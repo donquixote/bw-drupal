@@ -48,6 +48,8 @@ function bewelcome_profile_modules() {
     // Development
     'openidadmin', 'devel', 'migrate',
     'views_ui', 
+    // This BW module has all other BW dependencies
+    'bewelcome_main',
   );
   return $modules;
 }
