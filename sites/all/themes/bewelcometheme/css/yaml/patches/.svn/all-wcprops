@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/hcvol/!svn/ver/7538/trunk/htdocs/styles/yaml/patches
+END
+patch_layout_draft.css
+K 25
+svn:wc:ra_dav:version-url
+V 80
+/svn/hcvol/!svn/ver/7538/trunk/htdocs/styles/yaml/patches/patch_layout_draft.css
+END
+patch_nav_vlist.css
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/svn/hcvol/!svn/ver/7538/trunk/htdocs/styles/yaml/patches/patch_nav_vlist.css
+END
