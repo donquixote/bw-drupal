@@ -1,0 +1,295 @@
+<?php
+
+/**
+ * Implements hook_user_load().
+ */
+function profile_privacy_user_load($users) {
+  foreach (array_keys($users) as $uid) {
+    $private_fields = profile_privacy_get_user_privacy($uid);
+    foreach ($private_fields as $field_name => $private) {
+      $users[$uid]->{'profile_privacy_' . $field_name} = $private;
+    }
+  }
+}
+
+/**
+ * Implements hook_user_cancel().
+ */
+function profile_privacy_user_cancel($edit, $account, $method) {
+  // Reassign and delete deletes data.
+  switch ($method) {
+    case 'user_cancel_reassign':
+    case 'user_cancel_delete':
+      profile_privacy_delete_user_privacy($account->uid);
+      break;
+  }
+}
+
+/**
+ * Implements hook_user_view().
+ */
+function profile_privacy_user_view($account, $build_mode) {
+  $private_fields = profile_privacy_get_user_privacy($account->uid);
+  $profile_fields = profile_privacy_get_fields();
+  // Do not hide any information from administers
+  if (!user_access('administer users') || TRUE) {
+    foreach ($profile_fields as $field) {
+      // If the user has set a privacy option, this always takes precidence.
+      if (isset($account->{'profile_privacy_' . $field->name}) && $field->privacy) {
+        if ($account->{'profile_privacy_' . $field->name}) {
+          // Setting the account variable and the return field both to NULL
+          // ensure that no output will be generated on the profile page,
+          // even if it's being themed with theme_user_profile().
+          $account->{$field->name} = NULL;
+          $account->content[$field->category][$field->name] = NULL;
+        }
+        else {
+          // Generate the fields to be returned since profile module
+          // thought this field was private.
+          $field->visibility = PROFILE_PUBLIC;
+          if ($value = profile_view_field($account, $field)) {
+            $title = ($field->type != 'checkbox') ? check_plain($field->title) : NULL;
+            // Create a single fieldset for each category.
+            if (!isset($account->content[$field->category])) {
+              $account->content[$field->category] = array(
+                '#type' => 'user_profile_category',
+                '#title' => $field->category,
+              );
+            }
+            $item = array(
+              '#title' => $title,
+              '#markup' => $value,
+              '#class' => $field->name,
+              '#type' => 'user_profile_item',
+              '#weight' => $field->weight,
+              '#attributes' => array('class' => 'profile-' . $field->name),
+            );
+            // TODO: This currently appends the now visible field to the end
+            // of other profile fields, it should insert in original position.
+            $account->content[$field->category][$field->name] = $item;
+          }
+        }
+      }
+      // Override the default profile behavior. If a field is only available
+      // to "privileged users" unset the variable entirely. This affects
+      // all themed versions
+      elseif ($field->visibility == PROFILE_PRIVATE) {
+        $account->{$field->name} = NULL;
+        $account->content[$field->category][$field->name] = NULL;
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_user_update().
+ */
+function profile_privacy_user_update(&$edit, $account, $category) {
+  $fields = profile_privacy_get_fields();
+  foreach ($fields as $field) {
+    $profile_privacy_field = 'profile_privacy_' . $field->name;
+    if (isset($edit[$profile_privacy_field])) {
+      $private = !$edit[$profile_privacy_field];
+      profile_privacy_set_user_field_privacy($account->uid, $field->name, $private);
+      // Set field to NULL to prevent user.module from saving in user table.
+      $edit[$profile_privacy_field] = NULL;
+    }
+  }
+}
+
+/**
+ * Implements hook_user_insert().
+ */
+function profile_privacy_user_insert(&$edit, $account, $category) {
+  $fields = profile_privacy_get_fields();
+  foreach ($fields as $field) {
+    if (isset($edit['profile_privacy_' . $field->name])) {
+      profile_privacy_set_user_field_privacy($account->uid, $field->name, !$edit['profile_privacy_' . $field->name]);
+      // Set field to NULL to prevent user.module from saving in user table.
+      $edit['profile_privacy_' . $field->name] = NULL;
+    }
+  }
+}
+
+/**
+ * Implements hook_form_alter().
+ */
+function profile_privacy_form_alter(&$form, &$form_state, $form_id, $category = NULL) {
+  switch ($form_id) {
+    case 'user_profile_form':
+      if ($form['#user_category'] != 'account') {
+        profile_privacy_form_alter_category($form['#user_category'] , $form['#user'], $form);
+      }
+      break;
+    case 'user_register':
+      $form_keys = element_children($form);
+      foreach ($form_keys as $form_key) {
+        $fieldset_keys = element_children($form[$form_key]);
+        foreach ($fieldset_keys as $fieldset_key) {
+          if (preg_match('/^profile_/', $fieldset_key)) {
+            profile_privacy_form_alter_category($form_key, NULL, $form);
+          }
+        }
+      }
+      break;
+    case 'profile_field_form':
+      if (isset($form['fid'])) {
+        $field = profile_privacy_get_field(NULL, $form['fid']['#value']);
+      }
+
+      $form['profile_privacy'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Allow user to override default visibility'),
+        '#default_value' => isset($field->privacy) ? $field->privacy : 0,
+      );
+      // @todo get the field in a better location!
+      
+      $form['#submit'][] = 'profile_privacy_profile_field_submit';
+      break;
+  }
+}
+
+function profile_privacy_form_alter_category($category, $account, &$form) {
+  $profile_keys = element_children($form[$category]);
+  $profile_fields = profile_privacy_get_fields($category);
+
+  //$form[$category]['#theme'] = 'profile_privacy_category';
+
+  foreach ($profile_keys as $key) {
+    if (!empty($profile_fields[$key]->privacy)) {
+      // Remove descriptions about current privacy rules
+      $form[$category][$key]['#description'] = str_replace(' ' . t('The content of this field is kept private and will not be shown publicly.'), '', $form[$category][$key]['#description']);
+      // Create the privacy checkbox
+      $privacy_checkbox = array();
+      $privacy_checkbox['profile_privacy_' . $key] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Display !field publicly', array('!field' => $form[$category][$key]['#title'])),
+      );
+      if (isset($form[$category][$key]['#weight'])) {
+        $privacy_checkbox['#weight'] = $form[$category][$key]['#weight'] + 0.01;
+      }
+      if (!isset($account->{'profile_privacy_' . $key})) {
+        $privacy_checkbox['profile_privacy_' . $key]['#default_value'] = $profile_fields[$key]->visibility < 2 ? 0 : 1;
+      }
+      else {
+        $privacy_checkbox['profile_privacy_' . $key]['#default_value'] = !$account->{'profile_privacy_' . $key};
+      }
+      // Insert our new checkbox after the field it references
+      $category_keys = array_flip(array_keys($form[$category]));
+      $form_first = array_slice($form[$category], 0, $category_keys[$key] + 1);
+      $form_last = array_slice($form[$category], $category_keys[$key] + 1);
+      $form[$category] = array_merge($form_first, $privacy_checkbox, $form_last);
+    }
+  }
+}
+
+function profile_privacy_profile_field_submit($form, &$form_state) {
+  profile_privacy_set_field_privacy($form_state['values']['name'], $form_state['values']['profile_privacy']);
+}
+
+function profile_privacy_theme($existing, $type, $theme, $path) {
+  return array(
+    'profile_privacy_category' => array(
+      'variables' => array('form' => NULL)
+    )
+  );
+}
+
+function theme_profile_privacy_category($form) {
+  drupal_add_css(drupal_get_path('module', 'profile_privacy') . '/profile_privacy.css');
+
+  $field_keys = element_children($form);
+  foreach ($field_keys as $field_key) {
+    $form['profile_privacy_' . $field_key]['#attributes']['class'] = 'profile-privacy-checkbox';
+    $form[$field_key]['#description'] .= drupal_render($form['profile_privacy_' . $field_key]);
+  }
+
+  return drupal_render($form);
+}
+
+function profile_privacy_set_field_privacy($field_name, $privacy = 0) {
+  profile_privacy_get_fields(NULL, TRUE);
+  $field = profile_privacy_get_field($field_name);
+  db_delete('profile_privacy_field')
+    ->condition('fid', $field->fid)
+    ->execute();
+  $id = db_insert('profile_privacy_field')
+    ->fields(array(
+      'fid' => $field->fid,
+      'privacy' => $privacy,
+      ))
+    ->execute();
+}
+
+function profile_privacy_get_user_field_privacy($uid, $field_name) {
+  $user_privacy = profile_privacy_get_user_privacy($uid);
+  return $user_privacy[$field_name];
+}
+
+function profile_privacy_get_user_privacy($uid, $reset = FALSE) {
+  static $users = array();
+  if (!isset($users[$uid]) || $reset) {
+    $result = db_query('SELECT ppv.*, pf.name FROM {profile_privacy_value} ppv INNER JOIN {profile_field} pf ON ppv.fid = pf.fid WHERE uid = :uid',
+      array(':uid' => $uid)
+    );
+    foreach ($result as $row) {
+      $users[$row->uid][$row->name] = $row->private;
+    }
+  }
+  return isset($users[$uid]) ? $users[$uid] : array();
+}
+
+function profile_privacy_delete_user_privacy($uid) {
+  return db_delete('profile_privacy_value')
+    ->condition('uid', $uid)
+    ->execute();
+}
+
+function profile_privacy_set_user_field_privacy($uid, $field_name, $private = 0) {
+  $field = profile_privacy_get_field($field_name);
+  $num_deleted = db_delete('profile_privacy_value')
+    ->condition('fid', $field->fid)
+    ->condition('uid', $uid)
+    ->execute();
+  // Only allow the the profile field to be hidden if privacy is enabled.
+  if ($field->privacy) {
+    $id = db_insert('profile_privacy_value')
+      ->fields(array(
+        'fid' => $field->fid,
+        'uid' => $uid,
+        'private' => $private ? 1 : 0,
+        ))
+      ->execute();
+  }
+}
+
+function profile_privacy_get_field($field_name = NULL, $fid = NULL) {
+  $fields = profile_privacy_get_fields();
+  if ($field_name) {
+    return $fields[$field_name];
+  }
+
+  foreach ($fields as $field) {
+    if ($field->fid == $fid) {
+      return $field;
+    }
+  }
+}
+
+function profile_privacy_get_fields($category = NULL, $reset = FALSE) {
+  static $fields, $category_fields;
+
+  if (!isset($fields) || $reset) {
+    $fields = array();
+    $result = db_query('SELECT ppf.*, pf.* FROM {profile_field} pf LEFT JOIN {profile_privacy_field} ppf ON pf.fid = ppf.fid');
+    foreach ($result as $record) {
+      $fields[$record->name] = $record;
+      $category_fields[$record->category][$record->name] = $record;
+    }
+  }
+
+  if (isset($category)) {
+    return $category_fields[$category];
+  }
+  return $fields;
+}

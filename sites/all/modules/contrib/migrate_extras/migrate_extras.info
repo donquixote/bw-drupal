@@ -1,0 +1,24 @@
+name = Migrate Extras
+description = "Adds migrate module integration with contrib modules and other miscellaneous tweaks."
+core = 7.x
+package=Development
+
+dependencies[] = migrate
+dependencies[] = profile2
+files[] = date.inc
+files[] = media.inc
+files[] = pathauto.inc
+files[] = profile2.inc
+files[] = rules.inc
+files[] = og.inc
+files[] = votingapi.inc
+files[] = user_relationships.inc
+files[] = tests/date.test
+files[] = tests/pathauto.test
+
+; Information added by drupal.org packaging script on 2011-06-24
+version = "7.x-2.1"
+core = "7.x"
+project = "migrate_extras"
+datestamp = "1308876142"
+
