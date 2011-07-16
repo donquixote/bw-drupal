@@ -1,0 +1,5 @@
+name = BeWelcome
+description = Profile for BeWelcome.
+version = VERSION
+core = 7.x
+hidden = FALSE
