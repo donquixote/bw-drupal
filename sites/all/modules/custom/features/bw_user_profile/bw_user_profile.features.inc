@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_user_profile.features.inc
+ */
 
 /**
  * Implementation of hook_default_profile2_type().
@@ -11,9 +15,7 @@ function bw_user_profile_default_profile2_type() {
     "type" : "main",
     "label" : "Main profile",
     "weight" : "0",
-    "data" : { "registration" : true, "use_page" : true },
-    "module" : null,
-    "rdf_mapping" : []
+    "data" : { "registration" : true, "use_page" : true }
   }');
   return $items;
 }

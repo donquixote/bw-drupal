@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_user_profile.features.field.inc
+ */
 
 /**
  * Implementation of hook_field_default_fields().
@@ -117,7 +121,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -180,7 +184,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -243,7 +247,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -306,13 +310,13 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'tid' => array(
-          '0' => 'tid',
+          0 => 'tid',
         ),
       ),
       'module' => 'taxonomy',
       'settings' => array(
         'allowed_values' => array(
-          '0' => array(
+          0 => array(
             'parent' => '0',
             'vocabulary' => 'gender',
           ),
@@ -325,7 +329,7 @@ function bw_user_profile_field_default_fields() {
     'field_instance' => array(
       'bundle' => 'main',
       'default_value' => array(
-        '0' => array(
+        0 => array(
           'tid' => '3',
         ),
       ),
@@ -375,7 +379,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -438,7 +442,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -501,7 +505,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -564,7 +568,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -627,7 +631,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -747,7 +751,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -810,7 +814,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -873,7 +877,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -936,7 +940,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -999,7 +1003,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -1061,7 +1065,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -1124,7 +1128,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -1220,6 +1224,18 @@ function bw_user_profile_field_default_fields() {
       'label' => 'Website',
       'required' => 0,
       'settings' => array(
+        'attributes' => array(
+          'class' => '',
+          'rel' => '',
+          'target' => 'default',
+        ),
+        'display' => array(
+          'url_cutoff' => 80,
+        ),
+        'enable_tokens' => 1,
+        'title' => 'optional',
+        'title_value' => '',
+        'url' => 0,
         'user_register_form' => FALSE,
       ),
       'widget' => array(
@@ -1250,7 +1266,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -1294,6 +1310,29 @@ function bw_user_profile_field_default_fields() {
       ),
     ),
   );
+
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Birth date');
+  t('Books');
+  t('Films');
+  t('First name');
+  t('Gender');
+  t('Hobbies');
+  t('Home phone');
+  t('House number');
+  t('I live with');
+  t('Last name');
+  t('Maximum length of stay');
+  t('Maximum number of guests');
+  t('Music');
+  t('Occupation');
+  t('Organizations I belong to');
+  t('Profile Summary');
+  t('Second name');
+  t('Street');
+  t('Website');
+  t('Zip code');
 
   return $fields;
 }
