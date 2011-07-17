@@ -550,14 +550,14 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_irc'
-  $fields['profile2-main-field_irc'] = array(
+  // Exported field: 'profile2-main-field_im'
+  $fields['profile2-main-field_im'] = array(
     'field_config' => array(
       'active' => '1',
       'cardinality' => '1',
       'deleted' => '0',
       'entity_types' => array(),
-      'field_name' => 'field_irc',
+      'field_name' => 'field_im',
       'foreign keys' => array(
         'format' => array(
           'columns' => array(
@@ -573,7 +573,7 @@ function bw_user_profile_field_default_fields() {
       ),
       'module' => 'text',
       'settings' => array(
-        'max_length' => '80',
+        'max_length' => '255',
         'profile2_private' => 0,
       ),
       'translatable' => '1',
@@ -583,7 +583,7 @@ function bw_user_profile_field_default_fields() {
       'bundle' => 'main',
       'default_value' => NULL,
       'deleted' => '0',
-      'description' => '',
+      'description' => 'XMPP iz bettr than all',
       'display' => array(
         'default' => array(
           'label' => 'above',
@@ -594,8 +594,8 @@ function bw_user_profile_field_default_fields() {
         ),
       ),
       'entity_type' => 'profile2',
-      'field_name' => 'field_irc',
-      'label' => 'IRC',
+      'field_name' => 'field_im',
+      'label' => 'Instant messenging',
       'required' => 0,
       'settings' => array(
         'text_processing' => '0',
@@ -1385,7 +1385,7 @@ function bw_user_profile_field_default_fields() {
   t('Home phone');
   t('House number');
   t('I live with');
-  t('IRC');
+  t('Instant messenging');
   t('Last name');
   t('Maximum length of stay');
   t('Maximum number of guests');
@@ -1396,6 +1396,7 @@ function bw_user_profile_field_default_fields() {
   t('Second name');
   t('Street');
   t('Website');
+  t('XMPP iz bettr than all');
   t('Zip code');
 
   return $fields;
