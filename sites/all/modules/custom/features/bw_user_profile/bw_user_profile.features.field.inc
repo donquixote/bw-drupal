@@ -550,6 +550,69 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
+  // Exported field: 'profile2-main-field_irc'
+  $fields['profile2-main-field_irc'] = array(
+    'field_config' => array(
+      'active' => '1',
+      'cardinality' => '1',
+      'deleted' => '0',
+      'entity_types' => array(),
+      'field_name' => 'field_irc',
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
+      'indexes' => array(
+        'format' => array(
+          0 => 'format',
+        ),
+      ),
+      'module' => 'text',
+      'settings' => array(
+        'max_length' => '80',
+        'profile2_private' => 0,
+      ),
+      'translatable' => '1',
+      'type' => 'text',
+    ),
+    'field_instance' => array(
+      'bundle' => 'main',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => '',
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
+          'weight' => 20,
+        ),
+      ),
+      'entity_type' => 'profile2',
+      'field_name' => 'field_irc',
+      'label' => 'IRC',
+      'required' => 0,
+      'settings' => array(
+        'text_processing' => '0',
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '60',
+        ),
+        'type' => 'text_textfield',
+        'weight' => '23',
+      ),
+    ),
+  );
+
   // Exported field: 'profile2-main-field_lastname'
   $fields['profile2-main-field_lastname'] = array(
     'field_config' => array(
@@ -1322,6 +1385,7 @@ function bw_user_profile_field_default_fields() {
   t('Home phone');
   t('House number');
   t('I live with');
+  t('IRC');
   t('Last name');
   t('Maximum length of stay');
   t('Maximum number of guests');
