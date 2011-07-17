@@ -11,3 +11,5 @@ to sites/default/settings.php
 After installation you will have to
 - enable the bewelcome main module in admin/modules
 - enable the theme in admin/appearance/list
+
+This will happen automatically in the future via bewelcome.profile.
