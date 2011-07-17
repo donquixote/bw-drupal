@@ -1,0 +1,5 @@
+<?php
+
+function bewelcome_main_schema_6000() {
+  module_enable(array('field_ui'));
+}
