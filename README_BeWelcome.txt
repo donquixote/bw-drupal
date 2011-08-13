@@ -14,5 +14,12 @@ After installation you will have to
 
 This will happen automatically in the future via bewelcome.profile.
 
+
+
 == Test database
 - find it here: https://gitorious.org/bewelcome/rox/trees/master/testdb
+
+
+
+== Notes
+- drush up breaks when updating core
