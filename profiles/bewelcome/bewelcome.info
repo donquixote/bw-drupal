@@ -18,4 +18,4 @@ dependencies[] = search
 dependencies[] = admin_menu
 dependencies[] = field_ui
 dependencies[] = file
-dependencies[] = rdf
+dependencies[] = bewelcome_main
