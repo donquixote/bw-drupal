@@ -9,6 +9,9 @@ dependencies[] = comment
 dependencies[] = migrate
 dependencies[] = list
 dependencies[] = number
+files[] = user.inc
+files[] = members.inc
+
 
 ;node_reference is useful but not required
 ;dependencies[] = node_reference
