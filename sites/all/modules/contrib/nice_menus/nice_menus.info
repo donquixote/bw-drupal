@@ -7,9 +7,9 @@ files[] = nice_menus.install
 files[] = nice_menus.module
 
 
-; Information added by drupal.org packaging script on 2011-05-02
+; Information added by drupal.org packaging script on 2011-08-16
 version = "7.x-2.x-dev"
 core = "7.x"
 project = "nice_menus"
-datestamp = "1304338239"
+datestamp = "1313496779"
 
