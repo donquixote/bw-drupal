@@ -20,8 +20,6 @@ class BWUserMigration extends BWMigration {
     $this->source = new MigrateSourceSQL($query, $query_count, NULL, array('map_joinable' => FALSE));
     $this->destination = new MigrateDestinationUser();
 
-    // TODO: fix
-    //$this->addFieldMapping('active', 'status'); 
 
     // Dedupe assures that value is unique. Use it when source data is non-unique.
     // Pass the Drupal table and column for determining uniqueness.
@@ -45,6 +43,11 @@ class BWUserMigration extends BWMigration {
     $this->addFieldMapping('roles')
          ->defaultValue(drupal_map_assoc(array(2)));
     $this->addFieldMapping('field_migrate_example_gender', 'sex');
+
+    // TODO: fix
+    //    $this->addFieldMapping('active', 'status'); 
+    $this->addFieldMapping('status')
+         ->defaultValue(1); // 1 => active
 
     // Unmapped source fields
     $this->addFieldMapping(NULL, 'nickname')
