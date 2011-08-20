@@ -5,9 +5,9 @@ description = "Examples of migrating into Profile2 entities"
 files[] = migrate_extras_profile2.migrate.inc
 name = "Migrate Extras Profile2 Example"
 package = "Development"
-; Information added by drupal.org packaging script on 2011-06-24
-version = "7.x-2.1"
+; Information added by drupal.org packaging script on 2011-08-19
+version = "7.x-2.x-dev"
 core = "7.x"
 project = "migrate_extras"
-datestamp = "1308876142"
+datestamp = "1313714173"
 

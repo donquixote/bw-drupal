@@ -21,7 +21,7 @@ class MigrateExtrasPathautoUnitTest extends DrupalWebTestCase {
    * Verify that setting 'pathauto' to FALSE when migrating actually prevents
    * pathauto from creating an alias.
    */
-  function testDateImport() {
+  function testPathautoImport() {
     $migration = Migration::getInstance('MigrateExamplePathauto');
     $result = $migration->processImport();
     $this->assertEqual($result, Migration::RESULT_COMPLETED,
