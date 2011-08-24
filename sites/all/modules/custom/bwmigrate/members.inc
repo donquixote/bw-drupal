@@ -13,7 +13,7 @@ class BWMembersMigration extends BWMigration {
 
     $this->map = new MigrateSQLMap($this->machineName,
       array(
-        'id' => array(
+        'uid' => array(
           'type' => 'int',
           'unsigned' => TRUE,
           'not null' => TRUE,
@@ -21,7 +21,6 @@ class BWMembersMigration extends BWMigration {
       ),
       MigrateDestinationProfile2::getKeySchema()
     );
-
 
     $query = $this->roxdb_connection
       ->select('members', 'm')->fields('m', array('FirstName', 'SecondName', 'Occupation'));
