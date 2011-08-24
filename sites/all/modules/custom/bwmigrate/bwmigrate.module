@@ -34,6 +34,16 @@ abstract class BWMigration extends Migration {
     $this->roxdb_connection = Database::getConnection('default', 'bwroxdb');
   }
 
+  public function roxMigrateSource($query) {
+    $query_count = array();
+    // Create a MigrateSource object, which manages retrieving the input data.
+    // The map_joinable should be false because we're using another database
+    // (and we don't want silly SQL errors because of unjoinable cross database JOINs)
+    $source = new MigrateSourceSQL($query, $query_count, NULL, array('map_joinable' => FALSE));
+    return $source;
+  }
+
+
   public function getTranslation($code, $lang = 'en') {
     // Method to get BW Rox translation string
     $result = $this->roxdb_connection

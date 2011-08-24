@@ -1,15 +1,48 @@
 <?php
 
 
+class FaqTermMigration extends BWMigration {
+  public function __construct() {
+    parent::__construct();
+    // Human-friendly description of your migration process. Be as detailed as you
+    // like.
+    $this->description = t('Migrate FAQ categories from the source database to taxonomy terms');
+
+    // Create a map object for tracking the relationships between source rows
+    // and their resulting Drupal objects. Usually, you'll use the MigrateSQLMap
+    // class, which uses database tables for tracking. Pass the machine name
+    // (FaqTerm) of this migration to use in generating map and message tables.
+    // And, pass schema definitions for the primary keys of the source and
+    // destination - we need to be explicit for our source, but the destination
+    // class knows its schema already.
+    $this->map = new MigrateSQLMap($this->machineName,
+				   array(
+					 'id' => array('type' => 'varchar',
+						       'length' => 255,
+						       'not null' => TRUE,
+						       'description' => 'Topic ID',
+						       )
+					 ),
+				   MigrateDestinationTerm::getKeySchema()
+				   );
+
+    $query = $this->roxdb_connection
+      ->select('faqcategories', 'faqcategories')->fields('faqcategories', array('id', 'Description', 'SortOrder'));
+    $this->source = $this->roxMigrateSource($query);
+
+    $this->destination = new MigrateDestinationTerm('faq_categories');
+
+    $this->addFieldMapping('name', 'description');
+    $this->addFieldMapping('description', 'description');
+  }
+}
+
+
 class FaqNodeMigration extends BWMigration {
   public function __construct() {
     parent::__construct();
     $this->description = t('FAQ');
-
-    // You may optionally declare dependencies for your migration - other migrations
-    // which should run first. In this case, terms assigned to our nodes and
-    // the authors of the nodes should be migrated before the nodes themselves.
-    // $this->dependencies = array('BeerTerm', 'BeerUser');
+    $this->dependencies = array('FaqTerm');
 
     $this->map = new MigrateSQLMap($this->machineName,
         array('id' => array(
@@ -25,9 +58,7 @@ class FaqNodeMigration extends BWMigration {
     $this->destination = new MigrateDestinationNode('faq_item');
     $query = $this->roxdb_connection
       ->select('faq', 'faq')->fields('faq', array('id', 'QandA', 'updated', 'created', 'Active', 'SortOrder', 'IdCategory', 'PageTitle'));
-    $query_count = array();
-    $this->source = new MigrateSourceSQL($query, $query_count, NULL, array('map_joinable' => FALSE));
-    $this->destination = new MigrateDestinationNode('faq_item');
+    $this->source = $this->roxMigrateSource($query);
 
     // Mapped fields
     $this->addFieldMapping('title', 'title')
@@ -39,7 +70,7 @@ class FaqNodeMigration extends BWMigration {
     // the same unique IDs), map the ID column from the old system to nid and
     // set is_new to TRUE.
     $this->addFieldMapping('nid', 'id')
-         ->description(t('Preserve old beer ID as nid in Drupal'));
+         ->description(t('Preserve old FAQ ID as nid in Drupal'));
     $this->addFieldMapping('is_new')
          ->defaultValue(TRUE);
 

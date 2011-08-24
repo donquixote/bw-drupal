@@ -29,9 +29,12 @@ modules have some kind of support.
 Once you have enabled the bwmigrate module, run drush with arguments
 to see the possibilities.
 
-Basically a development session could look like this:
+A migration development session could look like this:
 
-# Change something in code
-drush mi FaqNode   # run FAQ migration - see if it runs
-drush ms           # migration status
-drush mr FaqNode   # revert FAQ migration
+# Write a new migration thing...
+drush ms           # Check if it's there with migration status
+drush cc all       # Clear cache
+drush ms           # Now it's there
+drush mi FaqTerm   # Run FAQ term migration - see if it runs
+drush ms           # Did it run?   Or not?
+drush mr FaqTerm   # Revert FAQ term migration
