@@ -27,13 +27,17 @@ class FaqTermMigration extends BWMigration {
 				   );
 
     $query = $this->roxdb_connection
-      ->select('faqcategories', 'faqcategories')->fields('faqcategories', array('id', 'Description', 'SortOrder'));
+      ->select('faqcategories', 'faqcategories')
+      ->fields('faqcategories', array('id', 'Description', 'SortOrder'));
     $this->source = $this->roxMigrateSource($query);
-
     $this->destination = new MigrateDestinationTerm('faq_categories');
 
     $this->addFieldMapping('name', 'description');
     $this->addFieldMapping('description', 'description');
+  }
+
+  public function prepareRow($current_row) {
+    $current_row->name = $this->getTranslation($current_row->description);
   }
 }
 
@@ -57,14 +61,14 @@ class FaqNodeMigration extends BWMigration {
     // Set up our destination - nodes of type migrate_example_beer
     $this->destination = new MigrateDestinationNode('faq_item');
     $query = $this->roxdb_connection
-      ->select('faq', 'faq')->fields('faq', array('id', 'QandA', 'updated', 'created', 'Active', 'SortOrder', 'IdCategory', 'PageTitle'));
+      ->select('faq', 'faq')
+      ->fields('faq', array('id', 'QandA', 'updated', 'created',
+			    'Active', 'SortOrder', 'IdCategory', 'PageTitle'));
     $this->source = $this->roxMigrateSource($query);
 
     // Mapped fields
     $this->addFieldMapping('title', 'title')
          ->description(t('Mapping something to node title'));
-
-    //Actual title: SELECT Sentence FROM words WHERE code = 'FaqA_' . QandA   ShortCode = 'en'
 
     // To maintain node identities between the old and new systems (i.e., have
     // the same unique IDs), map the ID column from the old system to nid and
@@ -73,8 +77,6 @@ class FaqNodeMigration extends BWMigration {
          ->description(t('Preserve old FAQ ID as nid in Drupal'));
     $this->addFieldMapping('is_new')
          ->defaultValue(TRUE);
-
-    //Actual title: SELECT Sentence FROM words WHERE code = 'FaqA_' . QandA
 
     $this->addFieldMapping('body', 'body');
 
@@ -87,7 +89,6 @@ class FaqNodeMigration extends BWMigration {
     $current_row->title = $this->getTranslation('FaqQ_' . $current_row->qanda);
     $current_row->body = $this->getTranslation('FaqA_' . $current_row->qanda);
   }
-
 
 }
 
