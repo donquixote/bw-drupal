@@ -262,12 +262,16 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
     $migration = Migration::currentMigration();
     $language = $this->getFieldLanguage($entity, $field_info, $arguments);
 
+    if (empty($arguments['file_function'])) {
+      $arguments['file_function'] = 'file_copy';
+    }
+
     if ($arguments['file_function'] == 'file_blob') {
       if (empty($arguments['source_path'])) {
         throw new MigrateException("You must specify a filename in the 'source_path' argument for file_blog migrations.");
         return FALSE;
       }
-      $destination_dir = file_field_widget_uri($field_info, $instance);
+      $destination_dir = $this->destinationDir($field_info, $instance);
       $destination_file = file_stream_wrapper_uri_normalize($destination_dir . "/" . str_replace('/', '-', $arguments['source_path']));
       if (!file_exists($destination_file)) {
         file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
@@ -297,6 +301,11 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
     return $return;
   }
 
+  protected function destinationDir($field_info, $instance) {
+    $destination_dir = file_field_widget_uri($field_info, $instance);
+    return $destination_dir;
+  }
+
   /**
    * Parses file information to create an appropriate data array.
    *
@@ -306,13 +315,16 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
    * @param $migration
    * @param $arguments
    *   Supported arguments are
-   *   - 'file_function'
+   *   - 'file_function': One of
    *     - 'file_fid' if the incoming $value is a fid that we can use as is.
    *     - 'file_copy' to use the file_copy() function
    *     - 'file_move' to use file_move()
    *     - 'file_fast' to use the existing file
    *     - 'file_link'
    *     - 'file_blob'
+   *   - 'file_replace' See file_copy(). FILE_EXISTS_REPLACE, FILE_EXISTS_RENAME,
+   *      or FILE_EXISTS_ERROR.
+   *   - 'source_path': A path to be prepended to the path of the source item.
    * @param $value
    *   If file_function is set to file_fid, this will be a fid. Otherwise, it may
    *   be a path to the source file, or a json-encoded array of properties:
@@ -365,10 +377,9 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
         $file_function = $arguments['file_function'];
       }
 
-      $destination_dir = file_field_widget_uri($field_info, $instance);
+      $destination_dir = $this->destinationDir($field_info, $instance);
       file_prepare_directory($destination_dir, FILE_CREATE_DIRECTORY);
-
-      if ($arguments['source_path']) {
+      if (!empty($arguments['source_path'])) {
         // $full_path needs adjusting for file_blob
         if ($file_function == 'file_blob') {
           $full_path = file_stream_wrapper_uri_normalize($destination_dir . "/" . str_replace('/', '-', $arguments['source_path']));
@@ -381,7 +392,6 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
       else {
         $full_path = $path;
       }
-
       $remote = FALSE;
 
       // TODO: belongs in prepare or validate?
@@ -410,12 +420,13 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
       else {
         $destination_file = file_stream_wrapper_uri_normalize($destination_dir . "/" . str_replace('/', '-', basename($full_path)));
       }
-      $destination_file = file_destination($destination_file, $arguments['file_replace']);
 
+      $file_replace = empty($arguments['file_replace']) ? FILE_EXISTS_RENAME : $arguments['file_replace'];
+      $destination_file = file_destination($destination_file, $file_replace);
       $real_destination_file = drupal_realpath($destination_file);
       $source = (object) array(
         'uri' => $full_path,
-        'uid' => isset($entity->uid) ? isset($entity->uid) : 0,
+        'uid' => isset($entity->uid) ? $entity->uid : 0,
         'filename' => basename($full_path),
         'filemime' => file_get_mimetype($full_path),
         'timestamp' => REQUEST_TIME,
@@ -454,7 +465,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
               }
             }
             else {
-              $file = file_copy($source, $destination_dir, $arguments['file_replace']);
+              $file = file_copy($source, $destination_dir, $file_replace);
             }
             break;
           case 'file_move':
@@ -510,7 +521,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
               migrate_instrument_stop('file_link: file_exists');
               $message = t('File does not exist in Drupal files directory: !path',
                 array('!path' => $full_path));
-              if ($arguments['throw_error']) {
+              if (!empty($arguments['throw_error'])) {
                 throw new MigrateException($message, MigrationBase::MESSAGE_ERROR);
               }
               else {
@@ -530,7 +541,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
                     ->fields('f')
                     ->condition('uri', $full_path)
                     ->execute()
-                    ->fetchAssoc();
+                    ->fetchObject();
             migrate_instrument_stop('file_link: select existing');
             if (!$file) {
               migrate_instrument_start('file_link: create file record');
@@ -538,7 +549,6 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
               $file->uri = $full_path;
               $file->uid = isset($entity->uid) ? $entity->uid : 0;
               $file->status |= FILE_STATUS_PERMANENT;
-
               $file = file_save($file);
               migrate_instrument_stop('file_link: create file record');
             }

@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Support for file entity as destination. Note that File Fields have a their
+ * Support for file entity as destination. Note that File Fields have their
  * own destination in fields.inc
  */
 
@@ -77,7 +77,7 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
    * @param array $options
    *  Options applied to files.
    */
-  public function __construct(array $options = array()) {
+  public function __construct(array $options = array(), $bundle = 'file') {
     if (isset($options['copy_file'])) {
       $this->copyFile = $options['copy_file'];
     }
@@ -90,7 +90,7 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
     if (isset($options['preserve_files'])) {
       $this->preserveFiles = $options['preserve_files'];
     }
-    parent::__construct('file', 'file', $options);
+    parent::__construct('file', $bundle, $options);
   }
 
   /**
@@ -114,7 +114,7 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
 
     // Then add in anything provided by handlers
     $fields += migrate_handler_invoke_all('Entity', 'fields', $this->entityType, $this->bundle);
-    $fields += migrate_handler_invoke_all('File', 'fields');
+    $fields += migrate_handler_invoke_all('File', 'fields', $this->entityType, $this->bundle);
 
     return $fields;
   }
@@ -128,7 +128,7 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
    *  Raw source data object - passed through to prepare handlers.
    */
   public function prepare($entity, stdClass $source_row) {
-    if ($this->copyBlob) {
+    if (!empty($this->copyBlob)) {
       if (empty($entity->filename)) {
         throw new MigrateException("You must map to filename field for copy_blob migrations.");
         return FALSE;
@@ -157,13 +157,29 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
    *  Fid to delete, arrayed.
    */
   public function rollback(array $fid) {
-    migrate_instrument_start('file_delete');
+    migrate_instrument_start('file_load');
     $file = file_load(reset($fid));
+    migrate_instrument_stop('file_load');
     if ($file) {
-      // TODO: Error checking
-      file_delete($file, TRUE);
+      // If we want to preserve the file while wiping the DB evidence of the file,
+      // we need to do it ourselves - file_delete() is all-or-nothing.
+      if ($this->preserveFiles) {
+        migrate_instrument_start('file_delete (preserving)');
+        // Let other modules clean up any references to the deleted file.
+        module_invoke_all('file_delete', $file);
+        module_invoke_all('entity_delete', $file, 'file');
+        // Remove the core knowledge of the file.
+        db_delete('file_managed')->condition('fid', $file->fid)->execute();
+        db_delete('file_usage')->condition('fid', $file->fid)->execute();
+        migrate_instrument_stop('file_delete (preserving)');
+      }
+      else {
+        // If we're not preserving the file, make sure we do the job completely.
+        migrate_instrument_start('file_delete');
+        file_delete($file, TRUE);
+        migrate_instrument_stop('file_delete');
+      }
     }
-    migrate_instrument_stop('file_delete');
   }
 
   /**
@@ -191,6 +207,7 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
         $file->fid = $row->migrate_map_destid1;
       }
     }
+
     if ($migration->getSystemOfRecord() == Migration::DESTINATION) {
       if (!isset($file->fid)) {
         throw new MigrateException(t('System-of-record is DESTINATION, but no destination fid provided'));

@@ -24,7 +24,10 @@ class MigrateSourceOracle extends MigrateSource {
    *
    * @var resource
    */
-  public $connection;
+  protected $connection;
+  public function getConnection() {
+    return $this->connection;
+  }
 
   /**
    * The SQL query from which to obtain data. Is a string.
@@ -55,7 +58,7 @@ class MigrateSourceOracle extends MigrateSource {
    * Return an options array for Oracle sources.
    *
    * @param string $character_set
-   *  Character set to use in retrieving data. Defaults to 'UTF'.
+   *  Character set to use in retrieving data. Defaults to 'UTF8'.
    * @param boolean $cache_counts
    *  Indicates whether to cache counts of source records.
    */
@@ -244,6 +247,13 @@ class MigrateSourceOracle extends MigrateSource {
       $map_row = $map->getRowBySource($this->currentKey);
       if ($map_row && $map_row['needs_update'] == 0) {
         continue;
+      }
+      // Add map info to the row, if present
+      if ($map_row) {
+        foreach ($map_row as $field => $value) {
+          $field = 'migrate_map_' . $field;
+          $this->currentRow->$field = $value;
+        }
       }
 
       // Allow the Migration to prepare this row. prepareRow() can return boolean
