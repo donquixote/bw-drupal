@@ -53,23 +53,10 @@ class FaqNodeMigration extends BWMigration {
   }
 
   public function prepareRow($current_row) {
-    var_dump($current_row);
     $current_row->title = $this->getTranslation('FaqQ_' . $current_row->qanda);
     $current_row->body = $this->getTranslation('FaqA_' . $current_row->qanda);
   }
 
-  public function getTranslation($code) {
-    $result = $this->roxdb_connection
-      ->query('SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
-	      array(':code' => $code, ':lang' => 'en'));
-    foreach ($result as $row) { // this shouldn't be a loop but just want working code now
-      $sentence = $row->sentence ;
-    }
-    if (!$sentence) {
-      $sentence = $code;
-    }
-    return $sentence;
-  }
 
 }
 

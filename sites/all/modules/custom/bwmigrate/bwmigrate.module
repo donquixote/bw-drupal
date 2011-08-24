@@ -33,6 +33,21 @@ abstract class BWMigration extends Migration {
 
     $this->roxdb_connection = Database::getConnection('default', 'bwroxdb');
   }
+
+  public function getTranslation($code, $lang = 'en') {
+    // Method to get BW Rox translation string
+    $result = $this->roxdb_connection
+      ->query('SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
+	      array(':code' => $code, ':lang' => $lang));
+    foreach ($result as $row) { // this shouldn't be a loop but just want working code now
+      $sentence = $row->sentence ;
+    }
+    if (!$sentence) {
+      $sentence = $code;
+    }
+    return $sentence;
+  }
+
 }
 
 
