@@ -16,8 +16,7 @@ class BWUserMigration extends BWMigration {
 
     $query = $this->roxdb_connection
       ->select('user', 'user')->fields('user', array('id', 'email', 'handle', 'active', 'lastlogin', 'pw'));
-    $query_count = array();
-    $this->source = new MigrateSourceSQL($query, $query_count, NULL, array('map_joinable' => FALSE));
+    $this->source = $this->roxMigrateSource($query);
     $this->destination = new MigrateDestinationUser();
 
 
@@ -45,7 +44,7 @@ class BWUserMigration extends BWMigration {
     $this->addFieldMapping('field_migrate_example_gender', 'sex');
 
     // TODO: fix
-    //    $this->addFieldMapping('active', 'status'); 
+    //    $this->addFieldMapping('active', 'status');
     $this->addFieldMapping('status')
          ->defaultValue(1); // 1 => active
 
