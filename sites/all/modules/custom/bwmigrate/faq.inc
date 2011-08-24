@@ -30,8 +30,10 @@ class FaqNodeMigration extends BWMigration {
     $this->destination = new MigrateDestinationNode('faq_item');
 
     // Mapped fields
-    $this->addFieldMapping('title', 'PageTitle')
-         ->description(t('Mapping FAQ title to node title'));
+    $this->addFieldMapping('title', 'title')
+         ->description(t('Mapping something to node title'));
+
+    //Actual title: SELECT Sentence FROM words WHERE code = 'FaqA_' . QandA   ShortCode = 'en'
 
     // To maintain node identities between the old and new systems (i.e., have
     // the same unique IDs), map the ID column from the old system to nid and
@@ -41,11 +43,35 @@ class FaqNodeMigration extends BWMigration {
     $this->addFieldMapping('is_new')
          ->defaultValue(TRUE);
 
-    $this->addFieldMapping('body', 'QandA');
+    //Actual title: SELECT Sentence FROM words WHERE code = 'FaqA_' . QandA
+
+    $this->addFieldMapping('body', 'body');
 
     // Unmapped destination fields
     //$this->addUnmigratedDestinations(array('name', 'created', 'changed', 'status',
     //  'promote', 'revision', 'language'));
   }
+
+  public function prepareRow($current_row) {
+    var_dump($current_row);
+    $current_row->title = $this->getTranslation('FaqQ_' . $current_row->qanda);
+    $current_row->body = $this->getTranslation('FaqA_' . $current_row->qanda);
+  }
+
+  public function getTranslation($code) {
+    $result = $this->roxdb_connection
+      ->query('SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
+	      array(':code' => $code, ':lang' => 'en'));
+    foreach ($result as $row) { // this shouldn't be a loop but just want working code now
+      $sentence = $row->sentence ;
+    }
+    if (!$sentence) {
+      $sentence = $code;
+    }
+    return $sentence;
+  }
+
 }
+
+
 
