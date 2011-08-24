@@ -32,12 +32,12 @@ class FaqTermMigration extends BWMigration {
     $this->source = $this->roxMigrateSource($query);
     $this->destination = new MigrateDestinationTerm('faq_categories');
 
-    $this->addFieldMapping('name', 'description');
-    $this->addFieldMapping('description', 'description');
+    $this->addFieldMapping('name', 'name_en');
+    $this->addFieldMapping('description', 'name_en');
   }
 
   public function prepareRow($current_row) {
-    $current_row->name = $this->getTranslation($current_row->description);
+    $current_row->name_en = $this->getTranslation($current_row->description);
   }
 }
 
