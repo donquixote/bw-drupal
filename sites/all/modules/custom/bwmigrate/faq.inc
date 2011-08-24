@@ -49,21 +49,25 @@ class FaqNodeMigration extends BWMigration {
     $this->dependencies = array('FaqTerm');
 
     $this->map = new MigrateSQLMap($this->machineName,
-        array('id' => array(
-                'type' => 'int',
-                'not null' => TRUE,
-                'description' => 'FAQ ID.'
-                )
-             ),
-        MigrateDestinationNode::getKeySchema()
-    );
+				   array('id' => array(
+						       'type' => 'int',
+						       'not null' => TRUE,
+						       'description' => 'FAQ ID.'
+						       )
+					 ),
+				   MigrateDestinationNode::getKeySchema()
+				   );
 
     // Set up our destination - nodes of type migrate_example_beer
     $this->destination = new MigrateDestinationNode('faq_item');
     $query = $this->roxdb_connection
       ->select('faq', 'faq')
       ->fields('faq', array('id', 'QandA', 'updated', 'created',
-			    'Active', 'SortOrder', 'IdCategory', 'PageTitle'));
+			    'Active', 'SortOrder', 'IdCategory', 'PageTitle',
+			    ));
+    $query->leftJoin('faqcategories', 'fc', 'faq.IdCategory = fc.id');
+    $query->addExpression('fc.Description', 'faq_category');
+
     $this->source = $this->roxMigrateSource($query);
 
     // Mapped fields
@@ -80,6 +84,9 @@ class FaqNodeMigration extends BWMigration {
 
     $this->addFieldMapping('body', 'body');
 
+
+    $this->addFieldMapping('field_faq_category', 'category');
+
     // Unmapped destination fields
     //$this->addUnmigratedDestinations(array('name', 'created', 'changed', 'status',
     //  'promote', 'revision', 'language'));
@@ -88,6 +95,7 @@ class FaqNodeMigration extends BWMigration {
   public function prepareRow($current_row) {
     $current_row->title = $this->getTranslation('FaqQ_' . $current_row->qanda);
     $current_row->body = $this->getTranslation('FaqA_' . $current_row->qanda);
+    $current_row->category = $this->getTranslation($current_row->faq_category);
   }
 
 }

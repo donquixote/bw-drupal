@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_faq.features.inc
+ */
 
 /**
  * Implementation of hook_node_info().
@@ -15,13 +19,4 @@ function bw_faq_node_info() {
     ),
   );
   return $items;
-}
-
-/**
- * Implementation of hook_views_api().
- */
-function bw_faq_views_api() {
-  return array(
-    'api' => '3.0-alpha1',
-  );
 }

@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_faq.features.field.inc
+ */
 
 /**
  * Implementation of hook_field_default_fields().
@@ -13,7 +17,7 @@ function bw_faq_field_default_fields() {
       'cardinality' => '1',
       'deleted' => '0',
       'entity_types' => array(
-        '0' => 'node',
+        0 => 'node',
       ),
       'field_name' => 'body',
       'foreign keys' => array(
@@ -26,7 +30,7 @@ function bw_faq_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -97,13 +101,13 @@ function bw_faq_field_default_fields() {
       ),
       'indexes' => array(
         'tid' => array(
-          '0' => 'tid',
+          0 => 'tid',
         ),
       ),
       'module' => 'taxonomy',
       'settings' => array(
         'allowed_values' => array(
-          '0' => array(
+          0 => array(
             'parent' => '0',
             'vocabulary' => 'faq_categories',
           ),
@@ -148,6 +152,11 @@ function bw_faq_field_default_fields() {
       ),
     ),
   );
+
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Body');
+  t('FAQ category');
 
   return $fields;
 }
