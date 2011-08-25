@@ -1,12 +1,16 @@
 <?php
+/**
+ * @file
+ * bw_wiki.features.inc
+ */
 
 /**
  * Implementation of hook_node_info().
  */
 function bw_wiki_node_info() {
   $items = array(
-    'wiki' => array(
-      'name' => t('wiki'),
+    'bw_wikipage' => array(
+      'name' => t('bw_wikipage'),
       'base' => 'node_content',
       'description' => '',
       'has_title' => '1',
@@ -15,13 +19,4 @@ function bw_wiki_node_info() {
     ),
   );
   return $items;
-}
-
-/**
- * Implementation of hook_views_api().
- */
-function bw_wiki_views_api() {
-  return array(
-    'api' => '3.0-alpha1',
-  );
 }

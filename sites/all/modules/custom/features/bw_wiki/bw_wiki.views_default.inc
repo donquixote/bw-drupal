@@ -8,7 +8,7 @@ function bw_wiki_views_default_views() {
 
   // Exported view: wiki_recent_changes
   $view = new view;
-  $view->name = 'wiki_recent_changes';
+  $view->name = 'bw_wiki_recent_changes';
   $view->description = 'wiki recent changes';
   $view->tag = '';
   $view->base_table = 'node_revision';
@@ -76,7 +76,7 @@ function bw_wiki_views_default_views() {
   $handler->display->display_options['filters']['type']['table'] = 'node';
   $handler->display->display_options['filters']['type']['field'] = 'type';
   $handler->display->display_options['filters']['type']['value'] = array(
-    'wiki' => 'wiki',
+    'bw_wikipage' => 'bw_wikipage',
   );
   
 /* Display: Page */

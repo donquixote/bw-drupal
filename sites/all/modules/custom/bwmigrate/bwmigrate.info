@@ -12,6 +12,7 @@ dependencies[] = number
 files[] = user.inc
 files[] = members.inc
 files[] = faq.inc
+files[] = ewiki.inc
 
 
 ;node_reference is useful but not required
