@@ -25,7 +25,8 @@ class BWMembersMigration extends BWMigration {
 
     $query = $this->roxdb_connection
       ->select('members', 'm')
-      ->fields('m', array('id', 'Username', 'FirstName', 'SecondName', 'LastName', 'Occupation'));
+      ->fields('m', array('id', 'Username', 'FirstName', 'SecondName', 'LastName', 'Occupation',
+			  'ProfileSummary', 'Gender', 'BirthDate', 'WebSite', 'Books', 'Music', 'Movies'));
     $this->source = $this->roxMigrateSource($query);
 
     $this->destination = new MigrateDestinationProfile2('main');
@@ -35,6 +36,13 @@ class BWMembersMigration extends BWMigration {
     $this->addFieldMapping('field_lastname', 'lastname');
     $this->addFieldMapping('field_occupation', 'occupation');
 
+    $this->addFieldMapping('field_profile_summary', 'profilesummary');
+    $this->addFieldMapping('field_gender', 'gender');
+    $this->addFieldMapping('field_birth_date', 'birthdate');
+    $this->addFieldMapping('field_website', 'website');
+    $this->addFieldMapping('field_books', 'books');
+    $this->addFieldMapping('field_music', 'music');
+    $this->addFieldMapping('field_movies', 'movies');
 
     // Unmapped destination fields
     $this->addUnmigratedDestinations(array('id'));
