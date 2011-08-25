@@ -49,7 +49,6 @@ class BWMembersMigration extends BWMigration {
   }
 
   public function prepare(stdClass $account, stdClass $row) {
-    // print "\nuser: " . $row->username . "\n";
     $result = db_query('SELECT uid FROM {users} WHERE name = :name',
 		       array(':name' => $row->username));
     $uid = NULL;
@@ -57,6 +56,19 @@ class BWMembersMigration extends BWMigration {
       $uid = $r->uid;
     }
     $account->uid = (int)$uid;
-    // print $uid;
+  }
+
+  public function prepareRow($currentRow) {
+    // The crypted!
+    $crypted = array('firstname', 'secondname', 'lastname', 'profilesummary', 'occupation', 'books', 'music', 'movies');
+    foreach ($crypted as $cf) {
+      $result = $this->roxdb_connection
+	->query('SELECT MemberCryptedValue FROM {cryptedfields} WHERE id = :id',
+		array(':id' => $currentRow->$cf));
+      foreach ($result as $r) { // this shouldn't be a loop but just want working code now
+	$crypted = $r->membercryptedvalue;
+      }
+      $currentRow->$cf = preg_replace('/\<\/?membercrypted\>/', '', $crypted);
+    }
   }
 }
