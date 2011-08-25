@@ -27,6 +27,8 @@ class BWMembersMigration extends BWMigration {
       ->select('members', 'm')
       ->fields('m', array('id', 'Username', 'FirstName', 'SecondName', 'LastName', 'Occupation',
 			  'ProfileSummary', 'Gender', 'BirthDate', 'WebSite', 'Books', 'Music', 'Movies'));
+    $query->leftJoin('addresses', 'a', 'm.id = a.IdMember');
+    $query->fields('a', array('HouseNumber', 'StreetName', 'Zip', 'IdCity'));
     $this->source = $this->roxMigrateSource($query);
 
     $this->destination = new MigrateDestinationProfile2('main');
@@ -35,6 +37,11 @@ class BWMembersMigration extends BWMigration {
     $this->addFieldMapping('field_secondname', 'secondname');
     $this->addFieldMapping('field_lastname', 'lastname');
     $this->addFieldMapping('field_occupation', 'occupation');
+
+    $this->addFieldMapping('field_housenumber', 'housenumber');
+    $this->addFieldMapping('field_street', 'streetname');
+    $this->addFieldMapping('field_zipcode', 'zip');
+
 
     $this->addFieldMapping('field_profile_summary', 'profilesummary');
     $this->addFieldMapping('field_gender', 'gender');
@@ -60,7 +67,10 @@ class BWMembersMigration extends BWMigration {
 
   public function prepareRow($currentRow) {
     // The crypted!
-    $crypted = array('firstname', 'secondname', 'lastname', 'profilesummary', 'occupation', 'books', 'music', 'movies');
+    $crypted = array('firstname', 'secondname', 'lastname', 'profilesummary', 'occupation', 
+		     'books', 'music', 'movies',
+		     'housenumber', 'streetname', 'zip',
+		     );
     foreach ($crypted as $cf) {
       $result = $this->roxdb_connection
 	->query('SELECT MemberCryptedValue FROM {cryptedfields} WHERE id = :id',
