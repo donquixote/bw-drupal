@@ -13,6 +13,7 @@ dependencies[] = list
 dependencies[] = number
 files[] = user.inc
 files[] = members.inc
+files[] = comments.inc
 files[] = faq.inc
 files[] = ewiki.inc
 
