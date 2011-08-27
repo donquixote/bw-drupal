@@ -38,3 +38,8 @@ drush ms           # Now it's there
 drush mi FaqTerm   # Run FAQ term migration - see if it runs
 drush ms           # Did it run?   Or not?
 drush mr FaqTerm   # Revert FAQ term migration
+
+
+== More information 
+- http://drupal.org/project/migrate
+- http://www.midwesternmac.com/blogs/jeff-geerling/using-migrate-import-content
