@@ -15,8 +15,20 @@ cd ~/playground
 mysqladmin create bwroxdb
 
 # For convenience: Use the same user that has privileges to BW Drupal database
-mysql -e 'GRANT ALL PRIVILEGES ON bwroxdb.* TO bwdrupaluser@localhost
+mysql -e 'GRANT ALL PRIVILEGES ON bwroxdb.* TO bwdrupaluser@localhost'
 cat bewelcometest.sql | mysql bwroxdb
+
+
+== settings.php
+
+Add this to your sites/default/settings.php
+
+$databases['bwroxdb']['default'] = $databases['default']['default'];
+$databases['bwroxdb']['default']['database'] = 'bwroxdb';
+
+
+TODO: find a way to add this to bwmigrate.module
+
 
 
 == drush
