@@ -19,3 +19,5 @@ dependencies[] = admin_menu
 dependencies[] = field_ui
 dependencies[] = file
 dependencies[] = bewelcome_main
+; As long as we're mainly developing:
+dependencies[] = bwdev

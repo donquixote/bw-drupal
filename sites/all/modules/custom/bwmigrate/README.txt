@@ -9,13 +9,14 @@ to play with this.
 cd ~/playground
 
 # If needed: fetch BW Rox
-git clone rox...
-cd testdb; unzip bewelcome_db*.sql.zip
+# figure out easy commandline way to fetch it!
+# gzip -d bewelcometest.sql.gz 
+
 mysqladmin create bwroxdb
 
 # For convenience: Use the same user that has privileges to BW Drupal database
 mysql -e 'GRANT ALL PRIVILEGES ON bwroxdb.* TO bwdrupaluser@localhost
-cat bewelcome_db*sql | mysql bwroxdb
+cat bewelcometest.sql | mysql bwroxdb
 
 
 == drush
