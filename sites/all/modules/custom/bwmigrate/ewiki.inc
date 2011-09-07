@@ -11,8 +11,8 @@ class WikiNodeMigration extends BWMigration {
     // pagename as source key doesn't really work yet
     // somehow type varchar is not picked up
     $this->map = new MigrateSQLMap($this->machineName,
-				   array('pagename' => array(
-						       'type' => 'varchar',
+                 array('version' => array( // should be pagename but that causes mayhem with its type varchar
+						       'type' => 'int',
 						       // 'not null' => TRUE,
 						       // 'description' => 'Wiki pagename.'
 						       )
