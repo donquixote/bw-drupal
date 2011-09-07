@@ -8,7 +8,7 @@ to play with this.
 
 cd ~/playground
 
-# If needed: fetch BW Rox
+# If needed: fetch BW Rox test database from https://gitorious.org/bewelcome/rox/trees/master/testdb
 # figure out easy commandline way to fetch it!
 # gzip -d bewelcometest.sql.gz 
 
