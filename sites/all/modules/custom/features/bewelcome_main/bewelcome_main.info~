@@ -1,8 +1,0 @@
-core = "7.x"
-dependencies[] = "bw_faq"
-dependencies[] = "bw_user_profile"
-description = "BeWelcome main"
-name = "BeWelcome_main"
-package = "Features"
-project = "bewelcome_main"
-version = "7.x-1.0-alpha1"
