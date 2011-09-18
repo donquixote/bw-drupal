@@ -6,17 +6,11 @@ to play with this.
 
 == Set up the BW Rox database
 
-cd ~/playground
-
-# If needed: fetch BW Rox test database from https://gitorious.org/bewelcome/rox/trees/master/testdb
-# figure out easy commandline way to fetch it!
-# gzip -d bewelcometest.sql.gz 
-
 mysqladmin create bwroxdb
+zcat testdb/bewelcometest.sql.gz | mysql bwroxdb
 
 # For convenience: Use the same user that has privileges to BW Drupal database
 mysql -e 'GRANT ALL PRIVILEGES ON bwroxdb.* TO bwdrupaluser@localhost'
-cat bewelcometest.sql | mysql bwroxdb
 
 
 == settings.php
