@@ -20,8 +20,7 @@ function bw_user_profile_ds_custom_fields_info() {
   );
   $ds_field->properties = array(
     'code' => array(
-      'value' => '<?php dsm($entity); ?>
-<?php
+      'value' => '<?php
 print $entity->field_firstname[\'und\'][0][\'value\'] . \' \' . $entity->field_secondname[\'und\'][0][\'value\'] . \' \' . $entity->field_lastname[\'und\'][0][\'value\'];
 ?>',
       'format' => 'ds_code',
