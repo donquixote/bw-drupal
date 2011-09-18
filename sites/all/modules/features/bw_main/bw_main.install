@@ -24,3 +24,6 @@ function bw_main_update_7001() {
   );
 }
 
+function bw_main_update_7002() {
+  module_enable(array('bw_anonymous'));
+}
