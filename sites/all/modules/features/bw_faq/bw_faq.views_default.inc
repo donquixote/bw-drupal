@@ -70,7 +70,7 @@ function bw_faq_views_default_views() {
 
   /* Display: Page */
   $handler = $view->new_display('page', 'Page', 'page');
-  $handler->display->display_options['path'] = 'bw-faq';
+  $handler->display->display_options['path'] = 'about/faq';
   $handler->display->display_options['menu']['type'] = 'normal';
   $handler->display->display_options['menu']['title'] = 'FAQ';
   $handler->display->display_options['menu']['name'] = 'menu-footer-menu';
