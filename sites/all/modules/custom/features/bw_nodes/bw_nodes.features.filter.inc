@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_nodes.features.filter.inc
+ */
 
 /**
  * Implementation of hook_filter_default_formats().

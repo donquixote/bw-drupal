@@ -1,4 +1,8 @@
 <?php
+/**
+ * @file
+ * bw_nodes.features.field.inc
+ */
 
 /**
  * Implementation of hook_field_default_fields().
@@ -13,7 +17,7 @@ function bw_nodes_field_default_fields() {
       'cardinality' => '1',
       'deleted' => '0',
       'entity_types' => array(
-        '0' => 'node',
+        0 => 'node',
       ),
       'field_name' => 'body',
       'foreign keys' => array(
@@ -26,7 +30,7 @@ function bw_nodes_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -86,7 +90,7 @@ function bw_nodes_field_default_fields() {
       'cardinality' => '1',
       'deleted' => '0',
       'entity_types' => array(
-        '0' => 'node',
+        0 => 'node',
       ),
       'field_name' => 'body',
       'foreign keys' => array(
@@ -99,7 +103,7 @@ function bw_nodes_field_default_fields() {
       ),
       'indexes' => array(
         'format' => array(
-          '0' => 'format',
+          0 => 'format',
         ),
       ),
       'module' => 'text',
@@ -151,6 +155,10 @@ function bw_nodes_field_default_fields() {
       'widget_type' => 'text_textarea_with_summary',
     ),
   );
+
+  // Translatables
+  // Included for use with string extractors like potx.
+  t('Body');
 
   return $fields;
 }
