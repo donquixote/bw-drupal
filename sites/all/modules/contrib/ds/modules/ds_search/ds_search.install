@@ -16,6 +16,10 @@ function ds_search_uninstall() {
   variable_del('ds_search_language');
   variable_del('ds_search_highlight');
   variable_del('ds_search_highlight_selector');
+  variable_del('ds_search_group_by_type');
+  variable_del('ds_search_group_by_type_settings');
+  variable_del('ds_search_group_by_type_other');
+  variable_del('ds_search_group_by_type_other_wrapper');
   variable_del('ds_search_node_form_alter');
   variable_del('ds_search_apachesolr_form_alter');
   variable_del('ds_search_apachesolr_hide_current_filters');

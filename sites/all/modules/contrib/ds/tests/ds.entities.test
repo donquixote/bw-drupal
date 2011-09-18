@@ -5,9 +5,6 @@
  * Entities tests
  */
 
-/**
- * Test node entity.
- */
 class dsNodeTests extends dsBaseTest {
 
   /**
@@ -83,8 +80,7 @@ class dsNodeTests extends dsBaseTest {
   /**
    * Set the label.
    */
-  function entitiesSetLabelClass($label, $text = '', $class = '') {
-    // Configure fields.
+  function entitiesSetLabelClass($label, $text = '', $class = '', $hide_colon = FALSE) {
     $edit = array(
       'fields[body][label]' => $label,
     );
@@ -93,6 +89,9 @@ class dsNodeTests extends dsBaseTest {
     }
     if (!empty($class)) {
       $edit['fields[body][format][ft][styles][]'] = $class;
+    }
+    if ($hide_colon) {
+      $edit['fields[body][format][ft][lb-col]'] = '1';
     }
     $this->dsConfigureUI($edit);
   }
@@ -184,7 +183,7 @@ class dsNodeTests extends dsBaseTest {
     $this->assertNoRaw('Recent content');
 
     // Remove the page title (we'll use the switch view mode functionality too for this).
-    $edit = array('additional_settings[ds_hide_page_title]' => '1');
+    $edit = array('additional_settings[ds_page_title_options][page_option_type]' => '1');
     $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display/teaser');
     $this->drupalGet('node/' . $node->nid);
     $this->assertRaw('<h1 class="title" id="page-title">
@@ -194,6 +193,84 @@ class dsNodeTests extends dsBaseTest {
     $this->drupalGet('node/' . $node->nid);
     $this->assertNoRaw('<h1 class="title" id="page-title">
           '. $node->title . '        </h1>');
+
+    // Use page title substitutions.
+    $edit = array('additional_settings[ds_page_title_options][page_option_type]' => '2', 'additional_settings[ds_page_title_options][page_option_title]' => '%node:type');
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display/teaser');
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw('<h1 class="title" id="page-title">
+          '. $node->type . '        </h1>');
+
+    // Test revisions. Enable the revision view mode
+    $edit = array('additional_settings[modes][view_modes_custom][revision]' => '1');
+    $this->drupalPost('admin/structure/types/manage/article/display', $edit, t('Save'));
+
+    // Select layout and configure fields.
+    $edit = array(
+      'additional_settings[layout]' => 'ds_2col',
+    );
+    $assert = array(
+      'regions' => array(
+        'left' => '<td colspan="8">' . t('Left') . '</td>',
+        'right' => '<td colspan="8">' . t('Right') . '</td>',
+      ),
+    );
+    $this->dsSelectLayout($edit, $assert, 'admin/structure/types/manage/article/display/revision');
+    $edit = array(
+      'fields[body][region]' => 'left',
+      'fields[links][region]' => 'right',
+      'fields[author][region]' => 'right',
+    );
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display/revision');
+
+    // Create revision of the node.
+    $edit = array(
+      'revision' => TRUE,
+      'log' => 'Test revision',
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->assertText('Revisions');
+
+    // Assert revision is using 2 col template.
+    $this->drupalGet('node/' . $node->nid . '/revisions/1/view');
+    $this->assertText('Body:', 'Body label');
+
+    // Assert full view is using stacked template.
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertNoText('Body:', 'Body label');
+
+    // Test formatter limit on article with tags.
+    $edit = array(
+      'ds_switch' => '',
+      'field_tags[und]' => 'Tag 1, Tag 2'
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $edit = array(
+      'fields[field_tags][region]' => 'right',
+    );
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display');
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertText('Tag 1');
+    $this->assertText('Tag 2');
+    $edit = array(
+      'fields[field_tags][format][limit]' => '1',
+    );
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display');
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertText('Tag 1');
+    $this->assertNoText('Tag 2');
+
+    // Test check_plain() on ds_render_field() with the title field.
+    $edit = array(
+      'fields[title][region]' => 'right',
+    );
+    $this->dsConfigureUI($edit, 'admin/structure/types/manage/article/display');
+    $edit = array(
+      'title' => 'Hi, I am an article <script>alert(\'with a javascript tag in the title\');</script>',
+    );
+    $this->drupalPost('node/' . $node->nid . '/edit', $edit, t('Save'));
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw('<h2>Hi, I am an article &lt;script&gt;alert(&#039;with a javascript tag in the title&#039;);&lt;/script&gt;</h2>');
   }
 
   /**
@@ -259,6 +336,12 @@ class dsNodeTests extends dsBaseTest {
     $this->drupalGet('node/' . $node->nid);
     $this->assertRaw("<div class=\"group-right\">
       <div class=\"label-inline\">My body:&nbsp;</div><p>" . $body_field . "</p>");
+
+    variable_set('ft-kill-colon', TRUE);
+    $this->refreshVariables();
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw("<div class=\"group-right\">
+      <div class=\"label-inline\">My body</div><p>" . $body_field . "</p>");
 
     $this->entitiesSetLabelClass('hidden');
     $this->drupalGet('node/' . $node->nid);
@@ -474,6 +557,12 @@ class dsNodeTests extends dsBaseTest {
     $this->drupalGet('node/' . $node->nid);
     $this->assertRaw("<div class=\"group-right\">
       <div class=\"ow-class\"><div class=\"label-inline\">My body:&nbsp;</div><div class=\"fi-class-2\"><span class=\"even fi-class\"><p>" . $body_field . "</p>
+</span></div></div>    </div>");
+
+    $this->entitiesSetLabelClass('inline', 'My body', '', TRUE);
+    $this->drupalGet('node/' . $node->nid);
+    $this->assertRaw("<div class=\"group-right\">
+      <div class=\"ow-class\"><div class=\"label-inline\">My body</div><div class=\"fi-class-2\"><span class=\"even fi-class\"><p>" . $body_field . "</p>
 </span></div></div>    </div>");
 
     $this->entitiesSetLabelClass('hidden');

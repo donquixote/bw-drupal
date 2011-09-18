@@ -19,7 +19,7 @@ function ds_layout_list() {
   $rows = array();
   $entities = entity_get_info();
   foreach ($entities as $entity_type => $entity) {
-    if ($entity['fieldable'] || isset($entity['ds_display'])) {
+    if ((isset($entity['fieldable']) && $entity['fieldable']) || isset($entity['ds_display'])) {
 
       $entity_rows = array();
       foreach ($entity['bundles'] as $bundle_type => $bundle) {

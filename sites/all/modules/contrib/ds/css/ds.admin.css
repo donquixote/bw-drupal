@@ -14,16 +14,24 @@
 }
 
 .ds-extras-field-template {
-	margin-bottom: 1em;
+  margin-bottom: 1em;
 }
 
 .field-formatter-settings-editing .ft-link {
-	display: none;
+  display: none;
 }
 
 .ft-group div.form-item {
   float: left;
   width: 130px;
+}
+
+/**
+ * Limit
+ */
+.limit-float {
+  float: left;
+  margin-right: 5px;
 }
 
 /**
@@ -73,11 +81,11 @@ div.ctools-modal-content {
 }
 
 a.section-link {
-	display: block;
+  display: block;
 }
 
 #ctools-content-selection h2 {
-	color: #666;
+  color: #666;
 }
 
 .option-text-aligner .form-item {
@@ -107,10 +115,23 @@ a.section-link {
 }
 
 #ctools-content-selection .selection-hide {
-	display: none;
+  display: none;
 }
 
 #ctools-content-selection .content-item {
   width: 50%;
   float: left;	
+}
+
+/**
+ * Fieldset in vertical tabs.
+ */
+.vertical-tabs fieldset#edit-additional-settings-ds-page-title-options-page-option-contexts {
+  margin: 1em 0;
+  padding: 2.5em 0 0;
+  border: 1px solid #CCCCCC;
+}
+
+#edit-additional-settings-ds-page-title-options-page-option-contexts legend {
+  display: block;
 }

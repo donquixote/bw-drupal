@@ -1,5 +1,4 @@
 <?php
-// $Id: context_reaction_block.theme.inc,v 1.1.2.13.2.4 2010/09/16 21:01:30 yhahn Exp $
 
 /**
  * Block form.
@@ -28,8 +27,8 @@ function theme_context_block_regions_form($vars) {
 
   // Add draggable weights
   drupal_add_js('misc/tableheader.js');
-  drupal_add_js(drupal_get_path('module', 'context') .'/plugins/context_reaction_block.js');
-  drupal_add_css(drupal_get_path('module', 'context') .'/plugins/context_reaction_block.css');
+  drupal_add_js(drupal_get_path('module', 'context') . '/plugins/context_reaction_block.js');
+  drupal_add_css(drupal_get_path('module', 'context') . '/plugins/context_reaction_block.css');
 
   $output = '';
 
@@ -38,20 +37,20 @@ function theme_context_block_regions_form($vars) {
       'id' => "context-blockform-region-{$region}",
       'class' => array("context-blockform-region"),
     );
-    drupal_add_tabledrag($attr['id'], 'order', 'sibling', 'block-weight', NULL, NULL, FALSE);
+    drupal_add_tabledrag($attr['id'], 'order', 'sibling', 'tabledrag-hide', NULL, NULL, FALSE);
     $rows = array();
     foreach (element_children($form[$region]) as $id) {
-      $form[$region][$id]['weight']['#attributes'] = array('class' => array('block-weight'));
+      $form[$region][$id]['weight']['#attributes'] = array('class' => array('tabledrag-hide'));
       $label = $form[$region][$id]['#value'];
-      $remove = l('X', $_GET['q'], array('fragment' => 'remove', 'attributes' => array('class' => array('remove'))));
+      $remove = l(t('X'), $_GET['q'], array('fragment' => 'remove', 'attributes' => array('class' => array('remove'))));
       $rows[] = array(
-        'data' => array($label . drupal_render($form[$region][$id]['weight']), $remove),
+        'data' => array($label, drupal_render($form[$region][$id]['weight']), $remove),
         'class' => array('draggable'),
         'id' => $id,
       );
     }
     $output .= "<div class='label context-blockform-regionlabel-{$region}'>";
-    $output .= l('+ '. t('Add'), $_GET['q'], array('fragment' => $region, 'attributes' => array('class' => array('add-block'))));
+    $output .= l(t('+') . ' ' . t('Add'), $_GET['q'], array('fragment' => $region, 'attributes' => array('class' => array('add-block'))));
     $output .= $form[$region]['#title'];
     $output .= "</div>";
     $output .= theme('table', array('rows' => $rows, 'attributes' => $attr));
@@ -73,7 +72,7 @@ function theme_context_block_script_placeholder($text = '') {
 function template_preprocess_context_block_browser(&$vars) {
   $categories = array(
     '#type' => 'select',
-    '#options' => array(0 => '<'. t('Choose a category') .'>'),
+    '#options' => array(0 => '<' . t('Choose a category') . '>'),
     '#attributes' => array('class' => array('context-block-browser-categories')),
     '#value' => 0,
     '#size' => 1,
@@ -86,11 +85,15 @@ function template_preprocess_context_block_browser(&$vars) {
   $blocks = array();
   // Group blocks by module.
   foreach ($vars['blocks'] as $block) {
-    if (!isset($categories[$block->module])) {
+    $group = isset($block->context_group) ? $block->context_group : $block->module;
+    // Normalize the $group, borrowed from drupal_html_id
+    $group = strtr(drupal_strtolower($group), array(' ' => '-', '_' => '-', '[' => '-', ']' => ''));
+    if (!isset($categories[$group])) {
       $info = system_get_info('module', $block->module);
-      $categories['#options'][$block->module] = !empty($info['name']) ? $info['name'] : $block->module;
+      $title = isset($block->context_group) ? $block->context_group : (!empty($info['name']) ? $info['name'] : $block->module);
+      $categories['#options'][$group] = $title;
     }
-    $blocks[$block->module][$block->bid] = $block; // Don't call theme('context_block_browser_item') to allow others to alter.
+    $blocks[$group][$block->bid] = $block; // Don't call theme('context_block_browser_item') to allow others to alter.
   }
   $vars['categories'] = $categories; // Don't call theme('select') here to allow further preprocesses to alter the element.
   $vars['blocks'] = $blocks;

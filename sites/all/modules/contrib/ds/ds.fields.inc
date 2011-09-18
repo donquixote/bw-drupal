@@ -69,6 +69,8 @@ function ds_field_human_name($type) {
       return t('Block field');
     case DS_FIELD_TYPE_CTOOLS:
       return t('Dynamic field');
+    case DS_FIELD_TYPE_PREPROCESS:
+      return t('Preprocess field');
   }
 
   // Fallback
@@ -95,6 +97,10 @@ function ds_custom_manage($field_key = '') {
 
       case DS_FIELD_TYPE_CTOOLS:
         $redirect = 'admin/structure/ds/fields/manage_ctools/' . $field_key;
+        break;
+
+      case DS_FIELD_TYPE_PREPROCESS:
+        $redirect = 'admin/structure/ds/fields/manage_preprocess/' . $field_key;
         break;
 
       default:
@@ -300,6 +306,26 @@ function ds_ctools_field_form_validate($form, &$form_state) {
 }
 
 /**
+ * Manage a Preprocess field.
+ */
+function ds_edit_preprocess_field_form($form, &$form_state, $ctools_field = '') {
+  $custom_field = ds_shared_form($form, $ctools_field);
+  $form['info'] = array(
+    '#markup' => t('The machine name of this field must reflect the key in the variables, e.g. "submitted".'),
+    '#weight' => -10,
+  );
+  $form['#validate'][] = 'ds_preprocess_field_form_validate';
+  return $form;
+}
+
+/**
+ * CTools field form validation.
+ */
+function ds_preprocess_field_form_validate($form, &$form_state) {
+  $form_state['field']->field_type = DS_FIELD_TYPE_PREPROCESS;
+}
+
+/**
  * Manage a custom block.
  */
 function ds_edit_block_field_form($form, &$form_state, $custom_block = '') {
@@ -326,11 +352,11 @@ function ds_edit_block_field_form($form, &$form_state, $custom_block = '') {
   $form['block_identity']['block_render'] = array(
     '#type' => 'select',
     '#options' => array(
-      DS_BLOCK_TEMPLATE => t('Render through block template'),
+      DS_BLOCK_TEMPLATE => t('Default'),
       DS_BLOCK_TITLE_CONTENT => t('Show block title + content'),
       DS_BLOCK_CONTENT => t('Show only block content'),
     ),
-    '#title' => t('Block render'),
+    '#title' => t('Layout'),
     '#required' => TRUE,
     '#default_value' => isset($custom_block->properties['block_render']) ? $custom_block->properties['block_render'] : '',
   );

@@ -64,44 +64,43 @@ $.fn.dsCtoolsContentConfiguration = function (configuration) {
  * Field template.
  */
 Drupal.behaviors.settingsToggle = {
-  attach: function (context) {  
-
-    // Remove click from link.
-    $('.ft-link').click(function(e) {
+  attach: function (context) {
+        
+    // Bind on click.
+    $(context).find('#field-display-overview').find('.ft-link').once('ds-ft').bind('click', function(e) {
+      
       e.preventDefault();
-    });
+      
+      var fieldTemplate = $(this).next();
+      
+      // Bind update button.
+      fieldTemplate.find('.ft-update').click(function() {
+  
+        // Close the settings.
+        var settings = $(this).parents('.field-template');
+        settings.hide();
+        $(this).parents('tr').removeClass('field-formatter-settings-editing');
+  
+        // Check the label.
+        var row = $(this).parents('tr');
+        var label = $('.label-change', settings).val();
+        var original = $('.original-label', row).val();
+        if (label != '') {
+          new_label = label + ' (Original: ' + original + ')<input type="hidden" class="original-label" value="' + original + '">';
+          $('.field-label-row', row).html(new_label);
+        }
+        else {
+          new_label = original + '<input type="hidden" class="original-label" value="' + original + '">';
+          $('.field-label-row', row).html(new_label);
+        }
+        return false;
+      });      
 
-    // Bind update button.
-    $('#field-display-overview .ft-update').click(function() {
-
-      // Close the settings.
-      var settings = $(this).parents('.field-template');
-      settings.hide();
-      $(this).parents('tr').removeClass('field-formatter-settings-editing');
-
-      // Check the label.
-      var row = $(this).parents('tr');
-      var label = $('.label-change', settings).val();
-      var original = $('.original-label', row).val();
-      if (label != '') {
-        new_label = label + ' (Original: ' + original + ')<input type="hidden" class="original-label" value="' + original + '">';
-        $('.field-label-row', row).html(new_label);
-      }
-      else {
-        new_label = original + '<input type="hidden" class="original-label" value="' + original + '">';
-        $('.field-label-row', row).html(new_label);
-      }
-      return false;
-    });
-
-    // Bind on field template select button.
-    $('.ds-extras-field-template').change(function() {
-      ds_show_expert_settings(this);
-    });
-
-    // Add click event to field settings link.
-    $('.ft-link').click(function() {
-
+      // Bind on field template select button.
+      fieldTemplate.find('.ds-extras-field-template').change(function() {
+        ds_show_expert_settings(this);
+      })
+    
       $(this).parents('tr').siblings().removeClass('field-formatter-settings-editing');
       $(this).parents('tr').addClass('field-formatter-settings-editing');
 
@@ -151,6 +150,14 @@ Drupal.behaviors.settingsToggle = {
         $('.ow, .fis, .fi', field).hide();
       }
 
+      // Colon.
+      if (ft == 'theme_field' || ft == 'theme_ds_field_reset') {
+        $('.colon-checkbox', field).parent().hide();
+      }
+      else if ($('.lb .form-item:nth-child(1)', field).is(':visible')) {
+        $('.colon-checkbox', field).parent().show();        
+      }
+      
       // Styles.
       if (ft != 'theme_ds_field_expert' && ft != 'theme_ds_field_reset') {
         $('.field-styles', field).show();
@@ -159,8 +166,25 @@ Drupal.behaviors.settingsToggle = {
         $('.field-styles', field).hide();
       }
     }
+    
+    $('.label-change').change(function() {
+      var field = $(this).parents('tr');
+      if ($('.field-template', field).length > 0) {
+        ft = $('.ds-extras-field-template', field).val();
+        if (ft == 'theme_field' || ft == 'theme_ds_field_reset') {
+          $('.colon-checkbox', field).parent().hide();
+        }
+      }
+    });
   }
 };
+
+/**
+ * Save the page after saving a new field.
+ */
+$.fn.dsRefreshDisplayTable = function () {
+  $('#edit-submit').click();
+}
 
 /**
  * Row handlers for the 'Manage display' screen.
@@ -207,16 +231,23 @@ Drupal.fieldUIDisplayOverview.ds.prototype = {
    */
   regionChange: function (region) {
 
-    // Replace dashes with underscores.
-    region = region.replace('-', '_');
-    
-    this.$regionSelect.val(region);    
+     // Replace dashes with underscores.
+     region = region.replace('-', '_');
 
-    var refreshRows = {};
-    refreshRows[this.name] = this.$regionSelect.get(0);
+     // Set the region of the select list.
+     this.$regionSelect.val(region);
 
-    return refreshRows;
-  },
+     // Prepare rows to be refreshed in the form.
+     var refreshRows = {};
+     refreshRows[this.name] = this.$regionSelect.get(0);
+
+     // If a row is handled by field_group module, loop through the children.
+     if ($(this.row).hasClass('field-group') && $.isFunction(Drupal.fieldUIDisplayOverview.group.prototype.regionChangeFields)) {
+       Drupal.fieldUIDisplayOverview.group.prototype.regionChangeFields(region, this, refreshRows);
+     }
+
+     return refreshRows;
+  }
 };
 
 })(jQuery);

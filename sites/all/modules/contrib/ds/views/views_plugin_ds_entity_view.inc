@@ -57,7 +57,7 @@ class views_plugin_ds_entity_view extends views_plugin_row {
       $view_mode_options[$key] = $view_mode['label'];
     }
 
-    // Default view mode.
+    // Default view mode & load comments.
     $form['default_fieldset'] = array(
       '#type' => 'fieldset',
       '#title' => t('Default view mode'),
@@ -70,6 +70,14 @@ class views_plugin_ds_entity_view extends views_plugin_row {
       '#options' => $view_mode_options,
       '#description' => t('Select the default view mode for this view.')
     );
+    if ($entity_type == 'node') {
+      $form['default_fieldset']['load_comments'] = array(
+        '#title' => t('Comments'),
+        '#type' => 'checkbox',
+        '#description' => t('Load comments for every node to display.'),
+        '#default_value' => isset($this->options['load_comments']) ? $this->options['load_comments'] : FALSE,
+      );
+    }
 
     // Changing view modes.
     $form['alternating_fieldset'] = array(
@@ -164,7 +172,7 @@ class views_plugin_ds_entity_view extends views_plugin_row {
     $form['advanced_fieldset']['advanced'] = array(
       '#type' => 'checkbox',
       '#title' => t('Use the advanced view mode selector'),
-      '#description' => t('This gives you the opportunity to have full control of a list for really advanced features.<br /> There is no UI for this, you need to create a function named like this: <strong><em>ds_views_row_adv_@VIEWSNAME($entity, $view_mode)</em></strong>.<br />See <a href="http://drupal.org/node/697320#ds_views_row_adv_VIEWSNAME">http://drupal.org/node/697320#ds_views_row_adv_VIEWSNAME</a> for an example.', array('@VIEWSNAME' => $this->view->name)),
+      '#description' => t('This gives you the opportunity to have full control of a list for really advanced features.<br /> There is no UI for this, you need to create a function named like this: <strong><em>ds_views_row_adv_@VIEWSNAME($entity, $view_mode, $load_comments)</em></strong>.<br />See <a href="http://drupal.org/node/697320#ds_views_row_adv_VIEWSNAME">http://drupal.org/node/697320#ds_views_row_adv_VIEWSNAME</a> for an example.', array('@VIEWSNAME' => $this->view->name)),
       '#default_value' => $this->options['advanced'],
     );
   }
@@ -182,6 +190,7 @@ class views_plugin_ds_entity_view extends views_plugin_row {
    * Reset all fieldsets except for changing.
    */
   function options_submit($form, &$form_state) {
+    $form_state['values']['row_options']['load_comments'] = $form_state['values']['row_options']['default_fieldset']['load_comments'];
     $form_state['values']['row_options']['view_mode'] = $form_state['values']['row_options']['default_fieldset']['view_mode'];
     $form_state['values']['row_options']['alternating'] = $form_state['values']['row_options']['alternating_fieldset']['alternating'];
     $form_state['values']['row_options']['grouping'] = $form_state['values']['row_options']['grouping_fieldset']['grouping'];
@@ -223,11 +232,14 @@ class views_plugin_ds_entity_view extends views_plugin_row {
    */
   function render($row) {
 
+    // Set a variable to indicate if comments need to be loaded or not.
+    $load_comments = isset($this->options['load_comments']) ? $this->options['load_comments'] : FALSE;
+
     // The advanced selector searches for a function called
     // ds_views_row_adv_VIEWSNAME. Return the row immediately.
     if ($this->options['advanced']) {
       $row_function = 'ds_views_row_adv_' . $this->view->name;
-      return $row_function($this->entities[$row->{$this->field_alias}], $this->options['view_mode']);
+      return $row_function($this->entities[$row->{$this->field_alias}], $this->options['view_mode'], $load_comments);
     }
 
     // Keep a static group array.
@@ -245,16 +257,21 @@ class views_plugin_ds_entity_view extends views_plugin_row {
         $view_mode = $this->options['view_mode'];
       }
       else {
-        $view_mode = $this->options['alternating_fieldset']['item_' . $this->view->row_index];
+        $view_mode = isset($this->options['alternating_fieldset']['item_' . $this->view->row_index]) ? $this->options['alternating_fieldset']['item_' . $this->view->row_index] : $this->options['view_mode'];
       }
     }
 
     // Call the row render function.
-    $content = $this->ds_views_row_render_entity($view_mode, $row);
+    $content = $this->ds_views_row_render_entity($view_mode, $row, $load_comments);
 
     // Keep a static grouping for this view.
     if ($this->options['grouping']) {
-      $raw_group_value = $row->{$this->options['grouping_fieldset']['group_field']};
+      // Note, the keys in the $row object are cut of at 60 chars.
+      $group_field = $this->options['grouping_fieldset']['group_field'];
+      if (strlen($group_field) > 60) {
+        $group_field = substr($group_field, 0, 60);
+      }
+      $raw_group_value = isset($row->{$group_field}) ? $row->{$group_field} : '';
       if (!isset($grouping[$view_name][$raw_group_value])) {
         $group_value = $raw_group_value;
         // Special function to format the heading value.
@@ -292,9 +309,9 @@ class views_plugin_ds_entity_view extends views_plugin_row {
    * @return $content
    *   An entity view rendered as HTML
    */
-  function ds_views_row_render_entity($view_mode, $row) {
+  function ds_views_row_render_entity($view_mode, $row, $load_comments) {
     $row_function = 'ds_views_row_render_' . $this->base_table;
-    $content = $row_function($this->entities[$row->{$this->field_alias}], $view_mode);
+    $content = $row_function($this->entities[$row->{$this->field_alias}], $view_mode, $load_comments);
     return $content;
   }
 }
@@ -302,14 +319,18 @@ class views_plugin_ds_entity_view extends views_plugin_row {
 /**
  * Render the node through the entity plugin.
  */
-function ds_views_row_render_node($entity, $view_mode) {
-  return drupal_render(node_view($entity, $view_mode));
+function ds_views_row_render_node($entity, $view_mode, $load_comments) {
+  $node_display = node_view($entity, $view_mode);
+  if ($load_comments) {
+    $node_display['comments'] = comment_node_page_additions($entity);
+  }
+  return drupal_render($node_display);
 }
 
 /**
  * Render the comment through the entity plugin.
  */
-function ds_views_row_render_comment($entity, $view_mode) {
+function ds_views_row_render_comment($entity, $view_mode, $load_comments) {
   $node = node_load($entity->nid);
   return drupal_render(comment_view($entity, $node, $view_mode));
 }
@@ -317,28 +338,28 @@ function ds_views_row_render_comment($entity, $view_mode) {
 /**
  * Render the user through the entity plugin.
  */
-function ds_views_row_render_users($entity, $view_mode) {
+function ds_views_row_render_users($entity, $view_mode, $load_comments) {
   return drupal_render(user_view($entity, $view_mode));
 }
 
 /**
  * Render the taxonomy term through the entity plugin.
  */
-function ds_views_row_render_taxonomy_term_data($entity, $view_mode) {
+function ds_views_row_render_taxonomy_term_data($entity, $view_mode, $load_comments) {
   return drupal_render(taxonomy_term_view($entity, $view_mode));
 }
 
 /**
  * Render the file through the entity plugin.
  */
-function ds_views_row_render_file_managed($entity, $view_mode) {
+function ds_views_row_render_file_managed($entity, $view_mode, $load_comments) {
   return drupal_render(file_view($entity, $view_mode));
 }
 
 /**
  * Render the micro through the entity plugin.
  */
-function ds_views_row_render_micro($entity, $view_mode) {
+function ds_views_row_render_micro($entity, $view_mode, $load_comments) {
   return drupal_render(micro_view($entity, $view_mode));
 }
 

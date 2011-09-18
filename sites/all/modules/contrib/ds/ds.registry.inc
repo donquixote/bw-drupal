@@ -14,7 +14,7 @@ function _ds_menu() {
   // Start page of Display Suite.
   $items['admin/structure/ds'] = array(
     'title' => 'Display suite',
-    'description' => 'Manage configuration for Display Suite.',
+    'description' => 'Manage configuration for Display suite like fields, view modes etc.',
     'page callback' => 'system_admin_menu_block_page',
     'access arguments' => array('admin_display_suite'),
     'file' => 'system.admin.inc',
@@ -119,7 +119,7 @@ function _ds_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ds_edit_custom_field_form'),
     'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_view_modes'),
+    'access arguments' => array('admin_fields'),
     'type' => MENU_LOCAL_ACTION,
     'weight' => 0,
   );
@@ -129,7 +129,7 @@ function _ds_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ds_edit_ctools_field_form'),
     'file' => 'ds.fields.inc',
-    'access arguments' => array('admin_view_modes'),
+    'access arguments' => array('admin_fields'),
     'type' => MENU_LOCAL_ACTION,
     'weight' => 1,
   );
@@ -139,6 +139,16 @@ function _ds_menu() {
     'file' => 'ds.field_ui.inc',
     'access arguments' => array('admin_display_suite'),
     'type' => MENU_CALLBACK,
+  );
+  $items['admin/structure/ds/fields/manage_preprocess'] = array(
+    'title' => 'Add a preprocess field',
+    'description' => 'Manage a preprocess field',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('ds_edit_preprocess_field_form'),
+    'file' => 'ds.fields.inc',
+    'access arguments' => array('admin_fields'),
+    'type' => MENU_LOCAL_ACTION,
+    'weight' => 2,
   );
   $items['admin/structure/ds/fields/delete'] = array(
     'title' => 'Delete a field',
@@ -166,11 +176,21 @@ function _ds_menu() {
       'page callback' => 'drupal_get_form',
       'page arguments' => array('ds_edit_block_field_form'),
       'file' => 'ds.fields.inc',
-      'access arguments' => array('admin_view_modes'),
+      'access arguments' => array('admin_fields'),
       'type' => MENU_LOCAL_ACTION,
-      'weight' => 2,
+      'weight' => 3,
     );
   }
+
+  // CTools Modal add field.
+  $items['admin/structure/ds/%ctools_js/add_field/%'] = array(
+    'title' => 'Add field',
+    'page callback' => 'ds_ajax_add_field',
+    'page arguments' => array(3, 5),
+    'access arguments' => array('admin_fields'),
+    'file' => 'ds.field_ui.inc',
+    'type' => MENU_CALLBACK,
+  );
 
   return $items;
 }
@@ -198,6 +218,36 @@ function _ds_theme() {
   }
 
   return $theme_functions;
+}
+
+/**
+ * Implements hook_features_api().
+ */
+function _ds_features_api() {
+  static $api = FALSE;
+
+  if (!$api) {
+    module_load_include('inc', 'features', 'includes/features.ctools');
+    $api = ctools_component_features_api('ds');
+    foreach ($api as $key => $value) {
+      switch ($key) {
+        case 'ds_field_settings':
+          $api[$key]['name'] = 'Display suite field settings';
+          break;
+        case 'ds_layout_settings':
+          $api[$key]['name'] = 'Display suite layout settings';
+          break;
+        case 'ds_view_modes':
+          $api[$key]['name'] = 'Display suite view modes';
+          break;
+        case 'ds_fields':
+          $api[$key]['name'] = 'Display suite fields';
+          break;
+      }
+    }
+  }
+
+  return $api;
 }
 
 /**
@@ -246,7 +296,10 @@ function _ds_entity_info_alter(&$entity_info) {
   $ds_layouts = ds_get_layout_info();
   $ds_layout_settings = ctools_export_crud_load_all('ds_layout_settings');
   foreach ($ds_layout_settings as $row) {
-    $layout = $ds_layouts[$row->layout];
+    $layout = array();
+    if (!isset($row->settings['ds_panels'])) {
+      $layout = $ds_layouts[$row->layout];
+    }
     $layout['layout'] = $row->layout;
     $layout['settings'] = $row->settings;
     $entity_info[$row->entity_type]['bundles'][$row->bundle]['layouts'][$row->view_mode] = $layout;
@@ -432,7 +485,7 @@ function _ds_ds_layout_info() {
 }
 
 function _ds_layouts_scan_theme($theme, &$layouts) {
-  $theme_layouts = file_scan_directory(drupal_get_path('theme', $theme) . '/ds_layouts', '/inc/');
+  $theme_layouts = file_scan_directory(drupal_get_path('theme', $theme) . '/ds_layouts', '/inc$/');
   foreach ($theme_layouts as $file => $values) {
     include_once(DRUPAL_ROOT . '/' . $file);
     $function = 'ds_' . $values->name;

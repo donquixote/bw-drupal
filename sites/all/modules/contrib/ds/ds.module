@@ -147,6 +147,14 @@ function ds_module_implements_alter(&$implementations, $hook) {
 }
 
 /**
+ * Implements hook_features_api().
+ */
+function ds_features_api() {
+  module_load_include('inc', 'ds', 'ds.registry');
+  return _ds_features_api();
+}
+
+/**
  * Implements hook_filter_info().
  */
 function ds_filter_info() {
@@ -223,6 +231,7 @@ function ds_get_layout_info() {
  *   The name of the view mode.
  * @param $fallback
  *   Whether to fallback to default or not.
+ *
  * @return $layout
  *   Array of layout variables for the regions.
  */
@@ -419,7 +428,6 @@ function ds_get_field_value($key, $field, $entity, $entity_type, $bundle, $view_
  * Implements hook_field_attach_view_alter().
  */
 function ds_field_attach_view_alter(&$build, $context) {
-
   static $loaded_css = array();
 
   // If views and core doesn't send information along on the entity,
@@ -428,11 +436,30 @@ function ds_field_attach_view_alter(&$build, $context) {
     return;
   }
 
+  // If no layout is configured, stop as well.
+  if (!ds_get_layout($build['#entity_type'], $build['#bundle'], $context['view_mode'])) {
+    return;
+  }
+
   $entity_type = $build['#entity_type'];
   $bundle = $build['#bundle'];
   $view_mode = $context['view_mode'];
   $entity = $context['entity'];
+  $layout = ds_get_layout($build['#entity_type'], $build['#bundle'], $context['view_mode']);
 
+  // Check on field limit.
+  if (isset($layout['settings']['limit'])) {
+    foreach ($layout['settings']['limit'] as $field => $limit) {
+      if (isset($build[$field])) {
+        $count = count($build[$field]['#items']);
+        if ($count > $limit) {
+          $build[$field]['#items'] = array_slice($build[$field]['#items'], 0, $limit);
+        }
+      }
+    }
+  }
+
+  // Add Display Suite display fields.
   $fields = ds_get_fields($entity_type);
   $field_values = ds_get_field_settings($entity_type, $bundle, $view_mode);
 
@@ -475,8 +502,14 @@ function ds_field_attach_view_alter(&$build, $context) {
     }
   }
 
-  // Add path to css file for this layout.
+  // Add path to css file for this layout and disable block regions if necessary.
   if (($layout = ds_get_layout($entity_type, $bundle, $view_mode)) && isset($layout['css']) && !isset($loaded_css[$layout['path'] . '/' . $layout['layout'] . '.css'])) {
+
+    // Disable blocks.
+    if (isset($layout['settings']['hide_sidebars']) && $layout['settings']['hide_sidebars']) {
+      ctools_set_no_blocks();
+    }
+
     // Register css file.
     $loaded_css[$layout['path'] . '/' . $layout['layout'] . '.css'] = TRUE;
     // Add css file.
@@ -495,6 +528,11 @@ function ds_field_attach_view_alter(&$build, $context) {
 function ds_entity_variables(&$vars) {
   if (isset($vars['elements']) && $layout = ds_get_layout($vars['elements']['#entity_type'], $vars['elements']['#bundle'], $vars['elements']['#view_mode'])) {
 
+    // Do not render panel layouts.
+    if (!empty($layout['settings']['ds_panels'])) {
+      return;
+    }
+
     $render_container = 'content';
     // User uses user_profile as container.
     if ($vars['elements']['#entity_type'] == 'user') {
@@ -502,8 +540,13 @@ function ds_entity_variables(&$vars) {
     }
 
     // Move any preprocess fields to render container.
-    if (isset($vars[$vars['elements']['#entity_type']]->preprocess_fields)) {
-      foreach ($vars[$vars['elements']['#entity_type']]->preprocess_fields as $key => $field) {
+    // Inconsitency in taxonomy term naming.
+    $object = $vars['elements']['#entity_type'];
+    if ($vars['elements']['#entity_type'] == 'taxonomy_term') {
+      $object = 'term';
+    }
+    if (isset($vars[$object]->preprocess_fields)) {
+      foreach ($vars[$object]->preprocess_fields as $key => $field) {
 
         // Process RDF if the module is enabled before moving preprocess fields.
         if (module_exists('rdf')) {
@@ -590,6 +633,7 @@ function ds_entity_variables(&$vars) {
  */
 function ds_render_region($content, $region, $layout) {
   $output = '';
+
   if (isset($layout['settings']['regions'][$region])) {
     foreach ($layout['settings']['regions'][$region] as $key => $field) {
       $output .= render($content[$field]);
@@ -638,6 +682,23 @@ function ds_php_eval($code, $entity) {
 }
 
 /**
+ * Create entity context.
+ */
+function ds_create_entity_context($entity_type, $entity, &$contexts, $context_arguments = array()) {
+  ctools_include('context');
+  if (empty($context_arguments)) {
+    $context_arguments = array(array(
+      'keyword' => $entity_type,
+      'identifier' => drupal_ucfirst($entity_type) . ' being viewed',
+      'id' => 1,
+      'name' => 'entity_id:' . $entity_type,
+      'settings' => array(),
+    ));
+  }
+  ctools_context_get_context_from_arguments($context_arguments, $contexts, array($entity));
+}
+
+/**
  * Render a code field.
  */
 function ds_render_code_field($field) {
@@ -676,17 +737,8 @@ function ds_render_ctools_field($field) {
     $entity_type = $field['entity_type'];
     $keywords = $arguments = $contexts = array();
 
-    // Pass entity in the context.
-    if (isset($conf['context'])) {
-      $context_arguments = array(array(
-        'keyword' => $entity_type,
-        'identifier' => drupal_ucfirst($entity_type) . ' being viewed',
-        'id' => 1,
-        'name' => 'entity_id:' . $entity_type,
-        'settings' => array(),
-      ));
-      ctools_context_get_context_from_arguments($context_arguments, $contexts, array($field['entity']));
-    }
+    // Create entity context.
+    ds_create_entity_context($entity_type, $field['entity'], $contexts);
 
     // Build the content.
     $data = ctools_content_render($type, $subtype, $conf, $keywords, $arguments, $contexts);
@@ -731,6 +783,10 @@ function ds_render_block_field($field) {
           $block->subject = $block_title == '<none>' ? '' : check_plain($block_title);
         }
         $elements = array('elements' => array('#block' => $block, '#children' => $block->content));
+        // Add contextual links
+        if (module_exists('contextual') && user_access('access contextual links')) {
+          $elements['elements'] += array('#contextual_links' => array('block' => array('admin/structure/block/manage', array($block->module, $block->delta))));
+        }
         return theme('block', $elements);
         break;
       case DS_BLOCK_TITLE_CONTENT:
@@ -778,11 +834,14 @@ function ds_render_field($field) {
     }
     $output = l($output, $path);
   }
+  else {
+    $output = check_plain($output);
+  }
 
   // Wrapper and class.
   if (!empty($settings['wrapper'])) {
-    $wrapper = $settings['wrapper'];
-    $class = (!empty($settings['class'])) ? ' class="' . $settings['class'] . '"' : '';
+    $wrapper = check_plain($settings['wrapper']);
+    $class = (!empty($settings['class'])) ? ' class="' . check_plain($settings['class']) . '"' : '';
     $output = '<' . $wrapper . $class . '>' . $output . '</' . $wrapper . '>';
   }
 

@@ -10,7 +10,7 @@
  */
 function ds_views_plugins() {
   $path = drupal_get_path('module', 'ds');
-  return array(
+  $views_plugins = array(
     'module' => 'ds',
     'row' => array(
       'ds' => array(
@@ -25,4 +25,21 @@ function ds_views_plugins() {
       ),
     ),
   );
+
+  if (module_exists('ds_extras') && variable_get('ds_extras_vd')) {
+    $views_plugins['row']['ds_fields'] = array(
+      'uses fields' => TRUE,
+      'title' => t('Display suite fields'),
+      'help' => t('Display fields through the Display suite module.'),
+      'handler' => 'views_plugin_ds_fields_view',
+      'path' => $path . '/views',
+      'theme' => 'ds_row_fields',
+      'theme path' => $path . '/views',
+      'theme file' => 'views_plugin_ds_fields_view.inc',
+      'uses options' => TRUE,
+      'type' => 'normal',
+    );
+  }
+
+  return $views_plugins;
 }

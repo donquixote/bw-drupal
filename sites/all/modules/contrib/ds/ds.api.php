@@ -278,6 +278,24 @@ function hook_ds_fields_info_alter(&$fields, $entity_type) {
 }
 
 /**
+ * Alter fields defined by Display Suite just before they get
+ * rendered on the Field UI. Use this hook to inject fields
+ * which you can't alter with hook_ds_fields_info_alter().
+ *
+ * Use this in edge cases, see ds_extras_ds_fields_ui_alter()
+ * which adds fields chosen in Views UI. This also runs
+ * when a layout has been chosen.
+ *
+ * @param $fields
+ *   An array with fields which can be altered just before they get cached.
+ * @param $entity_type
+ *   The name of the entity type.
+ */
+function hook_ds_fields_ui_alter(&$fields, $context) {
+  $fields['title'] = t('Extra title');
+}
+
+/**
  * Define theme functions for fields.
  *
  * This only is necessary when you're using the field settings
@@ -461,6 +479,15 @@ function hook_ds_label_options_alter(&$field_label_options) {
   }
 
  */
+
+/**
+ * Return fields to be added when creating a new display with the panels editor.
+ */
+function hook_ds_panels_default_fields($entity_type, $bundle, $view_mode) {
+  // Get the fields from Field API.
+  $fields = field_info_instances($entity_type, $bundle);
+  return $fields;
+}
 
 /**
  * Theme an entity coming from the views entity plugin.

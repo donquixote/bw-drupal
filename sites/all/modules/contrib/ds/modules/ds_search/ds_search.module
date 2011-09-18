@@ -29,6 +29,7 @@ function ds_search_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('ds_search_settings'),
     'access arguments' => array('admin_display_suite'),
+    'file' => 'ds_search.admin.inc',
   );
 
   return $items;
@@ -38,7 +39,13 @@ function ds_search_menu() {
  * Implements hook_theme().
  */
 function ds_search_theme() {
-  return array('ds_search_page' => array());
+  return array(
+    'ds_search_page' => array(),
+    'ds_search_group_by_type_settings' => array(
+      'render element' => 'element',
+      'file' => 'ds_search.admin.inc',
+    ),
+  );
 }
 
 /**
@@ -54,149 +61,11 @@ function theme_ds_search_page($build) {
       $build['search_title']['#markup'] = '<h2>' . t('Your search yielded no results') . '</h2>';
       unset($build['search_extra']);
     }
+
     $build['search_empty'] = array('#markup' => t('<ul><li>Check if your spelling is correct.</li><li>Remove quotes around phrases to search for each word individually. <em>bike shed</em> will often show more results than <em>&quot;bike shed&quot;</em>.</li><li>Consider loosening your query with <em>OR</em>. <em>bike OR shed</em> will often show more results than <em>bike shed</em>.</li></ul>'));
   }
 
   return $build;
-}
-
-/**
- * Menu callback: Display Suite search settings.
- */
-function ds_search_settings($form, $form_state) {
-
-  $form['general'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('General'),
-  );
-
-  $engine_options = array();
-  foreach (module_implements('search_info') as $module) {
-    if ($module != 'ds_search' && $module != 'user') {
-      $engine_options[$module] = drupal_ucfirst(str_replace('_', ' ', $module));
-    }
-  }
-
-  $form['general']['ds_search_type'] = array(
-    '#type' => 'select',
-    '#title' => t('Search engine'),
-    '#description' => t('Select the search engine as the query backend.'),
-    '#options' => $engine_options,
-    '#default_value' => variable_get('ds_search_type', 'node'),
-  );
-
-  $entity_view_modes = ds_entity_view_modes('node');
-  foreach ($entity_view_modes as $key => $view_mode) {
-    $view_mode_options[$key] = $view_mode['label'];
-  }
-  $form['general']['ds_search_view_mode'] = array(
-    '#type' => 'select',
-    '#title' => t('View mode'),
-    '#description' => 'Select another view mode in favor of the default search view mode.',
-    '#default_value' => variable_get('ds_search_view_mode', 'search_result'),
-    '#options' => $view_mode_options,
-  );
-
-  $form['general']['ds_search_variables'] = array(
-    '#type' => 'radios',
-    '#options' => array(
-      'none' => t('None'),
-      'search_totals' => t('Total results'),
-      'search_totals_plus_keywords' => t('Total results + keywords'),
-      'search_totals_from_to_end' => t('Totals + start to end')
-    ),
-    '#title' => t('Extra variables'),
-    '#description' => t('Choose an extra variable to display on the results screen.'),
-    '#default_value' => variable_get('ds_search_variables', 'none'),
-  );
-
-  $form['general']['ds_search_show_title'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show title'),
-    '#description' => t('Toggle this checkbox if you want to display the "Search results" title.'),
-    '#default_value' => variable_get('ds_search_show_title', FALSE),
-  );
-
-  $form['general']['ds_search_language'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Language'),
-    '#description' => t('Toggle this checkbox if you want only want to search in the language the site is currently in. Enable this if you have at least 2 languages.'),
-    '#default_value' => variable_get('ds_search_language', FALSE),
-  );
-
-  $form['general']['ds_search_highlight'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Highlight search word'),
-    '#description' => t('Use jQuery to highlight the word in the results.'),
-    '#default_value' => variable_get('ds_search_highlight', FALSE),
-  );
-
-  $form['general']['ds_search_highlight_selector'] = array(
-    '#type' => 'textfield',
-    '#title' => t('HTML selector'),
-    '#description' => t('Enter the css selector, if not sure, leave this by default.'),
-    '#default_value' => variable_get('ds_search_highlight_selector', '.search-result'),
-  );
-
-  $form['node'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('Drupal core'),
-    '#description' => t('These settings are only applicable if the search engine is set to Node.'),
-    '#states' => array(
-      'visible' => array(
-        'select[name="ds_search_type"]' => array('value' => 'node'),
-      ),
-    ),
-  );
-
-  $form['node']['ds_search_node_form_alter'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Form alter'),
-    '#description' => t('Toggle this checkbox if you want to run the node form alter function on the basic search form. This will enable the advanced search form.'),
-    '#default_value' => variable_get('ds_search_node_form_alter', FALSE),
-  );
-
-  if (module_exists('apachesolr')) {
-
-    $form['apachesolr_search'] = array(
-      '#type' => 'fieldset',
-      '#title' => t('Apache Solr'),
-      '#description' => t('These settings are only applicable if the search engine is set to Apache Solr.'),
-      '#states' => array(
-        'visible' => array(
-          'select[name="ds_search_type"]' => array('value' => 'apachesolr_search'),
-        ),
-      ),
-    );
-
-    $form['apachesolr_search']['ds_search_apachesolr_form_alter'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Form alter'),
-      '#description' => t('Toggle this checkbox if you want to run the Apache Solr form alter function on the basic search form. This will enable features like "Did you mean?" and the "Retain filter" checkbox.'),
-      '#default_value' => variable_get('ds_search_apachesolr_form_alter', FALSE),
-    );
-
-    $form['apachesolr_search']['ds_search_apachesolr_hide_current_filters'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide Retain filters'),
-      '#description' => t('Toggle this checkbox if you want to hide the "Retain current filters" checkbox.'),
-      '#default_value' => variable_get('ds_search_apachesolr_hide_current_filters', FALSE),
-    );
-  }
-
-  $form['user'] = array(
-    '#type' => 'fieldset',
-    '#title' => t('User search'),
-  );
-
-  $form['user']['ds_user_override_search_page'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Override user search page'),
-    '#description' => t('Toggle this checkbox if you want Display suite to render user search results.'),
-    '#default_value' => variable_get('ds_user_override_search_page', FALSE),
-  );
-
-  return system_settings_form($form);
 }
 
 /**
@@ -234,6 +103,15 @@ function ds_search_conditions() {
   // Needed for Apache Solr.
   if (isset($_GET['filters']) && trim($_GET['filters'])) {
     $conditions['filters'] = trim($_GET['filters']);
+  }
+
+  // We may also have filters added by facet API module. The 'f'
+  // is determined by constant FacetapiAdapter::FILTER_KEY. Hard
+  // coded here to avoid extra class loading.
+  if (!empty($_GET['f']) && is_array($_GET['f'])) {
+    if (module_exists('facetapi')) {
+      $conditions['f'] = $_GET['f'];
+    }
   }
 
   if (variable_get('apachesolr_search_browse', 'browse') != 'none') {
@@ -307,11 +185,74 @@ function ds_search_invoke_node_search($hook) {
  * Implements hook_search_page().
  */
 function ds_search_search_page($results) {
+
+  // Build shared variables.
   $build = array('#type' => 'node');
   ds_build_shared_page_variables($build);
 
-  foreach ($results as $result) {
-    $build['search_results'][$result->nid] = node_view($result, variable_get('ds_search_view_mode', 'search_result'));
+  // Build nodes.
+  $render_nodes = node_view_multiple($results, variable_get('ds_search_view_mode', 'search_result'));
+  $build['search_results'] = $render_nodes['nodes'];
+  unset($build['search_results']['#sorted']);
+
+  // Group by type.
+  if (variable_get('ds_search_group_by_type') && variable_get('ds_search_group_by_type_settings') && !empty($build['search_results'])) {
+
+    $settings = variable_get('ds_search_group_by_type_settings');
+    foreach ($build['search_results'] as $id => $result) {
+      if ($settings[$result['#bundle']]['status']) {
+
+        // Type group.
+        if (!isset($build['search_results'][$result['#bundle']])) {
+          $type = $settings[$result['#bundle']]['wrapper'];
+          $title = check_plain(t($settings[$result['#bundle']]['label']));
+          $class = 'group-result group-result-' . strtr($result['#bundle'], '_', '-');
+          $build['search_results'][$result['#bundle']] = array(
+            '#type' => $type,
+            '#title' => $title,
+            '#weight' => $settings[$result['#bundle']]['weight'],
+            '#attributes' => array(
+              'class' => array($class),
+            ),
+          );
+
+          if ($type == 'markup') {
+            $build['search_results'][$result['#bundle']]['#prefix'] = '<div class="' . $class . '">' . ((!empty($title)) ? ' <h2>' . $title . '</h2>' : '');
+            $build['search_results'][$result['#bundle']]['#suffix'] = '</div>';
+          }
+        }
+
+        // Move result into the wrapper of its type and unset previous.
+        $build['search_results'][$result['#bundle']][$id] = $result;
+        unset($build['search_results'][$id]);
+      }
+      else {
+
+        // Other group.
+        if (!isset($build['search_results']['ds-other'])) {
+          $title = check_plain(t(variable_get('ds_search_group_by_type_other', 'Other')));
+          $type = variable_get('ds_search_group_by_type_other_wrapper', 'fieldset');
+          $class = 'group-result group-result-other';
+          $build['search_results']['ds-other'] = array(
+            '#type' => $type,
+            '#title' => $title,
+            '#weight' => 100,
+            '#attributes' => array(
+              'class' => array($class),
+            ),
+          );
+
+          if ($type == 'markup') {
+            $build['search_results']['ds-other']['#prefix'] = '<div class="' . $class . '">' . ((!empty($title)) ? '<h2>' . $title . '</h2>' : '');
+            $build['search_results']['ds-other']['#suffix'] = '</div>';
+          }
+        }
+
+        // Move result into other wrapper and unset previous.
+        $build['search_results']['ds-other'][$id] = $result;
+        unset($build['search_results'][$id]);
+      }
+    }
   }
 
   return theme('ds_search_page', $build);
@@ -351,7 +292,7 @@ if (variable_get('ds_user_override_search_page', FALSE)) {
       if (!empty($uids)) {
         $accounts = user_load_multiple($uids);
         foreach ($accounts as $account) {
-          $build['results'][$account->uid] = user_view($account, variable_get('ds_search_view_mode', 'search_result'));
+          $build['search_results'][$account->uid] = user_view($account, variable_get('ds_search_view_mode', 'search_result'));
         }
       }
     }
@@ -390,7 +331,7 @@ function ds_build_shared_page_variables(&$build) {
     drupal_add_js(drupal_get_path('module', 'ds_search') . '/ds_search.js');
     drupal_add_js(array(
       'ds_search' => array(
-        'selector' => check_plain(variable_get('ds_search_highlight_selector', '.search-result')),
+        'selector' => check_plain(variable_get('ds_search_highlight_selector', '.view-mode-search_result')),
         'search' => check_plain(arg(2)),
       ),
     ), 'setting');
@@ -535,6 +476,12 @@ function node_ds_search_execute($keys = NULL, $conditions = NULL) {
 function apachesolr_search_ds_search_execute($keys = NULL, $conditions = NULL) {
   $find = apachesolr_search_search_execute($keys, $conditions);
   $results = array();
+
+  // Make sure apachesolr_search_browse is not rendered.
+  if (isset($find['apachesolr_search_browse'])) {
+    unset($find['apachesolr_search_browse']);
+  }
+
   foreach ($find as $item) {
     $node = @unserialize(urldecode($item['fields']['tm_node'][0]));
     if (!isset($node->nid)) {
@@ -542,5 +489,6 @@ function apachesolr_search_ds_search_execute($keys = NULL, $conditions = NULL) {
     }
     $results[$item['node']->entity_id] = $node;
   }
+
   return $results;
 }

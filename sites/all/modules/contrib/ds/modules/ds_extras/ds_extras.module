@@ -22,6 +22,14 @@ function ds_extras_entity_info() {
 }
 
 /**
+ * Implements hook_entity_info_alter().
+ */
+function ds_extras_entity_info_alter(&$entity_info) {
+  module_load_include('inc', 'ds_extras', 'ds_extras.registry');
+  return _ds_extras_entity_info_alter($entity_info);
+}
+
+/**
  * Implements hook_permission().
  */
 function ds_extras_permission() {
@@ -186,7 +194,11 @@ function theme_ds_field_reset($variables, $config) {
 
   // Render the label.
   if (!$variables['label_hidden']) {
-    $output .= '<div class="label-' . $variables['element']['#label_display'] . '">' . $variables['label'] . ':&nbsp;</div>';
+    $output .= '<div class="label-' . $variables['element']['#label_display'] . '">' . $variables['label'];
+    if (!variable_get('ft-kill-colon', FALSE)) {
+      $output .= ':&nbsp;';
+    }
+    $output .= '</div>';
   }
 
   // Render the items.
@@ -212,10 +224,18 @@ function theme_ds_field_expert($variables, $config) {
       else {
         $class = ' class="label-' . $variables['element']['#label_display'] . '"';
       }
-      $output .= '<' . $config['lb-el'] . $class . '>' . $variables['label'] . ':&nbsp;</' . $config['lb-el'] . '>';
+      $output .= '<' . $config['lb-el'] . $class . '>' . $variables['label'] . '"';
+      if (!isset($config['lb-col'])) {
+        $output .= ':&nbsp;';
+      }
+      $output .= '</' . $config['lb-el'] . '>';
     }
     else {
-      $output .= '<div class="label-' . $variables['element']['#label_display'] . '">' . $variables['label'] . ':&nbsp;</div>';
+      $output .= '<div class="label-' . $variables['element']['#label_display'] . '">' . $variables['label'];
+      if (!isset($config['lb-col'])) {
+        $output .= ':&nbsp;';
+      }
+      $output .= '</div>';
     }
   }
 
@@ -279,13 +299,31 @@ function ds_extras_get_view_mode() {
 }
 
 /**
- * Hide the page title for a full node page view.
+ * Page title options for a full node page view.
  */
 function ds_extras_process_page_title(&$variables) {
   if (isset($variables['node']) && node_is_page($variables['node']) && arg(2) == '' && $layout = ds_get_layout('node', $variables['node']->type, ds_extras_get_view_mode())) {
-    if (isset($layout['settings']['hide_page_title']) && $layout['settings']['hide_page_title']) {
+    if (isset($layout['settings']['hide_page_title']) && $layout['settings']['hide_page_title'] == 1) {
       $variables['title'] = '';
     }
+    elseif (isset($layout['settings']['hide_page_title']) && $layout['settings']['hide_page_title'] == 2 && !empty($layout['settings']['page_option_title'])) {
+      $contexts = array();
+      $entity = node_load(arg(1));
+      ds_create_entity_context('node', $entity, $contexts);
+      $title = $layout['settings']['page_option_title'];
+      ds_create_entity_context('node', entity_load('node', array(arg(1))), $contexts);
+      $variables['title'] = filter_xss_admin(ctools_context_keyword_substitute($title, array(), $contexts));
+    }
+  }
+}
+
+/**
+ * Implements hook_ds_layout_settings_alter().
+ */
+function ds_extras_ds_layout_settings_alter($record, $form_state) {
+  if (isset($form_state['values']['additional_settings']['ds_page_title_options']['page_option_type']) || isset($form_state['values']['page_option_type'])) {
+    $record->settings['hide_page_title'] = isset($form_state['values']['additional_settings']['ds_page_title_options']['page_option_type']) ? $form_state['values']['additional_settings']['ds_page_title_options']['page_option_type'] : $form_state['values']['page_option_type'];
+    $record->settings['page_option_title'] = isset($form_state['values']['additional_settings']['ds_page_title_options']['page_option_title']) ? $form_state['values']['additional_settings']['ds_page_title_options']['page_option_title'] : $form_state['values']['page_option_title'];
   }
 }
 
@@ -507,6 +545,7 @@ function ds_extras_block_view($delta = '') {
 function ds_extras_ds_layout_region_alter($context, &$region_info) {
 
   $region_blocks = variable_get('ds_extras_region_blocks', array());
+
   // Bail out if region_blocks is empty or we are working on default view mode.
   if (empty($region_blocks) || $context['view_mode'] == 'default') {
     return;
@@ -537,6 +576,22 @@ function ds_extras_ctools_plugin_api($owner, $api) {
   if ($owner == 'ds_extras' && $api == 'ds_extras') {
     return array('version' => 1);
   }
+}
+
+/**
+ * Implements hook_ctools_plugin_directory().
+ */
+function ds_extras_ctools_plugin_directory($module, $plugin) {
+  if ($plugin == 'cache') {
+    return 'plugins/' . $plugin;
+  }
+}
+
+/**
+ * Implements hook_ctools_plugin_type().
+ */
+function ds_extras_ctools_plugin_type() {
+  return array('cache' => array());
 }
 
 /**
@@ -626,4 +681,205 @@ function ds_vd_render_title_field($field) {
   // Views is a special case, we stack title on the entity.
   $field['entity']->preprocess_fields[] = 'title';
   $field['entity']->ds_vd['title'] = $output;
+}
+
+/**
+ * Implements hook_flush_caches().
+ */
+function ds_extras_flush_caches() {
+  return array('cache_ds_panels');
+}
+
+/**
+ * Implements hook_panels_dashboard_blocks().
+ */
+function ds_extras_panels_dashboard_blocks(&$vars) {
+  $vars['links']['ds_panels'] = array(
+    'title' => l(t('Panel view modes'), 'admin/structure/ds/layout'),
+    'description' => t('Manage the layout of view modes for every entity.'),
+    'weight' => -3,
+  );
+}
+
+/**
+ * Implements hook_ds_panels_default_fields().
+ */
+function ds_extras_ds_panels_default_fields($entity_type, $bundle, $view_mode) {
+
+  // Get the fields from Field API.
+  $fields = field_info_instances($entity_type, $bundle);
+
+  // Add other fields like title, etc.
+  switch ($entity_type) {
+    case 'node':
+      $fields['node_title'] = array('label' => t('Title'), 'type' => 'node_title', 'subtype' => 'node_title');
+      $fields['node_created'] = array('label' => t('Created date'), 'type' => 'node_created', 'subtype' => 'node_created');
+      $fields['node_author'] = array('label' => t('Author'), 'type' => 'node_author', 'subtype' => 'node_author');
+      $fields['node_links'] = array('label' => t('Links'), 'type' => 'node_links', 'subtype' => 'node_links');
+      if (module_exists('comment') && variable_get("comment_$bundle", COMMENT_NODE_OPEN) != COMMENT_NODE_HIDDEN) {
+        $fields['node_comments'] = array('label' => t('Comments'), 'type' => 'node_comments', 'subtype' => 'node_comments');
+        $fields['node_comment_form'] = array('label' => t('Comment form'), 'type' => 'node_comment_form', 'subtype' => 'node_comment_form');
+      }
+      break;
+  }
+
+  return $fields;
+}
+
+/**
+ * Implements hook_entity_view_alter().
+ */
+function ds_extras_entity_view_alter(&$build, $entity_type) {
+  static $loaded = array();
+
+  // If views and core doesn't send information along on the entity,
+  // Display suite doesn't have a context to render the layout.
+  if (!isset($build['#entity_type']) && !isset($build['#bundle'])) {
+    return;
+  }
+
+  $bundle = $build['#bundle'];
+  $view_mode = $build['#view_mode'];
+
+  // Disable blocks.
+  if (($layout = ds_get_layout($entity_type, $bundle, $view_mode)) && isset($layout['settings']['hide_sidebars']) && !isset($loaded[$entity_type][$bundle][$view_mode])) {
+
+    // Store the setting.
+    $loaded[$entity_type][$bundle][$view_mode] = TRUE;
+
+    // Disable blocks.
+    if (isset($layout['settings']['hide_sidebars']) && $layout['settings']['hide_sidebars']) {
+      ctools_set_no_blocks();
+    }
+  }
+}
+
+/**
+ * Render the entity through the Panels layout.
+ */
+function ds_extras_render_panel_layout(&$vars) {
+  static $displays = array();
+  static $renderer = NULL;
+
+  if (isset($vars['elements']) && $layout = ds_get_layout($vars['elements']['#entity_type'], $vars['elements']['#bundle'], $vars['elements']['#view_mode'])) {
+
+    if (empty($layout['settings']['ds_panels'])) {
+      return;
+    }
+
+    $entity_type = $vars['elements']['#entity_type'];
+    $bundle = $vars['elements']['#bundle'];
+    $view_mode = $vars['elements']['#view_mode'];
+    $entity = $vars[$vars['elements']['#entity_type']];
+    ctools_include('plugins', 'panels');
+
+    $contexts = array();
+    // Add entity context to begin with.
+    ds_create_entity_context($entity_type, $entity, $contexts);
+
+    // Load the display.
+    $did = $layout['settings']['did'];
+    if (!isset($displays[$did])) {
+      $display = panels_load_display($did);
+      $display->entity_type = $entity_type;
+      $display->bundle = $bundle;
+      $display->view_mode = $view_mode;
+      $displays[$did] = $display;
+    }
+    else {
+      $display = $displays[$did];
+    }
+    $display->context = $contexts;
+
+    $info = entity_extract_ids($entity_type, $entity);
+    $display->entity_id = $info[0];
+
+    // Add the panels template file as the theme hook suggestion.
+    $vars['theme_hook_suggestion'] = $layout['settings']['theme'];
+
+    // Add css ID.
+    $vars['css_id'] = $layout['settings']['css_id'];
+
+    // Add classes.
+    $class = array();
+    $class[] = check_plain($layout['settings']['class']);
+
+    // Add sticky class.
+    if ($layout['settings']['sticky'] && $entity->sticky) {
+      $class[] = 'sticky';
+    }
+    $vars['class'] = !empty($class) ? ' ' . implode(' ', $class) : '';
+
+    // Flexible layouts.
+    if ($layout['settings']['theme'] == 'panels_flexible') {
+      $vars['settings'] = $vars['renderer'] = '';
+      $vars['display'] = $display;
+      $panels_layout = str_replace('panels-', '', $layout['layout']);
+      $vars['layout'] = panels_get_layout($panels_layout);
+      $vars['theme_hook_suggestion'] = 'panels_flexible';
+    }
+
+    // Load renderer.
+    if (!isset($renderer)) {
+      $pipeline = $layout['settings']['pipeline'];
+      $renderer = panels_get_renderer($pipeline, $display);
+    }
+
+    // Attach out-of-band data first.
+    $renderer->add_meta();
+
+    $cache = FALSE;
+    $cacheable = isset($renderer->display->cache['method']) && !empty($renderer->display->cache['method']);
+    if ($cacheable) {
+      $cache = panels_get_cached_content($renderer->display, $renderer->display->args, $renderer->display->context);
+      if ($cache) {
+        $content = $cache->content;
+      }
+    }
+
+    // If no content is found from cache, call the $renderer
+    // methods. In display has a cache setting, store it into cache table.
+    if ($cache === FALSE) {
+      $renderer->prepare();
+      $renderer->render_panes();
+      $renderer->render_regions();
+      $content = $renderer->rendered['regions'];
+      if ($cacheable) {
+        $cache = new panels_cache_object();
+        $cache->set_content($content);
+        panels_set_cached_content($cache, $renderer->display, $renderer->display->args, $renderer->display->context);
+      }
+    }
+
+    // Overwrite $vars['content'].
+    $vars['content'] = $content;
+  }
+}
+
+/**
+ * Implements hook_entity_update().
+ */
+function ds_extras_entity_update($entity, $type) {
+  _ds_extras_cache_clear($entity, $type);
+}
+
+/**
+ * Implements hook_entity_delete().
+ */
+function ds_extras_entity_delete($entity, $type) {
+  _ds_extras_cache_clear($entity, $type);
+}
+
+/**
+ * Clears the entity display from cache_ds_panels bin.
+ *
+ * @param $entity
+ *   The full entity object.
+ * @param $type
+ *   The name of the $entity.
+ */
+function _ds_extras_cache_clear($entity, $type) {
+  $info = entity_extract_ids($type, $entity);
+  $cid = $type . ':' . $info[0];
+  cache_clear_all($cid, 'cache_ds_panels', TRUE);
 }

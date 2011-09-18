@@ -24,9 +24,19 @@ Drupal.behaviors.DSExtrasSummaries = {
 
       return Drupal.t('Disabled');
     });
-
-
+    
     $('#edit-additional-settings-fs3', context).drupalSetSummary(function (context) {
+      var panel_view_modes = $('#edit-additional-settings-fs3-ds-extras-panel-view-modes', context);
+
+      if (panel_view_modes.is(':checked')) {
+        return Drupal.t('Enabled');
+      }
+
+      return Drupal.t('Disabled');
+    });
+
+
+    $('#edit-additional-settings-fs4', context).drupalSetSummary(function (context) {
       var vals = [];
 
       $('input:checked', context).parent().each(function () {

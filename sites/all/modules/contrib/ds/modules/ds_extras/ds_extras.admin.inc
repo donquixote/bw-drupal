@@ -45,6 +45,19 @@ function ds_extras_settings($form) {
     ),
   );
 
+  $form['additional_settings']['fs1']['ft-kill-colon'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Hide colon'),
+    '#default_value' => variable_get('ft-kill-colon', FALSE),
+    '#description' => t('Hide the colon on the reset field template.'),
+    '#states' => array(
+      'visible' => array(
+        'select[name="additional_settings[fs1][ft-default]"]' => array('value' => 'theme_ds_field_reset'),
+        'input[name="additional_settings[fs1][ds_extras_field_template]"]' => array('checked' => TRUE),
+      ),
+    ),
+  );
+
   $form['additional_settings']['fs1']['ft-kill'] = array(
     '#type' => 'checkbox',
     '#title' => t('Remove theme suggestions'),
@@ -80,27 +93,54 @@ function ds_extras_settings($form) {
     ),
   );
 
-  $form['additional_settings']['fs3'] = array(
+  if (module_exists('panels')) {
+    $form['additional_settings']['fs3'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Panel view modes'),
+    );
+
+    $form['additional_settings']['fs3']['ds_extras_panel_view_modes'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Enable Panels editor on view modes'),
+      '#description' => t('With this option, you can use the Panels editor instead of Field UI.'),
+      '#default_value' => variable_get('ds_extras_panel_view_modes', FALSE),
+    );
+    $form['additional_settings']['fs3']['ds_extras_editor_switch'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Switch layout editor'),
+      '#description' => t('By default, the Panels editor will be used always. With this option, any layout configured already with Field UI will be kept, but you are able to switch back and forth.'),
+      '#default_value' => variable_get('ds_extras_editor_switch', FALSE),
+    );
+  }
+
+  $form['additional_settings']['fs4'] = array(
     '#type' => 'fieldset',
     '#title' => t('Other'),
   );
 
-  $form['additional_settings']['fs3']['ds_extras_switch_view_mode'] = array(
+  $form['additional_settings']['fs4']['ds_extras_switch_view_mode'] = array(
     '#type' => 'checkbox',
     '#title' => t('Switch view mode'),
     '#description' => t('Change view modes for individual nodes. A new tab "Display settings" will appear on the content create form.'),
     '#default_value' => variable_get('ds_extras_switch_view_mode', FALSE),
   );
 
-  $form['additional_settings']['fs3']['ds_extras_switch_field'] = array(
+  $form['additional_settings']['fs4']['ds_extras_switch_field'] = array(
     '#type' => 'checkbox',
     '#title' => t('Switch view mode field'),
     '#description' => t('Adds a field with links to switch view modes inline with Ajax. Only works for nodes at this time.'),
     '#default_value' => variable_get('ds_extras_switch_field', FALSE),
   );
 
+  $form['additional_settings']['fs4']['ds_extras_revision_view_mode'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Revision view mode'),
+    '#description' => t('Make new view mode "Revision" available which can be used to style the revision of a node.'),
+    '#default_value' => variable_get('ds_extras_revision_view_mode', FALSE),
+  );
+
   if (module_exists('contextual') && module_exists('field_ui')) {
-    $form['additional_settings']['fs3']['ds_extras_contextual'] = array(
+    $form['additional_settings']['fs4']['ds_extras_contextual'] = array(
       '#type' => 'checkbox',
       '#title' => t('Contextual links'),
       '#description' => t('Add contextual links (if possible) to manage the layout.'),
@@ -108,15 +148,15 @@ function ds_extras_settings($form) {
     );
   }
 
-  $form['additional_settings']['fs3']['ds_extras_hide_page_title'] = array(
+  $form['additional_settings']['fs4']['ds_extras_hide_page_title'] = array(
     '#type' => 'checkbox',
-    '#title' => t('Hide page title'),
-    '#description' => t('An extra option will appear on the "Manage displays" screen of the "Full content" build mode.'),
+    '#title' => t('Page title options'),
+    '#description' => t('An extra option to either, hide or manually set the page title will appear on the "Manage displays" screen of the "Full content" build mode.'),
     '#default_value' => variable_get('ds_extras_hide_page_title', FALSE),
   );
 
   if (module_exists('block')) {
-    $form['additional_settings']['fs3']['ds_extras_region_to_block'] = array(
+    $form['additional_settings']['fs4']['ds_extras_region_to_block'] = array(
       '#type' => 'checkbox',
       '#title' => t('Region to block'),
       '#description' => t('Create additional regions exposed as block. Note: this will not work on the default view mode.'),
@@ -125,16 +165,16 @@ function ds_extras_settings($form) {
   }
 
   if (module_exists('views')) {
-    $form['additional_settings']['fs3']['ds_extras_vd'] = array(
+    $form['additional_settings']['fs4']['ds_extras_vd'] = array(
       '#type' => 'checkbox',
       '#title' => t('Views displays'),
-      '#description' => t('Manage the layout of your Views through a drag and drop interface at !url.', array('!url' => l(url('admin/structure/ds'), 'admin/structure/ds', array('absolute' => TRUE)))),
+      '#description' => t('Manage the layout of your Views templates and field rows with Field UI at !url.', array('!url' => l(url('admin/structure/ds/vd', array('absolute' => TRUE)), 'admin/structure/ds/vd'))),
       '#default_value' => variable_get('ds_extras_vd', FALSE),
     );
   }
 
   if (module_exists('fivestar')) {
-    $form['additional_settings']['fs3']['ds_extras_fivestar'] = array(
+    $form['additional_settings']['fs4']['ds_extras_fivestar'] = array(
       '#type' => 'checkbox',
       '#title' => t('Fivestar field'),
       '#default_value' => variable_get('ds_extras_fivestar', FALSE),
@@ -164,6 +204,53 @@ function ds_extras_settings_validate($form, &$form_state) {
 }
 
 /**
+ * Select the editor depending on layout.
+ *
+ * @param $entity_type
+ *   The name of the entity type.
+ * @param $bundle_arg
+ *   The position of the bundle argument
+ * @param $view_mode
+ *   The name of the view mode.
+ */
+function ds_extras_select_layout_editor($entity_type, $bundle_arg, $view_mode) {
+
+  // Extra the bundle name.
+  $bundle = field_extract_bundle($entity_type, $bundle_arg);
+
+  // Check layout.
+  $layout = ds_get_layout($entity_type, $bundle, $view_mode);
+
+  // Check switch.
+  $panels_editor = TRUE;
+  if (variable_get('ds_extras_editor_switch')) {
+    if ($layout && !isset($layout['settings']['ds_panels'])) {
+      $panels_editor = FALSE;
+    }
+    if (isset($_GET['switch']) && $_GET['switch'] == 'field_ui') {
+      $panels_editor = FALSE;
+    }
+    if (isset($_GET['switch']) && $_GET['switch'] == 'panels') {
+      $panels_editor = TRUE;
+    }
+  }
+
+  // Select the layout editor.
+  if ($panels_editor) {
+    module_load_include('inc', 'ds_extras', 'ds_extras.panels');
+    return ds_panels_field_ui($entity_type, $bundle, $view_mode);
+  }
+  else {
+    // Use drupal_build_form instead of drupal_get_form.
+    $form_state = array();
+    $arguments = array($entity_type, $bundle, $view_mode);
+    $form_state['build_info']['args'] = $arguments;
+    form_load_include($form_state, 'inc', 'field_ui', 'field_ui.admin');
+    return drupal_build_form('field_ui_display_overview_form', $form_state);
+  }
+}
+
+/**
  * Submit callback: Extras settings screen.
  */
 function ds_extras_settings_submit($form, &$form_state) {
@@ -171,6 +258,7 @@ function ds_extras_settings_submit($form, &$form_state) {
   cache_clear_all('entity_info:', 'cache', TRUE);
   cache_clear_all('theme_registry:', 'cache', TRUE);
   cache_clear_all('module_implements', 'cache_bootstrap');
+  cache_clear_all('field_info_fields', 'cache_field');
   menu_rebuild();
 }
 
@@ -203,6 +291,7 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
       $form['fields'][$key]['format']['ft'] = array(
         '#prefix' => '<a href="" class="ft-link">' . t('Field display') . '</a><div class="field-template" id="ft-' . $i . '">',
         '#suffix' => '</div>',
+        '#weight' => 50,
       );
       $i++;
 
@@ -243,27 +332,34 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
       $wrappers = array(
         'lb' => array(
           'title' => t('Label'),
-            'states' => array(
-            'invisible' => array(
-              'select[name="fields[' . $key . '][label]"]' => array('value' => 'hidden'),
-              'select[name="fields[' . $key . '][format][ft][function]"]' => array('value' => 'theme_ds_field_expert'),
-            ),
-          ),
         ),
         'ow' => array('title' => t('Outer wrapper')),
         'fis' => array('title' => t('Field items')),
         'fi' => array('title' => t('Field item')),
       );
+
+      $colon_checkbox = FALSE;
       foreach ($wrappers as $wrapper_key => $value) {
+
+        // Hide colon.
+        if (!$colon_checkbox) {
+          $form['fields'][$key]['format']['ft']['lb-col'] = array(
+            '#type' => 'checkbox',
+            '#title' => t('Hide colon'),
+            '#default_value' => isset($field_settings[$key]['ft']['lb-col']) ? $field_settings[$key]['ft']['lb-col'] : FALSE,
+            '#attributes' => array(
+              'class' => array('colon-checkbox'),
+            ),
+          );
+          $colon_checkbox = TRUE;
+        }
+
         $form['fields'][$key]['format']['ft'][$wrapper_key] = array(
           '#type' => 'checkbox',
           '#title' => $value['title'],
           '#prefix' => '<div class="ft-group ' . $wrapper_key . '">',
           '#default_value' => isset($field_settings[$key]['ft'][$wrapper_key]) ? TRUE : FALSE,
         );
-        if (isset($value['states'])) {
-          $form['fields'][$key]['format']['ft'][$wrapper_key]['#states'] = $value['states'];
-        }
         $form['fields'][$key]['format']['ft'][$wrapper_key . '-el'] = array(
           '#type' => 'textfield',
           '#title' => t('Element'),
@@ -271,9 +367,6 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
           '#description' => t('E.g. div, span, h2 etc.'),
           '#default_value' => isset($field_settings[$key]['ft'][$wrapper_key . '-el']) ? $field_settings[$key]['ft'][$wrapper_key . '-el'] : '',
         );
-        if (isset($value['states']) && $wrapper_key == 'lb') {
-          $form['fields'][$key]['format']['ft'][$wrapper_key . '-el']['#states'] = $value['states'];
-        }
         $classes = array(
           'field-name-' . strtr($key, '_', '-'),
         );
@@ -285,9 +378,6 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
           '#default_value' => isset($field_settings[$key]['ft'][$wrapper_key . '-cl']) ? $field_settings[$key]['ft'][$wrapper_key . '-cl'] : '',
           '#description' => t('Classes: !classes', array('!classes' => implode(', ', $classes))),
         );
-        if (isset($value['states'])) {
-          $form['fields'][$key]['format']['ft'][$wrapper_key . '-cl']['#states'] = $value['states'];
-        }
       }
 
       $form['fields'][$key]['format']['ft']['update'] = array(
@@ -300,11 +390,6 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
 
       // Another label needs some other stuff.
       unset($form['fields'][$key]['format']['ft']['lb']['#description']);
-      $form['fields'][$key]['format']['ft']['lb']['#states'] = array(
-        'invisible' => array(
-          'select[name="fields[' . $key . '][label]"]' => array('value' => 'hidden'),
-        )
-      );
       $form['fields'][$key]['format']['ft']['lb']['#type'] = 'textfield';
       $form['fields'][$key]['format']['ft']['lb']['#size'] = '10';
       $form['fields'][$key]['format']['ft']['lb']['#attributes'] = array('class' => array('label-change'));
@@ -314,18 +399,14 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
 
   // Views displays.
   if (variable_get('ds_extras_vd', FALSE)) {
-    // Add an additional submit callback.
+    // Add an additional submit callback so we can ditch the extra title
+    // which is added by ds_extras_field_extra_fields().
     $form['#submit'] = array_merge(array('ds_extras_vd_field_ui_submit'), $form['#submit']);
   }
 
-  // Hide page title functionality, currently only works on node.
+  // Page title functionality, currently only works on nodes.
   if (isset($form['#ds_layout']) && $form['#entity_type'] == 'node' && ($form['#view_mode'] == 'full' || variable_get('ds_extras_switch_view_mode', FALSE)) &&  variable_get('ds_extras_hide_page_title', FALSE)) {
-    $form['additional_settings']['ds_layouts']['ds_hide_page_title'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Hide page title'),
-      '#default_value' => isset($form['#ds_layout']->settings['hide_page_title']) ? $form['#ds_layout']->settings['hide_page_title'] : FALSE,
-      '#weight' => 100,
-    );
+    $form['additional_settings']['ds_layouts']['ds_page_title_options'] = _ds_extras_page_title_options($form['#ds_layout']->settings, $form['#entity_type']);
   }
 
   // Region to block only fires if there is a layout and we're working on the
@@ -382,6 +463,30 @@ function ds_extras_field_ui_alter(&$form, &$form_state) {
     }
 
     $form['#submit'][] = 'ds_extras_block_submit';
+  }
+
+  // Editor switch.
+  if (variable_get('ds_extras_editor_switch') && variable_get('ds_extras_panel_view_modes')) {
+
+    // Get the entity_type, bundle and view mode.
+    $entity_type = $form['#entity_type'];
+    $bundle = $form['#bundle'];
+    $view_mode = $form['#view_mode'];
+
+    $form['additional_settings']['editor_switch'] = array(
+      '#type' => 'fieldset',
+      '#group' => 'tabs',
+      '#title' => t('Switch editor'),
+      '#weight' => 10,
+    );
+    $query = array('switch' => 'panels');
+    $switch_link = l(t('Switch to Panels'), $_GET['q'], array('query' => $query));
+    $content = array(
+      '#markup' => '<p>' . t('Click on the link underneath to switch to Panels') . '</p><p>' . $switch_link . '</p>',
+    );
+    $form['additional_settings']['editor_switch']['content'] = array(
+      '#markup' => drupal_render($content)
+    );
   }
 }
 
@@ -485,6 +590,9 @@ function ds_extras_ds_field_settings_alter(&$field_settings, $form, &$form_state
       if (!(empty($values['lb-cl'])) && $function == 'theme_ds_field_expert') {
         $field_settings[$key]['ft']['lb-cl'] = check_plain($values['lb-cl']);
       }
+      if (!(empty($values['lb-col']))) {
+        $field_settings[$key]['ft']['lb-col'] = TRUE;
+      }
     }
 
     // Custom field configuration.
@@ -500,15 +608,6 @@ function ds_extras_ds_field_settings_alter(&$field_settings, $form, &$form_state
         }
       }
     }
-  }
-}
-
-/**
- * Implements hook_ds_layout_settings_alter().
- */
-function ds_extras_ds_layout_settings_alter($record, $form_state) {
-  if (isset($form_state['values']['additional_settings']['ds_hide_page_title'])) {
-    $record->settings['hide_page_title'] = $form_state['values']['additional_settings']['ds_hide_page_title'];
   }
 }
 
@@ -573,4 +672,65 @@ function ds_extras_region_to_block_unique($name) {
   $region_blocks = variable_get('ds_extras_region_blocks', array());
   $value = strtr($name, array('-' => '_'));
   return isset($region_blocks[$value]) ? TRUE : FALSE;
+}
+
+/**
+ * Helper function to show the page title options. Used in Field UI and Panels editor.
+ */
+function _ds_extras_page_title_options($settings, $entity_type) {
+
+  $return['page_option_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Page title'),
+    '#options' => array(
+      '0' => t('Show'),
+      '1' => t('Hide'),
+      '2' => t('Manually set'),
+    ),
+    '#default_value' => isset($settings['hide_page_title']) ? $settings['hide_page_title'] : FALSE,
+    '#weight' => 100,
+  );
+
+  $contexts = ds_get_entity_context($entity_type);
+  $rows = array();
+  foreach ($contexts as $context) {
+    foreach (ctools_context_get_converters('%' . check_plain($context->keyword) . ':', $context) as $keyword => $title) {
+      $rows[] = array(
+        check_plain($keyword),
+        t('@identifier: @title', array('@title' => $title, '@identifier' => $context->identifier)),
+      );
+    }
+  }
+
+  $return['page_option_title'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Title'),
+    '#default_value' => isset($settings['page_option_title']) ? $settings['page_option_title'] : '',
+    '#description' => t('The title, you may use substitutions in this title.'),
+    '#weight' => 101,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="page_option_type"]' => array('value' => '2'),
+        ':input[name="additional_settings[ds_page_title_options][page_option_type]"]' => array('value' => '2'),
+      ),
+    ),
+  );
+
+  $header = array(t('Keyword'), t('Value'));
+  $return['page_option_contexts'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Substitutions'),
+    '#collapsible' => TRUE,
+    '#collapsed' => TRUE,
+    '#value' => theme('table', array('header' => $header, 'rows' => $rows)),
+    '#weight' => 102,
+    '#states' => array(
+      'visible' => array(
+        ':input[name="page_option_type"]' => array('value' => '2'),
+        ':input[name="additional_settings[ds_page_title_options][page_option_type]"]' => array('value' => '2'),
+      ),
+    ),
+  );
+
+  return $return;
 }
