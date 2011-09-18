@@ -1,7 +1,7 @@
 core = "7.x"
 dependencies[] = "bw_faq"
 dependencies[] = "bw_user_profile"
-dependencies[] = "bw_basic_pages"
+dependencies[] = "bw_nodes"
 dependencies[] = "admin_menu"
 dependencies[] = "menu"
 dependencies[] = "token"
