@@ -11,3 +11,4 @@ dependencies[] = context_ui
 dependencies[] = devel
 dependencies[] = masquerade
 dependencies[] = advanced_help
+dependencies[] = contextual
