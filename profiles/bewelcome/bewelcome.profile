@@ -120,7 +120,6 @@ function system_form_install_configure_form_alter(&$form, $form_state) {
 }
 
 function bewelcome_install() {
-  /* This code seems to be doing the right thing but it causes a 500 error */
   // check http://drupal.org/node/585012
   theme_enable(array('bewelcometheme', 'seven'));
   variable_set('theme_default', 'bwminimal');
