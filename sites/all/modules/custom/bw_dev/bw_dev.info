@@ -7,5 +7,6 @@ dependencies[] = bw_migrate
 dependencies[] = field_ui
 dependencies[] = views_ui
 dependencies[] = context_ui
+dependencies[] = devel
 dependencies[] = masquerade
 dependencies[] = advanced_help
