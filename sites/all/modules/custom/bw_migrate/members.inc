@@ -3,8 +3,55 @@
  * @file
  */
 
+
 /**
- * Migration class to test import of various date fields.
+ *
+ */
+
+class MembersPhotosFileCopyMigration extends BWMigration {
+  public function __construct() {
+    parent::__construct();
+    $this->map = new MigrateSQLMap($this->machineName,
+				   array('id' => array(
+							'type' => 'int',
+							'unsigned' => TRUE,
+							'not null' => TRUE,
+							'description' => 'Image ID.'
+							)
+					 ),
+				   MigrateDestinationFile::getKeySchema()
+				   );
+    $query = $this->roxdb_connection
+      ->select('membersphotos', 'p')
+      ->fields('p', array('id', 'FilePath'));
+    $this->source = $this->roxMigrateSource($query);
+    $this->destination = new MigrateDestinationFile();
+
+    $this->addFieldMapping('uri', 'uri');
+    $this->addFieldMapping('filename', 'filename');
+    $this->addFieldMapping('path', 'filename');
+    $this->addFieldMapping('scheduler', 'publish_on');
+  }
+
+  public function prepareRow($current_row) {
+    // var_dump($_SERVER['SCRIPT_FILENAME']);
+    $orig = str_replace('tmp/', '', $current_row->filepath);
+    $source = '' . $orig;
+    $clean_name = $this->cleanPath($orig);
+    $dest = 'public://' . basename($clean_name);
+    $current_row->uri = $clean_name;
+    var_dump($source);
+    var_dump($dest);
+    file_unmanaged_copy ($source, $dest);
+  }
+
+}
+
+
+
+
+/**
+ * Migration class to import BW members
  */
 class BWMembersMigration extends BWMigration {
   public function __construct() {
@@ -29,6 +76,8 @@ class BWMembersMigration extends BWMigration {
 			  'ProfileSummary', 'Gender', 'BirthDate', 'WebSite', 'Books', 'Music', 'Movies'));
     $query->leftJoin('addresses', 'a', 'm.id = a.IdMember');
     $query->fields('a', array('HouseNumber', 'StreetName', 'Zip', 'IdCity'));
+    $query->leftJoin('membersphotos', 'p', 'm.id = p.IdMember');
+    $query->fields('p', array('FilePath'));
     $this->source = $this->roxMigrateSource($query);
 
     $this->destination = new MigrateDestinationProfile2('main');
@@ -50,6 +99,9 @@ class BWMembersMigration extends BWMigration {
     $this->addFieldMapping('field_books', 'books');
     $this->addFieldMapping('field_music', 'music');
     $this->addFieldMapping('field_movies', 'movies');
+
+    $this->addFieldMapping('field_photos', 'filepath');
+
 
     // Unmapped destination fields
     $this->addUnmigratedDestinations(array('id'));
