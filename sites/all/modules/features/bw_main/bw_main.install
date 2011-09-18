@@ -32,6 +32,6 @@ function bw_main_update_7002() {
   module_enable(array('user_relationships'));
 }
 
-function bw_main_update_7002() {
+function bw_main_update_7003() {
   module_enable(array('openid'));
 }
