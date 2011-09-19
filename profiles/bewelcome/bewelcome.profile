@@ -123,5 +123,5 @@ function bewelcome_install() {
   // check http://drupal.org/node/585012
   theme_enable(array('bewelcometheme', 'seven'));
   variable_set('theme_default', 'bwminimal');
-  variable_set('admin_theme', 'seven');
+  variable_set('admin_theme', 'bwminimal');
 }
