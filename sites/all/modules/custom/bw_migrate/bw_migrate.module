@@ -52,7 +52,7 @@ abstract class BWMigration extends Migration {
     foreach ($result as $row) { // this shouldn't be a loop but just want working code now
       $sentence = $row->sentence ;
     }
-    if (!$sentence) {
+    if (!isset($sentence)) {
       $sentence = $code;
     }
     return $sentence;
