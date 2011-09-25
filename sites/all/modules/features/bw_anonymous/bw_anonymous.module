@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the BW anonymous feature.
+ */
+
+include_once('bw_anonymous.features.inc');

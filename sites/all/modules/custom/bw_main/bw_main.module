@@ -1,0 +1,11 @@
+<?php
+/**
+ * @file
+ */
+
+
+function bw_main_variables_set($arr) {
+  foreach ($arr as $key => $value) {
+    variable_set($key, $value);
+  }
+}

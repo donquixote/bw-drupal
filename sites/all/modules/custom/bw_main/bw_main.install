@@ -1,0 +1,46 @@
+<?php
+
+function bw_main_update_7000() {
+  module_enable(array('field_ui'));
+}
+
+function bw_main_update_7001() {
+
+  bw_main_variables_set(
+    array(
+      'node_export_reset_blog' => 0,
+      'node_export_reset_book_mlid_blog' => 0,
+      'node_export_reset_book_mlid_page' => 0,
+      'node_export_reset_changed_blog' => 0,
+      'node_export_reset_changed_page' => 0,
+      'node_export_reset_created_blog' => 0,
+      'node_export_reset_created_page' => 0,
+      'node_export_reset_menu_blog' => 0,
+      'node_export_reset_menu_page' => 0,
+      'node_export_reset_page' => 0,
+      'node_export_reset_path_blog' => 0,
+      'node_export_reset_path_page' => 0,
+    )
+  );
+}
+
+function bw_main_update_7002() {
+  module_enable(array('bw_anonymous'));
+}
+
+function bw_main_update_7003() {
+  module_enable(array('user_relationships'));
+}
+
+function bw_main_update_7004() {
+  module_enable(array('openid'));
+}
+
+function bw_main_update_7005() {
+  variable_set('privatemsg_display_preview_button', 1);
+  variable_set('admin_theme', 'bwminimal');
+}
+
+function bw_main_update_7006() {
+  module_enable(array('panels'));
+}

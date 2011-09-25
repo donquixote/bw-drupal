@@ -1,0 +1,12 @@
+name = Profile Privacy
+description = Provides options for users to override visibility of their own profile fields.
+dependencies[] = profile
+core = 7.x
+files[] = profile_privacy.install
+files[] = profile_privacy.module
+; Information added by drupal.org packaging script on 2011-02-25
+version = "7.x-1.x-dev"
+core = "7.x"
+project = "profile_privacy"
+datestamp = "1298619997"
+

@@ -1,0 +1,23 @@
+name = BeWelcome
+description = Profile for BeWelcome.
+version = VERSION
+core = 7.x
+hidden = FALSE
+dependencies[] = block
+dependencies[] = menu
+dependencies[] = help
+dependencies[] = image
+dependencies[] = list
+dependencies[] = menu
+dependencies[] = number
+dependencies[] = options
+dependencies[] = path
+dependencies[] = taxonomy
+dependencies[] = dblog
+dependencies[] = search
+dependencies[] = admin_menu
+dependencies[] = field_ui
+dependencies[] = file
+dependencies[] = bw_main
+; As long as we're mainly developing:
+dependencies[] = bw_dev

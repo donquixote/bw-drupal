@@ -1,0 +1,4 @@
+filename = bw-drupal-test
+description = "bw-drupal test data with example database dump"
+modules = masquerade block advanced_help blog bw_anonymous bw_dev bw_faq bw_main bw_migrate bw_nodes bw_permissions bw_user_profile context contextual context_ui ctools date date_api dblog demo entity field field_sql_storage field_ui file filter help image link list menu migrate migrate_extras migrate_ui node node_export node_export_features number openid options path pm_email_notify privatemsg profile2 search system taxonomy text token update user user_relationships uuid views_ui ds field_group views features devel admin_menu bewelcome
+version = 1.1

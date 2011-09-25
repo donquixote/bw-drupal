@@ -1,0 +1,63 @@
+<?php
+
+/*
+ * You must implement hook_migrate_api(), setting the API level to 2, for
+ * your migration classes to be recognized by the Migrate module.
+ */
+function bw_migrate_migrate_api() {
+  $api = array(
+    'api' => 2,
+  );
+  return $api;
+}
+
+
+abstract class BWMigration extends Migration {
+  public function __construct() {
+    // Always call the parent constructor first for basic setup
+    parent::__construct();
+
+    // With migrate_ui enabled, migration pages will indicate people involved in
+    // the particular migration, with their role and contact info. We default the
+    // list in the shared class; it can be overridden for specific migrations.
+    $this->team = array(
+      new MigrateTeamMember('Kasper Souren', 'kasper@guaka.org', t('coder')),
+      new MigrateTeamMember('Lemonhead', 'lemon.head.bw@gmail.com', t('coder')),
+    );
+
+    // Individual mappings in a migration can be linked to a ticket or issue
+    // in an external tracking system. Define the URL pattern here in the shared
+    // class with ':id:' representing the position of the issue number, then add
+    // ->issueNumber(1234) to a mapping.
+    $this->issuePattern = 'http://drupal.org/node/:id:';
+
+    $this->roxdb_connection = Database::getConnection('default', 'bwroxdb');
+  }
+
+  public function roxMigrateSource($query) {
+    $query_count = array();
+    // Create a MigrateSource object, which manages retrieving the input data.
+    // The map_joinable should be false because we're using another database
+    // (and we don't want silly SQL errors because of unjoinable cross database JOINs)
+    $source = new MigrateSourceSQL($query, $query_count, NULL, array('map_joinable' => FALSE));
+    return $source;
+  }
+
+
+  public function getTranslation($code, $lang = 'en') {
+    // Method to get BW Rox translation string
+    $result = $this->roxdb_connection
+      ->query('SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
+	      array(':code' => $code, ':lang' => $lang));
+    foreach ($result as $row) { // this shouldn't be a loop but just want working code now
+      $sentence = $row->sentence ;
+    }
+    if (!isset($sentence)) {
+      $sentence = $code;
+    }
+    return $sentence;
+  }
+
+}
+
+

@@ -1,0 +1,3 @@
+<?php
+
+include_once('bw_faq.features.inc');
