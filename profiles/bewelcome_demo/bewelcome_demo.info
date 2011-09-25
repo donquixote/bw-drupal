@@ -1,0 +1,6 @@
+name = BeWelcome Drupal with Example Data
+description = Create a pre-setup and pre-configured BeWelcome-Drupal site from a snapshot.
+core = 7.x
+dependencies[] = demo
+files[] = bewelcome_demo.profile
+

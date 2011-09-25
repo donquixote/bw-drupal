@@ -8,7 +8,7 @@
 /**
  * Implements hook_install_tasks_alter().
  */
-function demo_profile_install_tasks_alter(&$tasks, &$install_state) {
+function bewelcome_demo_install_tasks_alter(&$tasks, &$install_state) {
   // Break references.
   $install_bootstrap_full = (array) $tasks['install_bootstrap_full'];
   $install_finished = (array) $tasks['install_finished'];
@@ -29,7 +29,7 @@ function demo_profile_install_tasks_alter(&$tasks, &$install_state) {
   // Add Demonstration site profile tasks.
   // @todo Move dump path setting into separate step; store value in
   //   $install_state.
-  $tasks['demo_profile_form'] = array(
+  $tasks['bewelcome_demo_form'] = array(
     'display_name' => st('Choose snapshot'),
     'type' => 'form',
     'run' => INSTALL_TASK_RUN_IF_NOT_COMPLETED,
@@ -42,7 +42,7 @@ function demo_profile_install_tasks_alter(&$tasks, &$install_state) {
 /**
  * Implementation of hook_form_alter().
  */
-function demo_profile_form($form, &$form_state, &$install_state) {
+function bewelcome_demo_form($form, &$form_state, &$install_state) {
   drupal_set_title(st('Choose snapshot'));
 
   // @todo
@@ -93,7 +93,7 @@ function demo_profile_form($form, &$form_state, &$install_state) {
   );
   // Display the available database dumps.
   module_load_include('inc', 'demo', 'demo.admin');
-  $form['dump'] += demo_profile_get_dumps();
+  $form['dump'] += bewelcome_demo_get_dumps();
 
   $form['submit'] = array('#type' => 'submit', '#value' => t('Restore'));
   return $form;
@@ -102,7 +102,7 @@ function demo_profile_form($form, &$form_state, &$install_state) {
 /**
  * Submit handler for the "install_configure" form.
  */
-function demo_profile_form_submit($form, &$form_state) {
+function bewelcome_demo_form_submit($form, &$form_state) {
   // Restore the database dump and redirect to the homepage.
   drupal_load('module', 'demo');
   demo_reset($form_state['values']['filename'], TRUE);
@@ -113,7 +113,7 @@ function demo_profile_form_submit($form, &$form_state) {
 //  variable_set('demo_dump_path', $form_state['values']['demo_dump_path']);
 //
 //  // Refresh the page so that the form refreshes.
-//  header('Location: '. base_path() . 'install.php?locale='. $_GET['locale'] .'&profile=demo_profile');
+//  header('Location: '. base_path() . 'install.php?locale='. $_GET['locale'] .'&profile=bewelcome_demo');
 }
 
 /**
@@ -121,7 +121,7 @@ function demo_profile_form_submit($form, &$form_state) {
  *
  * @see demo_get_dumps()
  */
-function demo_profile_get_dumps() {
+function bewelcome_demo_get_dumps() {
   $fileconfig = demo_get_fileconfig();
 
   // Fetch list of available info files
