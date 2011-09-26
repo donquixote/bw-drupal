@@ -21,6 +21,11 @@ $databases['bwroxdb']['default'] = $databases['default']['default'];
 $databases['bwroxdb']['default']['database'] = 'bwroxdb';
 
 
+e.g. 
+grep \$[d]atabases README.txt  >> ../../../../default/settings.php 
+
+
+
 TODO: find a way to add this to bwmigrate.module
 
 
