@@ -13,9 +13,9 @@ function bw_frontpage_default_page_manager_pages() {
   $page->api_version = 1;
   $page->name = 'front_page';
   $page->task = 'page';
-  $page->admin_title = 'Front Page';
-  $page->admin_description = 'This is the Front Page';
-  $page->path = 'frontpage';
+  $page->admin_title = 'BeWelcome Front Page';
+  $page->admin_description = 'This is the BeWelcome Front Page Panel';
+  $page->path = 'bw_frontpage';
   $page->access = array();
   $page->menu = array();
   $page->arguments = array();
@@ -66,16 +66,15 @@ function bw_frontpage_default_page_manager_pages() {
         'type' => 'row',
         'contains' => 'region',
         'children' => array(
-          0 => 'left',
-          1 => 'center',
-          2 => 'right',
+          0 => 'center',
+          1 => 'right',
         ),
         'parent' => 'main',
       ),
       'center' => array(
         'type' => 'region',
         'title' => 'Center',
-        'width' => 25,
+        'width' => 75,
         'width_type' => '%',
         'parent' => 'main-row',
       ),
@@ -85,14 +84,6 @@ function bw_frontpage_default_page_manager_pages() {
         'children' => array(),
         'parent' => 'main',
         'class' => 'front-row1',
-      ),
-      'left' => array(
-        'type' => 'region',
-        'title' => 'left',
-        'width' => 50,
-        'width_type' => '%',
-        'parent' => 'main-row',
-        'class' => 'front-left',
       ),
       'right' => array(
         'type' => 'region',
@@ -161,7 +152,7 @@ function bw_frontpage_default_page_manager_pages() {
     $display->panels['center'][1] = 'new-2';
     $pane = new stdClass;
     $pane->pid = 'new-3';
-    $pane->panel = 'left';
+    $pane->panel = 'right';
     $pane->type = 'block';
     $pane->subtype = 'system-user-menu';
     $pane->shown = TRUE;
@@ -178,7 +169,7 @@ function bw_frontpage_default_page_manager_pages() {
     $pane->extras = array();
     $pane->position = 0;
     $display->content['new-3'] = $pane;
-    $display->panels['left'][0] = 'new-3';
+    $display->panels['right'][0] = 'new-3';
     $pane = new stdClass;
     $pane->pid = 'new-4';
     $pane->panel = 'right';
@@ -196,9 +187,9 @@ function bw_frontpage_default_page_manager_pages() {
     );
     $pane->css = array();
     $pane->extras = array();
-    $pane->position = 0;
+    $pane->position = 1;
     $display->content['new-4'] = $pane;
-    $display->panels['right'][0] = 'new-4';
+    $display->panels['right'][1] = 'new-4';
   $display->hide_title = PANELS_TITLE_FIXED;
   $display->title_pane = '0';
   $handler->conf['display'] = $display;
