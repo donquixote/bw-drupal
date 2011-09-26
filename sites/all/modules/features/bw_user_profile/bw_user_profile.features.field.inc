@@ -360,6 +360,66 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
+  // Exported field: 'profile2-main-field_geocoded'
+  $fields['profile2-main-field_geocoded'] = array(
+    'field_config' => array(
+      'active' => '1',
+      'cardinality' => '1',
+      'deleted' => '0',
+      'entity_types' => array(),
+      'field_name' => 'field_geocoded',
+      'foreign keys' => array(),
+      'indexes' => array(),
+      'module' => 'geofield',
+      'settings' => array(
+        'profile2_private' => 0,
+      ),
+      'translatable' => '0',
+      'type' => 'geofield',
+    ),
+    'field_instance' => array(
+      'bundle' => 'main',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => '',
+      'display' => array(
+        'default' => array(
+          'label' => 'above',
+          'module' => 'geofield_map',
+          'settings' => array(),
+          'type' => 'geofield_map_map',
+          'weight' => '19',
+        ),
+      ),
+      'entity_type' => 'profile2',
+      'field_name' => 'field_geocoded',
+      'label' => 'Geocoded',
+      'required' => 0,
+      'settings' => array(
+        'local_solr' => array(
+          'enabled' => FALSE,
+          'lat_field' => 'lat',
+          'lng_field' => 'lng',
+        ),
+        'user_register_form' => FALSE,
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'geocode',
+        'settings' => array(
+          'geocode_field' => array(
+            'field_housenumber' => 'field_housenumber',
+            'field_street' => 'field_street',
+            'field_zipcode' => 'field_zipcode',
+          ),
+          'geocode_handler' => 'google',
+        ),
+        'type' => 'geocode',
+        'weight' => '23',
+      ),
+    ),
+  );
+
   // Exported field: 'profile2-main-field_hobbies'
   $fields['profile2-main-field_hobbies'] = array(
     'field_config' => array(
@@ -1451,6 +1511,7 @@ function bw_user_profile_field_default_fields() {
   t('Films');
   t('First name');
   t('Gender');
+  t('Geocoded');
   t('Hobbies');
   t('Home phone');
   t('House number');
