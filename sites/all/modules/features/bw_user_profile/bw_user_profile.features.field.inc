@@ -98,7 +98,7 @@ function bw_user_profile_field_default_fields() {
           'year_range' => '-123:-15',
         ),
         'type' => 'date_select',
-        'weight' => '3',
+        'weight' => '6',
       ),
     ),
   );
@@ -161,7 +161,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '16',
+        'weight' => '13',
       ),
     ),
   );
@@ -224,7 +224,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '18',
+        'weight' => '15',
       ),
     ),
   );
@@ -286,7 +286,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '2',
+        'weight' => '3',
       ),
     ),
   );
@@ -355,7 +355,7 @@ function bw_user_profile_field_default_fields() {
         'module' => 'options',
         'settings' => array(),
         'type' => 'options_buttons',
-        'weight' => '6',
+        'weight' => '7',
       ),
     ),
   );
@@ -415,7 +415,7 @@ function bw_user_profile_field_default_fields() {
           'geocode_handler' => 'google',
         ),
         'type' => 'geocode',
-        'weight' => '23',
+        'weight' => '19',
       ),
     ),
   );
@@ -478,7 +478,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '19',
+        'weight' => '16',
       ),
     ),
   );
@@ -541,7 +541,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '10',
+        'weight' => '17',
       ),
     ),
   );
@@ -604,7 +604,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '15',
+        'weight' => '12',
       ),
     ),
   );
@@ -667,7 +667,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '21',
+        'weight' => '11',
       ),
     ),
   );
@@ -729,7 +729,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '7',
+        'weight' => '5',
       ),
     ),
   );
@@ -912,7 +912,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '17',
+        'weight' => '14',
       ),
     ),
   );
@@ -975,7 +975,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '5',
+        'weight' => '8',
       ),
     ),
   );
@@ -1038,7 +1038,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '20',
+        'weight' => '17',
       ),
     ),
   );
@@ -1101,7 +1101,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '8',
+        'weight' => '9',
       ),
     ),
   );
@@ -1174,7 +1174,7 @@ function bw_user_profile_field_default_fields() {
           'progress_indicator' => 'throbber',
         ),
         'type' => 'image_image',
-        'weight' => '0',
+        'weight' => '1',
       ),
     ),
   );
@@ -1236,7 +1236,7 @@ function bw_user_profile_field_default_fields() {
           'rows' => '5',
         ),
         'type' => 'text_textarea',
-        'weight' => '1',
+        'weight' => '0',
       ),
     ),
   );
@@ -1361,7 +1361,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '9',
+        'weight' => '16',
       ),
     ),
   );
@@ -1436,7 +1436,7 @@ function bw_user_profile_field_default_fields() {
         'module' => 'link',
         'settings' => array(),
         'type' => 'link_field',
-        'weight' => '12',
+        'weight' => '10',
       ),
     ),
   );
@@ -1499,7 +1499,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '11',
+        'weight' => '18',
       ),
     ),
   );
