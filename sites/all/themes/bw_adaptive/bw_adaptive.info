@@ -19,6 +19,9 @@
   stylesheets[all][] = css/blocks.css
   stylesheets[all][] = css/navigation.css
   stylesheets[all][] = css/skins.css
+  stylesheets[all][] = css/bwmenu.css
+  stylesheets[all][] = css/pages.css
+  stylesheets[all][] = css/navigation.css
   stylesheets[print][] = css/print.css
 
   ; Disabled styles - un-comment if you need these.

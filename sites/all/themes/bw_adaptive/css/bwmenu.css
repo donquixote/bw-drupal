@@ -1,0 +1,64 @@
+/**
+ * @file
+ * BeWelcome menu Styling
+ */
+
+
+/*
+ * make sure that main-menu will not be shown when nice menus are enabled
+ */ 
+ 
+#main-menu  {
+  display: none;
+}
+
+/*
+ * make sure block-title is not shown
+ */
+
+#navigation h2.block-title{
+  display: none;
+}
+ 
+
+/*
+ * BeWelcome styling of navigation bar
+ */
+#navigation .content  ul.nice-menu {
+    float: left;
+    font-weight: bold;
+    margin: -14px 0 0 0;
+    padding: 0;
+    z-index: 999px;
+}
+
+#navigation .nice-menu li {
+    border-left: 1px solid #FF9922;
+    display: block;
+    float: left;
+    padding: 0;
+}
+
+#navigation .nice-menu li a {
+    color: #FFFFFF;
+    display: block;
+    padding: 1.2em 1em;
+    text-decoration: none;
+}
+
+#navigation li ul {
+    background: #333;
+    font-size: 0.8em;
+    width: 160px;
+    background: transparent url(../images/nav_main_ul.png) no-repeat scroll left bottom;
+    padding: 1em 0;
+}
+
+#navigation .nice-menu li ul li {
+    border-left: none;
+}
+
+#navigation li:hover, #navigation li.sfhover {
+    background: #333;
+}
+
