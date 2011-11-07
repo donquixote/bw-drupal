@@ -8,7 +8,7 @@
  */
 
 /**
- * Implementation of hook_activity_grants().
+ * Implements hook_activity_grants().
  */
 function user_relationships_activity_grants($activity) {
   $relationships = array();
@@ -29,7 +29,7 @@ function user_relationships_activity_access_grants($account, $object = NULL, $ty
   $relationships = user_relationships_load($params);
 
   $relationship_ids = array();
-  foreach ($relationships as $rid => $relationship) {
+  foreach ($relationships as $relationship) {
     // is this approved yet?
     $relationship_approved = (!$relationship->requires_approval || $relationship->approved);
 

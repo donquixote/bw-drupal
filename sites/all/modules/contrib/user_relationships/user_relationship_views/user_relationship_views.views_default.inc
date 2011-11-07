@@ -7,7 +7,7 @@
  */
 
 /**
- * Implementation of hook_default_view_views().
+ * Implements hook_default_view_views().
  */
 function user_relationship_views_views_default_views() {
   $view = new view;
@@ -49,14 +49,14 @@ function user_relationship_views_views_default_views() {
       'field' => 'rtype',
       'relationship' => 'requester_id',
     ),
-    'updated_at' => array(
+    'changed' => array(
       'label' => 'Updated date',
       'date_format' => 'small',
       'custom_date_format' => '',
       'exclude' => 0,
-      'id' => 'updated_at',
+      'id' => 'changed',
       'table' => 'user_relationships',
-      'field' => 'updated_at',
+      'field' => 'changed',
       'relationship' => 'requester_id',
     ),
   ));
@@ -177,7 +177,7 @@ function user_relationship_views_views_default_views() {
     'columns' => array(
       'title' => 'title',
       'rtype' => 'rtype',
-      'updated_at' => 'updated_at',
+      'changed' => 'changed',
     ),
     'info' => array(
       'title' => array(
@@ -188,7 +188,7 @@ function user_relationship_views_views_default_views() {
         'sortable' => 0,
         'separator' => '',
       ),
-      'updated_at' => array(
+      'changed' => array(
         'sortable' => 0,
         'separator' => '',
       ),
@@ -272,14 +272,14 @@ function user_relationship_views_views_default_views() {
         'button' => 'Override',
       ),
     ),
-    'updated_at' => array(
+    'changed' => array(
       'label' => 'Added',
       'date_format' => 'time ago',
       'custom_date_format' => '',
       'exclude' => 0,
-      'id' => 'updated_at',
+      'id' => 'changed',
       'table' => 'user_relationships',
-      'field' => 'updated_at',
+      'field' => 'changed',
       'relationship' => 'none',
       'override' => array(
         'button' => 'Override',
@@ -407,14 +407,14 @@ function user_relationship_views_views_default_views() {
         'button' => 'Use default',
       ),
     ),
-    'updated_at' => array(
+    'changed' => array(
       'label' => 'Added',
       'date_format' => 'time ago',
       'custom_date_format' => '',
       'exclude' => 1,
-      'id' => 'updated_at',
+      'id' => 'changed',
       'table' => 'user_relationships',
-      'field' => 'updated_at',
+      'field' => 'changed',
       'relationship' => 'none',
       'override' => array(
         'button' => 'Use default',

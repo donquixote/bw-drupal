@@ -39,28 +39,22 @@ function _user_relationships_ui_set_notifications(&$account) {
 }
 
 /**
- * Adds autocompletion capability
+ * List of possible relationship actions with between two users.
+ *
+ * @param $viewer
+ *   User object for the visitor.
+ * @param $viewed
+ *   User object for the user being looked at.
+ * @param action_types
+ *   Associative array of kinds of links to show (all by default).
+ *   Only the existence of specific array keys is needed: add, remove,
+ *   requested, received.
+ *
+ * @return
+ *   An array with actions as strings.
  */
-function _user_relationships_ui_autocomplete_types($string = '') {
-  $matches = array();
-  if ($string) {
-    $result = db_query_range("SELECT rtid, name FROM {user_relationship_types} WHERE LOWER(name) LIKE LOWER(:string)", 0, 10, array(':string' => '%' . strtolower($string) . '%'));
-    foreach ($result as $relationship) {
-      $matches[$relationship->name] = check_plain(ur_tt("user_relationships:rtid:$relationship->rtid:name", $relationship->name));
-   }
-  }
-  print drupal_json_output($matches);
-}
-
-/**
- * List of possible relationship actions with between two users
- * @param $viewer - user object for the visitor
- * @param $viewed - user object for the user being looked at
- * @param action_types - associative array of kinds of links to show (all by default). Only the existence of specific array keys is needed:
- *                       add, remove, requested, received
- */
-function _user_relationships_ui_actions_between(&$viewer, &$viewed, $action_types = array('add' => 1, 'remove' => 1, 'requested' => 1, 'received' => 1)) {
-  if (!user_access('can have relationships') || $viewer->uid == $viewed->uid) {
+function user_relationships_ui_actions_between($viewer, $viewed, $action_types = array('add' => 1, 'remove' => 1, 'requested' => 1, 'received' => 1)) {
+  if ($viewer->uid == $viewed->uid) {
     return;
   }
 
@@ -87,38 +81,18 @@ function _user_relationships_ui_actions_between(&$viewer, &$viewed, $action_type
   }
 
   if (isset($action_types['add'])) {
-    // Compute if any more relationships can be created
-    $types_count = (int)db_query("SELECT COUNT(*) FROM {user_relationship_types}")->fetchField();
-    $existing_relationships = user_relationships_load(array('between' => array($viewer->uid, $viewed->uid)), array('sort' => 'rtid'));
-    $all_relationships = user_relationships_types_load();
-    $relationships_count = 0;
-
-    // Unset the relationships which already exist
-    foreach ($existing_relationships as $rtid => $relationship_type) {
-      foreach ($relationship_type as $relationship) {
-        if (!$relationship->is_oneway || !$relationship->is_reciprocal || $relationship->requester_id == $viewer->uid) {
-          unset($all_relationships[$rtid]);
-          $relationships_count++;
-        }
-      }
-    }
-
-    if (!$relationships_count || (variable_get('user_relationships_allow_multiple', TRUE) && ($relationships_count < $types_count))) {
-      //if configured, create direct links
+    $relationships = user_relationships_get_requestable_rtypes($viewer, $viewed, 'full');
+    if ($relationships) {
+      // If configured, create direct links.
       if (variable_get('user_relationships_show_direct_links', 1)) {
-        //draw a single link, or one for each relationship type
-        foreach ($all_relationships as $rtid => $relationship) {
-          //check this type can be requested
-          if (!user_relationships_can_request($viewer, $relationship) || !user_relationships_can_receive($viewed, $relationship) || !user_access('maintain own relationships')) {
-            continue;
-          }
+        // Create a single link, or one for each relationship type.
+        foreach ($relationships as $relationship) {
           $list[] = theme('user_relationships_request_relationship_direct_link', array('relate_to' => $viewed, 'relationship_type' => $relationship));
         }
       }
-      //just one generic link pointing to a page with dropdown
+      // just one generic link pointing to a page with dropdown.
       else {
         $list[] = theme('user_relationships_request_relationship_link', array('relate_to' => $viewed));
-
       }
     }
   }
@@ -138,41 +112,6 @@ function _user_relationships_ui_actions_between(&$viewer, &$viewed, $action_type
   return $list;
 }
 
-/**
- * Get relationship types that a user can request
- * TODO: factor out of .module into an include file
- * @param $requester requester user or uid
- * @param $requestee requestee user or uid
- * @return array {rtid} => {relationship type name} that requester may send to requestee
- */
-function _user_relationships_ui_get_requestable_rtypes($requester, $requestee) {
-  $current_relationships = user_relationships_load(array('between' => array($requester->uid, $requestee->uid)), array('sort' => 'rtid'));
-
-  $relationship_types = user_relationships_types_load();
-  $relationships = array();
-  foreach ($relationship_types as $rtype) {
-    //exclude already established relationships
-    if (!isset($current_relationships[$rtype->rtid])) {
-      $relationships[$rtype->rtid] = ur_tt("user_relationships:rtid:$rtype->rtid:name", $rtype->name);
-      continue;
-    }
-    $relationship = $current_relationships[$rtype->rtid];
-    if (is_array($relationship) && count($relationship)) {
-      $relationship = $relationship[0];
-    }
-    //skip two-way relationships, one-way non-reciprocal relationships, or reciprocal where this direction already exists
-    if (isset($current_relationships[$rtype->rtid]) && (!$rtype->is_oneway || !$rtype->is_reciprocal || (isset($relationship) && $relationship->requester_id == $requester->uid))) {
-      continue;
-    }
-    //exclude types that are not allowed
-    if (!user_relationships_can_request($requester, $rtype) || !user_relationships_can_receive($requestee, $rtype)) {
-      continue;
-    }
-    $relationships[$rtype->rtid] = ur_tt("user_relationships:rtid:$rtype->rtid:name", $rtype->name);
-  }
-  return $relationships;
-}
-
 
 /**********************************
  *          CALLBACKS
@@ -188,12 +127,13 @@ function user_relationships_ui_check_access($types, $account = NULL) {
     return TRUE;
   }
 
-  if (!is_array($types)) {
-    $types = array($types);
+  // If the user does not any have permission, deny access.
+  if (!user_relationships_can_receive($account)) {
+    return FALSE;
   }
 
-  if (!user_access('can have relationships')) {
-    return FALSE;
+  if (!is_array($types)) {
+    $types = array($types);
   }
 
   foreach ($types as $type) {
@@ -225,7 +165,7 @@ function user_relationships_ui_check_access($types, $account = NULL) {
  **********************************/
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function user_relationships_ui_help($section) {
   switch ($section) {
@@ -240,7 +180,7 @@ function user_relationships_ui_help($section) {
 }
 
 /**
- * Implementation of hook_init().
+ * Implements hook_init().
  */
 function user_relationships_ui_init() {
   //do not enable ajax functions if set in admin/config/people/relationships/settings
@@ -260,7 +200,7 @@ function user_relationships_ui_init() {
 }
 
 /**
- * Implementation of hook_perm().
+ * Implements hook_perm().
  */
 function user_relationships_ui_permission() {
   return array(
@@ -280,7 +220,7 @@ function user_relationships_ui_permission() {
 }
 
 /**
- * Implementation of hook_footer().
+ * Implements hook_footer().
  */
 function user_relationships_ui_page_alter(&$page) {
   // This is the div we are utilizing for the form popups for confirmation.
@@ -291,14 +231,6 @@ function user_relationships_ui_page_alter(&$page) {
  * Implements hook_menu().
  */
 function user_relationships_ui_menu() {
-  $items['relationship_types/autocomplete'] = array(
-    'title' => 'User Relationships Autocomplete',
-    'type' => MENU_CALLBACK,
-    'page callback' => '_user_relationships_ui_autocomplete_types',
-    'access callback' => 'user_access',
-    'access arguments' => array('administer user relationships'),
-  );
-
   $items['relationships'] = array(
     'title' => 'My relationships',
     'type' => MENU_NORMAL_ITEM,
@@ -490,7 +422,7 @@ function user_relationships_ui_title_callback_pending($column, $account = NULL) 
   }
 }
 /**
- * Implementation of hook_user_login().
+ * Implements hook_user_login().
  */
 function user_relationships_ui_user_login(&$edit, $account) {
   if (user_access('maintain own relationships')) {
@@ -506,7 +438,7 @@ function user_relationships_ui_user_view($account, $view_mode) {
   }
 
   $output = array();
-  if (user_access('view user relationships') && ($list = _user_relationships_ui_actions_between($user, $account, array('remove' => 1)))) {
+  if (user_access('view user relationships') && ($list = user_relationships_ui_actions_between($user, $account, array('remove' => 1)))) {
     $output['relations'] = array(
       '#title'      => t('Your relationships to this user'),
       '#type'       => 'user_profile_item',
@@ -515,7 +447,7 @@ function user_relationships_ui_user_view($account, $view_mode) {
     );
   }
 
-  if ($actions = _user_relationships_ui_actions_between($user, $account, array('add' => 1, 'requested' => 1, 'received' => 1))) {
+  if ($actions = user_relationships_ui_actions_between($user, $account, array('add' => 1, 'requested' => 1, 'received' => 1))) {
     $output['actions'] = array(
       '#title'      => t('Relationship actions'),
       '#type'       => 'user_profile_item',
@@ -565,28 +497,22 @@ function user_relationships_ui_form_alter(&$form, &$form_state, $form_id) {
 
         $options = array();
         foreach ($relationships as $relationship) {
-          if ($relationship->requires_approval) {
+          if ($relationship->requires_approval && user_relationships_can_receive($form['#user'], $relationship)) {
             $options[$relationship->rtid] = ur_tt("user_relationships:rtid:$relationship->rtid:name", $relationship->name);
           }
         }
 
         //#453090 Do nothing if there are no options.
         if (count($options)) {
-
-        $form['user_relationships_ui_settings']['user_relationships_ui_auto_approve'] = array(
-          '#type'           => 'checkboxes',
-          '#title'          => t('Automatically approve relationship requests from other users'),
-          '#options'        => $options,
-          '#default_value'  => $form['#user']->data['user_relationships_ui_auto_approve'],
-          '#description'    => t("When another user requests a relationship with you, we usually require your approval. If you'd like certain relationship types to be approved automatically, check the box next to that type.")
-        );
+          $form['user_relationships_ui_settings']['user_relationships_ui_auto_approve'] = array(
+            '#type'           => 'checkboxes',
+            '#title'          => t('Automatically approve relationship requests from other users'),
+            '#options'        => $options,
+            '#default_value'  => $form['#user']->data['user_relationships_ui_auto_approve'],
+            '#description'    => t("When another user requests a relationship with you, we usually require your approval. If you'd like certain relationship types to be approved automatically, check the box next to that type.")
+          );
         }
       }
-    }
-
-    // No options have been set so don't display it
-    if (isset($form['user_relationships_ui_settings']) && sizeof($form['user_relationships_ui_settings']) == 3) {
-      unset($form['user_relationships_ui_settings']);
     }
   }
 }
@@ -595,9 +521,14 @@ function user_relationships_ui_form_alter(&$form, &$form_state, $form_id) {
  * Hides the settings fieldset if there are no options to be displayed.
  */
 function user_relationships_ui_account_fieldset_remove_if_empty($element) {
-  if (count(element_children($element)) == 0) {
-    $element['#access'] = FALSE;
+  // Go through all child elements, if any of them is visible, do not hide.
+  // If no elements exist or none are accessible, hide this element.
+  foreach (element_children($element) as $key) {
+    if (!isset($element[$key]['#access'])  || $element[$key]['#access']) {
+      return $element;
+    }
   }
+  $element['#access'] = FALSE;
   return $element;
 }
 
@@ -606,11 +537,10 @@ function user_relationships_ui_account_fieldset_remove_if_empty($element) {
  */
 function user_relationships_ui_user_presave(&$edit, $account, $category) {
   $edit['data']['user_relationships_ui_auto_approve'] = isset($edit['user_relationships_ui_auto_approve']) ? $edit['user_relationships_ui_auto_approve'] : array();
-  $edit['data']['user_relationships_allow_private_message'] = isset($edit['user_relationships_allow_private_message']) ? $edit['user_relationships_allow_private_message'] : array();
 }
 
 /**
- * Implementation of hook_theme().
+ * Implements hook_theme().
  */
 function user_relationships_ui_theme() {
   $theme_funcs = array(
