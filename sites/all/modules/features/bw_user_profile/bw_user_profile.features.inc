@@ -12,10 +12,6 @@ function bw_user_profile_ctools_plugin_api() {
   if ($module == "ds" && $api == "ds") {
     return array("version" => "1");
   }
-  list($module, $api) = func_get_args();
-  if ($module == "field_group" && $api == "field_group") {
-    return array("version" => "1");
-  }
 }
 
 /**
@@ -27,9 +23,9 @@ function bw_user_profile_default_profile2_type() {
     "userCategory" : true,
     "userView" : true,
     "type" : "main",
-    "label" : "User Profile",
+    "label" : "Main profile",
     "weight" : "0",
-    "data" : { "registration" : 1 }
+    "data" : { "registration" : true, "use_page" : true }
   }');
   return $items;
 }

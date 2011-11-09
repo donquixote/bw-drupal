@@ -98,7 +98,7 @@ function bw_user_profile_field_default_fields() {
           'year_range' => '-123:-15',
         ),
         'type' => 'date_select',
-        'weight' => '6',
+        'weight' => '3',
       ),
     ),
   );
@@ -161,7 +161,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '13',
+        'weight' => '16',
       ),
     ),
   );
@@ -224,7 +224,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '15',
+        'weight' => '18',
       ),
     ),
   );
@@ -286,7 +286,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '3',
+        'weight' => '2',
       ),
     ),
   );
@@ -355,67 +355,7 @@ function bw_user_profile_field_default_fields() {
         'module' => 'options',
         'settings' => array(),
         'type' => 'options_buttons',
-        'weight' => '7',
-      ),
-    ),
-  );
-
-  // Exported field: 'profile2-main-field_geocoded'
-  $fields['profile2-main-field_geocoded'] = array(
-    'field_config' => array(
-      'active' => '1',
-      'cardinality' => '1',
-      'deleted' => '0',
-      'entity_types' => array(),
-      'field_name' => 'field_geocoded',
-      'foreign keys' => array(),
-      'indexes' => array(),
-      'module' => 'geofield',
-      'settings' => array(
-        'profile2_private' => 0,
-      ),
-      'translatable' => '0',
-      'type' => 'geofield',
-    ),
-    'field_instance' => array(
-      'bundle' => 'main',
-      'default_value' => NULL,
-      'deleted' => '0',
-      'description' => '',
-      'display' => array(
-        'default' => array(
-          'label' => 'above',
-          'module' => 'geofield_map',
-          'settings' => array(),
-          'type' => 'geofield_map_map',
-          'weight' => '19',
-        ),
-      ),
-      'entity_type' => 'profile2',
-      'field_name' => 'field_geocoded',
-      'label' => 'Geocoded',
-      'required' => 0,
-      'settings' => array(
-        'local_solr' => array(
-          'enabled' => FALSE,
-          'lat_field' => 'lat',
-          'lng_field' => 'lng',
-        ),
-        'user_register_form' => FALSE,
-      ),
-      'widget' => array(
-        'active' => 1,
-        'module' => 'geocoder',
-        'settings' => array(
-          'geocoder_field' => array(
-            'field_housenumber' => 'field_housenumber',
-            'field_street' => 'field_street',
-            'field_zipcode' => 'field_zipcode',
-          ),
-          'geocoder_handler' => 'google',
-        ),
-        'type' => 'geocoder',
-        'weight' => '19',
+        'weight' => '6',
       ),
     ),
   );
@@ -478,7 +418,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '16',
+        'weight' => '19',
       ),
     ),
   );
@@ -541,7 +481,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '17',
+        'weight' => '10',
       ),
     ),
   );
@@ -604,7 +544,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '12',
+        'weight' => '15',
       ),
     ),
   );
@@ -667,7 +607,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '11',
+        'weight' => '21',
       ),
     ),
   );
@@ -729,7 +669,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '5',
+        'weight' => '7',
       ),
     ),
   );
@@ -912,7 +852,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '14',
+        'weight' => '17',
       ),
     ),
   );
@@ -975,7 +915,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '8',
+        'weight' => '5',
       ),
     ),
   );
@@ -1038,7 +978,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '17',
+        'weight' => '20',
       ),
     ),
   );
@@ -1101,7 +1041,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '9',
+        'weight' => '8',
       ),
     ),
   );
@@ -1174,7 +1114,7 @@ function bw_user_profile_field_default_fields() {
           'progress_indicator' => 'throbber',
         ),
         'type' => 'image_image',
-        'weight' => '1',
+        'weight' => '0',
       ),
     ),
   );
@@ -1236,7 +1176,7 @@ function bw_user_profile_field_default_fields() {
           'rows' => '5',
         ),
         'type' => 'text_textarea',
-        'weight' => '0',
+        'weight' => '1',
       ),
     ),
   );
@@ -1361,7 +1301,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '16',
+        'weight' => '9',
       ),
     ),
   );
@@ -1436,7 +1376,7 @@ function bw_user_profile_field_default_fields() {
         'module' => 'link',
         'settings' => array(),
         'type' => 'link_field',
-        'weight' => '10',
+        'weight' => '12',
       ),
     ),
   );
@@ -1499,7 +1439,7 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '18',
+        'weight' => '11',
       ),
     ),
   );
@@ -1511,7 +1451,6 @@ function bw_user_profile_field_default_fields() {
   t('Films');
   t('First name');
   t('Gender');
-  t('Geocoded');
   t('Hobbies');
   t('Home phone');
   t('House number');
