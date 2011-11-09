@@ -405,16 +405,16 @@ function bw_user_profile_field_default_fields() {
       ),
       'widget' => array(
         'active' => 1,
-        'module' => 'geocode',
+        'module' => 'geocoder',
         'settings' => array(
-          'geocode_field' => array(
+          'geocoder_field' => array(
             'field_housenumber' => 'field_housenumber',
             'field_street' => 'field_street',
             'field_zipcode' => 'field_zipcode',
           ),
-          'geocode_handler' => 'google',
+          'geocoder_handler' => 'google',
         ),
-        'type' => 'geocode',
+        'type' => 'geocoder',
         'weight' => '19',
       ),
     ),
