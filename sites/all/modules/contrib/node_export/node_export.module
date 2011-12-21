@@ -8,20 +8,6 @@
  */
 
 /**
- * Implements hook_help().
- */
-function node_export_help($path, $arg) {
-  switch ($path) {
-    case 'admin/help#node_export':
-      $output = '<p>' . t('The Node export module allows users to export an existing node and then import it into another Drupal installation.') . '</p>';
-      $output .= '<p>' . t('Users with the "export nodes" permission can utilize this functionality. A new tab will appear on node pages with the words "Node export".') . '</p>';
-      $output .= '<p>' . t('It is also possible to do bulk exports, via Content admin (admin/content) or using "Views Bulk Operations".') . '</p>';
-      $output .= '<p>' . t('Importing nodes is done via the Add content page and can be used by those with the "Use PHP to import nodes" permission.') . '</p>';
-      return $output;
-  }
-}
-
-/**
  * Implements hook_permission().
  */
 function node_export_permission() {
@@ -95,7 +81,7 @@ function node_export_menu() {
     'title' => 'Node export: import',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('node_export_import_form'),
-    'access arguments' => array('use PHP to import nodes'),
+    'access callback' => 'node_export_access_import',
     'description' => 'Import content using <em>Node export</em>.',
     'file' => 'node_export.pages.inc',
   );
@@ -111,12 +97,18 @@ function node_export_access_export($node) {
   if (is_int($node)) {
     $node = node_load($node);
   }
-  // Check basic role permissions first.
-  $access = (user_access('export nodes') || ($user->uid && ($node->uid == $user->uid) && user_access('export own nodes')));
-  // Make sure the user can view the original node content.
-  $access = $access && node_access('view', $node);
-  // Check additional conditions
-  $access = $access && node_export_is_permitted($node->type);
+
+  if (function_exists('drush_main')) {
+    // Always allow drush to export nodes.
+    $access = TRUE;
+  }
+  else {
+    // Check basic role permissions first.
+    $access = (user_access('export nodes') || ($user->uid && ($node->uid == $user->uid) && user_access('export own nodes')));
+    // Make sure the user can view the original node content.
+    $access = $access && node_access('view', $node);
+  }
+
   // Let other modules alter this - for example to only allow some users
   // to export specific nodes or types.
   drupal_alter("node_export_access_export", $access, $node);
@@ -126,12 +118,31 @@ function node_export_access_export($node) {
 /**
  * Check access to import a node.
  */
-function node_export_access_import($node) {
+function node_export_access_import($node = NULL) {
   global $user;
-  // Check basic role permissions first.
-  $access = user_access('use PHP to import nodes');
-  // Check additional conditions
-  $access = $access && (node_export_is_permitted($node->type) && node_access('create', $node->type));
+
+  if (function_exists('drush_main')) {
+    // Always allow drush to import nodes.
+    $access = TRUE;
+  }
+  elseif (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install') {
+    // During the install phase $user is the Anonymous user; however, in
+    // practice $user is performing tasks only granted to the admin user
+    // (eg: installing modules, changing site settings).  For this reason
+    // it seems sensible to allow this "Anonymous admin" user to import
+    // any nodes they wish.
+    $access = TRUE;
+  }
+  else {
+    // Check basic role permissions first.
+    $access = user_access('use PHP to import nodes');
+
+    if (!is_null($node) && $access) {
+      // Check node conditions.
+      $access = node_access('create', $node->type);
+    }
+  }
+
   // Let other modules alter this - for example to only allow some users
   // to import specific nodes or types.
   drupal_alter("node_export_access_import", $access, $node);
@@ -168,14 +179,6 @@ function node_export_access_import_nodes($nodes) {
     }
   }
   return TRUE;
-}
-
-/**
- * Check whether exporting this type is permitted.
- */
-function node_export_is_permitted($type) {
-  $omitted = variable_get('node_export_omitted', array());
-  return empty($omitted[$type]);
 }
 
 /**
@@ -289,9 +292,6 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
 
     $node = node_export_prepare_node($original_node);
 
-    // Let other modules do special fixing up.
-    drupal_alter('node_export_node', $node, $original_node);
-
     $nodes[] = $node;
   }
 
@@ -306,6 +306,17 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
   // Let other modules do special fixing up.
   drupal_alter('node_export', $nodes, $format_handler);
 
+  // If any nodes are set to FALSE, then an error was triggered in another module.
+  // Currently modules doing this should also leave a watchdog warning.
+  if (in_array(FALSE, $nodes)) {
+    // Halt exporting.
+    $error = $msg_t('An error occurred when processing nodes, please check your logs.  No nodes exported.');
+    return array(
+      'success' => FALSE,
+      'output' => array($error),
+    );
+  }
+
   $code_string = module_invoke(
     $format_handlers[$format_handler]['#module'],
     'node_export',
@@ -319,6 +330,7 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
   return array(
     'success' => TRUE,
     'output' => $code_string,
+    'format' => $format_handler,
   );
 
 }
@@ -327,6 +339,13 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
  * Prepare a single node during export.
  */
 function node_export_prepare_node(&$original_node) {
+  // Create UUID if it's not there.
+  if (!uuid_get_uuid('node', 'nid', $original_node->nid)) {
+    $original_node->uuid = uuid_set_uuid('node', 'nid', $original_node->nid);
+    // Save it so future node exports are consistent.
+    node_save($original_node);
+  }
+
   $node = clone($original_node);
 
   // Fix taxonomy array
@@ -351,6 +370,10 @@ function node_export_prepare_node(&$original_node) {
     $node->taxonomy = $new_taxonomy;
   }
 
+  // Attach path to the node.  Drupal doesn't attach this anymore for
+  // performance reasons http://drupal.org/node/332333#comment-2163634.
+  $node->path = path_load(array('source' => 'node/' . $node->nid));
+
   // Fix menu array
   $node->menu = node_export_get_menu($original_node);
 
@@ -359,6 +382,9 @@ function node_export_prepare_node(&$original_node) {
 
   // Add a parameter to identify this node as coming from D7, might be useful some day.
   $node->node_export_drupal_version = '7';
+
+  // Let other modules do special fixing up.
+  drupal_alter('node_export_node', $node, $original_node);
 
   return $node;
 }
@@ -386,12 +412,25 @@ function node_export_import_types_check($nodes) {
  *   The string of export code.
  * @param $msg_t
  *   Function used to translate.
+ * @param $save
+ *   When TRUE will save the nodes that are imported.
  * @return
  *   An array with keys 'success' which is a boolean value representing whether
  *   the import was successful and 'output' which contains an array of
  *   translated strings to be shown to the user as messages.
  */
-function node_export_import($code_string, $msg_t = 't') {
+function node_export_import($code_string, $msg_t = 't', $save = TRUE) {
+  // Early check to avoid letting hooligans and the elderly pass data to the
+  // eval() function call.
+  if (!node_export_access_import()) {
+    $error = $msg_t(
+      'You do not have permission to import any nodes.'
+    );
+    return array(
+      'success' => FALSE,
+      'output' => array($error),
+    );
+  }
 
   // Allow modules to manipulate the $code_string.
   drupal_alter('node_export_decode', $code_string);
@@ -463,31 +502,50 @@ function node_export_import($code_string, $msg_t = 't') {
   $count = 0;
   $total = count($nodes);
   // Let other modules do special fixing up.
-  drupal_alter('node_export_import', $nodes, $used_format);
+  drupal_alter('node_export_import', $nodes, $used_format, $save);
   $new_nodes = array();
   $messages = array();
   foreach ($nodes as $original_node) {
     $node = node_export_node_clone($original_node);
 
     // Let other modules do special fixing up.
-    drupal_alter('node_export_node_import', $node, $original_node);
+    drupal_alter('node_export_node_import', $node, $original_node, $save);
 
-    node_export_save($node);
-    $new_nodes[$node->nid] = $node;
-    $messages[] = $msg_t("Imported node !nid: !node", array('!nid' => $node->nid, '!node' => l($node->title, 'node/' . $node->nid)));
-    $count++;
+    if ($save) {
+      node_export_save($node);
+      $new_nodes[$node->nid] = $node;
+      $messages[] = $msg_t("Imported node !nid: !node", array('!nid' => $node->nid, '!node' => l($node->title, 'node/' . $node->nid)));
+      $count++;
+    }
+    else {
+      $new_nodes[] = $node;
+    }
   }
-  drupal_alter('node_export_after_import', $new_nodes, $used_format);
-  $messages[] = $msg_t("!count of !total nodes were imported.  Some values may have been reset depending on Node export's configuration.", array('!total' => $total, '!count' => $count));
 
-  // Clear the page and block caches.
-  cache_clear_all();
+  if ($save) {
+    drupal_alter('node_export_after_import', $new_nodes, $used_format, $save);
+    $messages[] = $msg_t("!count of !total nodes were imported.  Some values may have been reset depending on Node export's configuration.", array('!total' => $total, '!count' => $count));
 
-  return array(
-    'success' => TRUE,
-    'output' => $messages,
-    'nids' => array_keys($new_nodes),
-  );
+    // Clear the page and block caches.
+    cache_clear_all();
+
+    // Nodes were saved, so return the nids.
+    return array(
+      'success' => TRUE,
+      'output' => $messages,
+      'nids' => array_keys($new_nodes),
+      'format' => $used_format,
+    );
+  }
+  else {
+    // We didn't save, so return full nodes.
+    return array(
+      'success' => TRUE,
+      'output' => $messages,
+      'nodes' => $new_nodes,
+      'format' => $used_format,
+    );
+  }
 
 }
 
@@ -656,9 +714,12 @@ function node_export_node_clone($original_node) {
     if (variable_get('node_export_reset_path_' . $node->type, TRUE)) {
       $node->path = NULL;
     }
-    elseif (module_exists('pathauto')) {
-      // Prevent pathauto from creating a new path alias.
-      $node->pathauto_perform_alias = FALSE;
+    else {
+      unset($node->path['pid']);
+      if (module_exists('pathauto')) {
+        // Prevent pathauto from creating a new path alias.
+        $node->path['pathauto'] = FALSE;
+      }
     }
 
     if (variable_get('node_export_reset_book_mlid_' . $node->type, TRUE) && isset($node->book['mlid'])) {
@@ -712,6 +773,15 @@ function node_export_get_menu($node) {
     // Copy those fields from the old menu over the new menu defaults.
     foreach ($menu_fields as $menu_field) {
       $node->menu[$menu_field] = $old_menu[$menu_field];
+    }
+
+    // Copy the menu description from the old menu.
+    // Issue #1287300.
+    if (isset($old_menu['options']['attributes']['title'])) {
+      $node->menu['description'] = $old_menu['options']['attributes']['title'];
+    }
+    else {
+      $node->menu['description'] = '';
     }
 
     // Ensure menu will be created during node import.

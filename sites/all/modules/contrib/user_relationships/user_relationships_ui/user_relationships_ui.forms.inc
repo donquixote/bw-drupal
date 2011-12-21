@@ -13,7 +13,7 @@ module_load_include('inc', 'user_relationships_ui', 'user_relationships_ui.actio
  * @param $form_values array $form['values'] when called from form_alter()
  */
 function user_relationships_ui_request_form($requester, $requestee, $form_values = NULL) {
-  $relationships = _user_relationships_ui_get_requestable_rtypes($requester, $requestee);
+  $relationships = user_relationships_get_requestable_rtypes($requester, $requestee);
   //try to find out desired relationship type
   $default_relationship = NULL;
   if (isset($form_values['rtid'])) {//given through form
@@ -91,14 +91,6 @@ function user_relationships_ui_request($form, &$form_state, $requestee) {
     );
     return $form;
   }
-  elseif (!user_access('can have relationships', $requestee)) {
-    $form['error'] = array(
-      '#prefix' => '<div>',
-      '#suffix' => '</div>',
-      '#markup' => user_relationships_get_message('not_accepting_requests') . $script
-    );
-    return $form;
-  }
   elseif ($user->uid == $requestee->uid) {
     $form['error'] = array(
       '#prefix' => '<div>',
@@ -108,7 +100,7 @@ function user_relationships_ui_request($form, &$form_state, $requestee) {
     return $form;
   }
   elseif (!variable_get('user_relationships_allow_multiple', TRUE) &&
-           $relationships_count = user_relationships_load(array('between' => array($requester->uid, $requestee->uid)), array('count' => TRUE))) {
+           user_relationships_load(array('between' => array($requester->uid, $requestee->uid)), array('count' => TRUE))) {
     $form['error'] = array(
       '#prefix' => '<div>',
       '#suffix' => '</div>',
@@ -164,6 +156,7 @@ function user_relationships_ui_pending_requested_ajax($action, $account, $relati
  * Approve, Decline, or Cancel confirmation form
  */
 function user_relationships_ui_pending_requested($form, &$form_state, $action, $account, $relationship) {
+  global $user;
   $viewed_id = $account->uid;
 
   $form['rid'] = array(
@@ -218,7 +211,6 @@ function user_relationships_ui_pending_requested($form, &$form_state, $action, $
     $dest = ($viewed_id == $user->id ? $request_url : "user/{$viewed_id}/$request_url");
   }
 
-  global $user;
   $output = confirm_form(
     $form,
     $action_message,

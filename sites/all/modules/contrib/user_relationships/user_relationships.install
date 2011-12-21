@@ -11,13 +11,13 @@
 function user_relationships_schema() {
   $schema['user_relationships'] = array(
     'fields' => array(
-      'rid'           => array('type' => 'serial', 'not null' => TRUE),
+      'rid'           => array('type' => 'int', 'not null' => TRUE),
       'requester_id'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'requestee_id'  => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'rtid'          => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'approved'      => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0, 'size' => 'tiny'),
-      'created_at'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-      'updated_at'    => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'created'       => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
+      'changed'       => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
       'flags'         => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
     ),
     'primary key' => array('requester_id', 'requestee_id', 'rtid'),
@@ -45,28 +45,6 @@ function user_relationships_schema() {
     'primary key' => array('rtid')
   );
 
-  $schema['user_relationship_type_roles'] = array(
-    'fields' => array(
-      'rtid'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-      'rid'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-    ),
-    'primary key' => array('rtid', 'rid'),
-    'indexes' => array(
-      'rtid' => array('rtid'),
-    )
-  );
-
-  $schema['user_relationship_type_roles_receive'] = array(
-    'fields' => array(
-      'rtid'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-      'rid'              => array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0),
-    ),
-    'primary key' => array('rtid', 'rid'),
-    'indexes' => array(
-      'rtid' => array('rtid'),
-    )
-  );
-
   return $schema;
 }
 
@@ -75,6 +53,7 @@ function user_relationships_schema() {
  * Implements hook_uninstall().
  */
 function user_relationships_uninstall() {
+  drupal_load('module', 'user_relationships');
   $message_defaults = _user_relationships_default_messages(array());
   $message_keys = array_merge(array_keys($message_defaults['informational']), array_keys($message_defaults['error']));
   foreach ($message_keys as $key) {
@@ -106,4 +85,38 @@ function user_relationships_update_7000() {
     // Delete the old variable.
     variable_del($variable->name);
   }
+}
+
+/**
+ * Remove user relationship type roles tables.
+ */
+function user_relationships_update_7001() {
+  drupal_set_message(('Allowed roles settings for user relationship types must now be set by configuring the corresponding permissions explicitly.'));
+  db_drop_table('user_relationship_type_roles');
+  db_drop_table('user_relationship_type_roles_receive');
+}
+
+/**
+ *  Change {user_relationships}.rid from type serial to int.
+ */
+function user_relationships_update_7002() {
+  db_change_field('user_relationships', 'rid', 'rid', array('type' => 'int', 'not null' => TRUE));
+}
+
+/**
+ * Change column names from created_at and updated_at to created and changed.
+ */
+function user_relationships_update_7003() {
+  db_change_field(
+    'user_relationships',
+    'created_at',
+    'created',
+    array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0)
+  );
+  db_change_field(
+    'user_relationships',
+    'updated_at',
+    'changed',
+    array('type' => 'int', 'unsigned' => TRUE, 'not null' => TRUE, 'default' => 0)
+  );
 }

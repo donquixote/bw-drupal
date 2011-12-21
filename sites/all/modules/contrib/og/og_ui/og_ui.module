@@ -34,16 +34,6 @@ function og_ui_menu() {
     'title' => 'Leave group',
   );
 
-  $items['group/%/%/invite'] = array(
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('og_ui_invite_form', 1, 2),
-    'access callback' => 'og_user_access_by_entity',
-    'access arguments' => array('invite', 1, 2),
-    'title' => 'Send invitation',
-    'type' => MENU_CALLBACK,
-    'file' => 'og_ui.pages.inc',
-  );
-
   $items['group/%/%/admin/people/add-user'] = array(
     'page callback' => 'drupal_get_form',
     'title' => 'Add members',
@@ -117,7 +107,7 @@ function og_ui_menu() {
   }
 
   $items['admin/config/group'] = array(
-    'title' => 'Group',
+    'title' => 'Organic groups',
     'description' => 'Administer the suite of Organic groups modules.',
     'position' => 'right',
     'weight' => -5,
@@ -280,13 +270,31 @@ function og_ui_mail($key, &$message, $params) {
 }
 
 /**
- * Implements hook_field_attach_form().
- *
- * Hide the group audience field from the user page, for non-privileged users.
+ * Implements hook_field_access().
  */
-function og_ui_field_attach_form($entity_type, $entity, &$form, $form_state, $langcode) {
-  if ($entity_type == 'user' && !user_access('administer group')) {
-    $form[OG_AUDIENCE_FIELD][LANGUAGE_NONE]['#access'] = FALSE;
+function og_ui_field_access($op, $field, $entity_type, $entity, $account) {
+  global $user;
+
+  if ($field['field_name'] != OG_AUDIENCE_FIELD) {
+    return;
+  }
+
+  if (!$user->uid) {
+    // User is anonymous, and user register might try to add the group-audience
+    // field.
+    return;
+  }
+
+  if ($op != 'edit') {
+    return;
+  }
+
+  if ($entity_type != 'user') {
+    return;
+  }
+
+  if (!user_access('administer group', $account)) {
+    return FALSE;
   }
 }
 
@@ -342,6 +350,12 @@ function og_ui_subscribe_link($entity_type, $entity, $account = NULL) {
         }
       }
       else {
+        if (og_is_member($group->gid, 'user', $account, array(OG_STATE_BLOCKED))) {
+          // If user is blocked, they should not be able to apply for
+          // membership.
+          return;
+        }
+
         if (og_user_access($group->gid, 'subscribe without approval', $account)) {
           $links['title'] = t('Subscribe to group');
           $url = "group/$entity_type/$id/subscribe";

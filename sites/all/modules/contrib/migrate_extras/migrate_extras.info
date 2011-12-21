@@ -4,6 +4,7 @@ core = 7.x
 package=Development
 
 dependencies[] = migrate
+files[] = addressfield.inc
 files[] = date.inc
 files[] = flag.inc
 files[] = media.inc
@@ -17,9 +18,9 @@ files[] = user_relationships.inc
 files[] = tests/date.test
 files[] = tests/pathauto.test
 
-; Information added by drupal.org packaging script on 2011-08-19
-version = "7.x-2.x-dev"
+; Information added by drupal.org packaging script on 2011-09-18
+version = "7.x-2.2"
 core = "7.x"
 project = "migrate_extras"
-datestamp = "1313714173"
+datestamp = "1316388405"
 
