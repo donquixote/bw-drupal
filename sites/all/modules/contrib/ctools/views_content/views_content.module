@@ -281,3 +281,77 @@ function _views_content_get_context_from_display($view, $id, $parent, $required 
     'view display id' => $id,
   );
 }
+
+
+/**
+ * Implements hook_ds_fields_info()
+ */
+function views_content_ds_fields_info($entity_type) {
+
+  if ($entity_type != 'node') {
+    // For now, only node is supported. See below, "Problem".
+    return;
+  }
+
+  $fields = array();
+
+  $views = views_get_all_views();
+
+  foreach ($views as $view_id => $view) {
+    if (!empty($view->disabled)) {
+      continue;
+    }
+
+    $view->init_display();
+    foreach ($view->display as $display_id => $display) {
+      if (empty($display->handler->panel_pane_display)) {
+        continue;
+      }
+      if (empty($display->display_options['argument_input'])) {
+        continue;
+      }
+      if (count($display->display_options['argument_input']) > 1) {
+        continue;
+      }
+      // Pick the first and only argument.
+      foreach ($display->display_options['argument_input'] as $arg_name => $arg_options) {}
+      // Problem: What is the equivalent to "node.nid" for other entity types?
+      if ($arg_options['context'] != "entity:$entity_type.nid") {
+        continue;
+      }
+      $title = t($view->human_name) . ': ' . t($display->display_title);
+      $fieldname = "views_content__{$view_id}__{$display_id}";
+      $fields[$fieldname] = array(
+        'title' => $title,
+        'field_type' => DS_FIELD_TYPE_FUNCTION,
+        'function' => '_views_content_ds_field_print',
+        // These two settings have no meaning for ds api,
+        // we just need them in the callback.
+        '_view_id' => $view_id,
+        '_display_id' => $display_id,
+        // We could restrict to specific bundles and view modes, if we wanted.
+        // 'ui_limit' => array('article|full', '*|search_index'),
+      );
+    }
+
+    $view->destroy();
+  }
+
+  if (!empty($fields)) {
+    return array($entity_type => $fields);
+  }
+}
+
+
+/**
+ * Callback to render our ds field..
+ */
+function _views_content_ds_field_print($field, $x = NULL) {
+  $entity = $node = $field['entity'];
+  $view_id = $field['_view_id'];
+  $display_id = $field['_display_id'];
+  // TODO: Actually load the view, fill in the argument, render.
+  return __FUNCTION__;
+}
+
+
