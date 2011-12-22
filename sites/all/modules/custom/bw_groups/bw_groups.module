@@ -1,0 +1,58 @@
+<?php
+
+
+/**
+ * Implements hook_nodeaspect()
+ */
+function bw_groups_nodeaspect($api) {
+  $api->page('forum');
+  $api->page('wiki');
+  $api->page('members');
+  $api->buildmode('group_forum', 'Group discussions');
+  $api->buildmode('group_wiki', 'Group wiki');
+  $api->buildmode('group_members', 'Group members');
+
+  // Hijack node/%/view, so we can override the title (needs pageapi).
+  $api->page('view');
+}
+
+
+/**
+ * Implements hook_nodeaspect_page()
+ */
+function bw_groups_nodeaspect_page($node, $suffix, $api) {
+
+  if ($node->type === 'group') {
+    $u = $GLOBALS['user'];
+    $is_member = og_is_member($node->nid);
+
+    switch ($suffix) {
+
+      case '':
+        $api->ttab('Overview', -3);
+        $api->buildmode('full');
+        break;
+
+      case 'forum':
+        $api->tab(t('Discussions'), -2);
+        $api->buildmode('group_forum');
+        $api->pageTitle(t('Dedicated forum for @group_name', array('@group_name' => $node->title)));
+        break;
+
+      case 'wiki':
+        $api->tab(t('Wiki'), -1);
+        $api->buildmode('group_wiki');
+        break;
+
+      case 'members':
+        $api->buildmode('group_members');
+        $api->tab(t('Members'), 0);
+        break;
+    }
+  }
+}
+
+
+
+
+
