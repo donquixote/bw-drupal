@@ -1,30 +1,6 @@
 <?php
 
 /**
- * This is a wild hack, but effective.
- * Dynamically declare functions under a ctools component's namespace if they are not already declared.
- */
-foreach (_ctools_features_get_info() as $component => $info) {
-  $code = '';
-  if (!function_exists("{$info['module']}_features_api")) {
-    $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
-  }
-  if (!function_exists("{$component}_features_export")) {
-    $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
-  }
-  if (!function_exists("{$component}_features_export_options")) {
-    $code .= 'function '. $component .'_features_export_options() { return ctools_component_features_export_options("'. $component .'"); }';
-  }
-  if (!function_exists("{$component}_features_export_render")) {
-    $code .= 'function '. $component .'_features_export_render($module, $data) { return ctools_component_features_export_render("'. $component .'", $module, $data); }';
-  }
-  if (!function_exists("{$component}_features_revert")) {
-    $code .= 'function '. $component .'_features_revert($module) { return ctools_component_features_revert("'. $component .'", $module); }';
-  }
-  eval($code);
-}
-
-/**
  * Implements hook_features_api().
  */
 function ctools_features_api() {
@@ -104,7 +80,9 @@ function ctools_features_export_render($module, $data) {
 function ctools_component_features_api($module_name) {
   $api = array();
   foreach (_ctools_features_get_info() as $component => $info) {
-    $api[$component] = $info;
+    if ($info['module'] == $module_name) {
+      $api[$component] = $info;
+    }
   }
   return $api;
 }
