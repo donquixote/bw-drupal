@@ -1,6 +1,17 @@
 <?php
 
 
+function bw_forum_theme() {
+  $theme = array();
+  $theme['bw_forum_comment_wrapper'] = array(
+    'template' => 'bw-forum-comment-wrapper',
+    'render element' => 'content',
+    'path' => drupal_get_path('module', 'bw_forum'),
+  );
+  return $theme;
+}
+
+
 /**
  * Implements hook_ds_fields_info()
  *
@@ -113,6 +124,11 @@ function _bw_forum_forum_jump_links($field) {
   $title = check_plain(t('Jump to top of page'));
   $text = check_plain(t('# Top'));
   return '<a href="#top" title="'. $title .'">'. $text .'</a>';
+}
+
+
+function bw_forum_preprocess_comment_wrapper(&$vars) {
+  $vars['theme_hook_suggestions'][] = 'bw_forum_comment_wrapper';
 }
 
 
