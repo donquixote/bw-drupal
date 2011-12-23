@@ -1,0 +1,118 @@
+<?php
+
+
+/**
+ * Implements hook_ds_fields_info()
+ *
+ * Some nd fields that allow forum-style discussions via nd/ds.
+ */
+function bw_forum_ds_fields_info($entity_type) {
+
+  switch ($entity_type) {
+
+    case 'comment':
+    case 'node':
+      break;
+
+    default:
+      return;
+  }
+
+  $titles = array();
+  $titles['author_pane'] = 'Author Pane';
+  $titles['forum_jump_links'] = 'Jump to top';
+
+  $fields = array();
+  foreach ($titles as $key => $title) {
+    $key = 'bw_forum_'. $key;
+    $fields[$key] = array(
+      'title' => 'BW Forum: '. $title,
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => '_'. $key,
+    );
+    if ($entity_type === 'node') {
+      // Only for node type "group_discussion", view mode "full".
+      // TODO: A generic forum module would allow more node types.
+      $fields[$key]['ui_limit'] = array(
+        'group_discussion|default',
+        'forum_discussion|default',
+      );
+    }
+    else {
+      // No view mode restrictions for comments?
+      $fields[$key]['ui_limit'] = array(
+        'comment_node_group_discussion|default',
+        'comment_node_forum_discussion|full',
+      );
+    }
+  }
+
+  return array($entity_type => $fields);
+}
+
+
+/**
+ * Implements hook_ds_layout_info()
+ *
+ * Custom layout for forum posts and comments.
+ */
+function bw_forum_ds_layout_info() {
+  $path = drupal_get_path('module', 'bw_forum');
+  $layouts = array();
+  $layouts['bw_forum_post'] = array(
+    'label' => t('BW Forum post'),
+    'path' => $path .'/layouts/bw_forum_post',
+    'regions' => array(
+      'header_left' => t('Header, float left'),
+      'header_right' => t('Header, float right'),
+      'left' => t('Left'),
+      'middle' => t('Content'),
+      'bottom_left' => t('Bottom left'),
+      'bottom_middle_left' => t('Bottom, float left'),
+      'bottom_middle_right' => t('Bottom, float right'),
+      'comments_region' => t('Comments'),
+    ),
+    'css' => TRUE,
+  );
+  return $layouts;
+}
+
+
+// ds field callbacks
+// -----------------------------------------------------------------------------
+
+
+/**
+ * ds field callback for author_pane.
+ */
+function _bw_forum_author_pane($field) {
+  $u = user_load($field['entity']->uid);
+  if (!$u) {
+    return t('The post author no longer has an account.');
+  }
+  if (module_exists('author_pane')) {
+    $u = user_load($field['entity']->uid);
+    return theme('author_pane', array(
+      'account' => $u,
+      // 'caller' => NULL,
+      // 'picture_preset' => NULL,
+      // 'context' => NULL,
+      // 'disable_css' => NULL,
+    ));
+  }
+  else {
+    return '"Author pane" not installed.';
+  }
+}
+
+
+/**
+ * ds field callback for forum_jump_links.
+ */
+function _bw_forum_forum_jump_links($field) {
+  $title = check_plain(t('Jump to top of page'));
+  $text = check_plain(t('# Top'));
+  return '<a href="#top" title="'. $title .'">'. $text .'</a>';
+}
+
+
