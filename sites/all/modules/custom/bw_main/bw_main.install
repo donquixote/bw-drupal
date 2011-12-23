@@ -41,3 +41,6 @@ function bw_main_update_7005() {
   variable_set('admin_theme', 'bwminimal');
 }
 
+function bw_main_update_7006() {
+  module_enable(array('panels'));
+}
