@@ -41,7 +41,7 @@ function nodeaspect_nodeaspect_page__($node, $api) {
   // This is the main node/% route, with emtpy suffix.
   $api->title($node->title);
   $api->pageTitle(check_plain($node->title));
-  $api->buildmode('full');
+  $api->view_mode('full');
   // We make this easy to override, by setting a low override weight.
   $api->override(-10);
 }

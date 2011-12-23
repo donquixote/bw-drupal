@@ -78,7 +78,7 @@ class nodeaspect_PageInfo {
       drupal_set_title($this->_info['page_title']);
     }
 
-    if (isset($this->_info['buildmode'])) {
+    if (isset($this->_info['view_mode'])) {
       return $this->_nodeShow($node);
     }
     elseif (isset($this->_info['page callback'])) {
@@ -112,21 +112,14 @@ class nodeaspect_PageInfo {
   protected function _nodeShow($node) {
 
     $info = $this->_info;
-    $node->build_mode = $info['buildmode'];
-    $output = node_view($node, $info['render as teaser'], $info['render as page'], $info['render links']);
 
-    if (!isset($info['render comments'])) {
-      $info['render comments'] = $node->comment;
-    }
-
-    if (function_exists('comment_render') && $node->comment && $info['render comments']) {
-      $output .= comment_render($node);
-    }
+    // For markup consistency with other pages, use node_view_multiple() rather than node_view().
+    $render_array = node_view_multiple(array($node->nid => $node), $info['view_mode']);
 
     // Update the history table, stating that this user viewed this node.
     node_tag_new($node);
 
-    return $output;
+    return $render_array;
   }
 }
 
@@ -157,14 +150,14 @@ class nodeaspect_API_PageInfo {
   }
 
   /**
-   * As an alternative to the buildmode, this method allows to set a page
+   * As an alternative to the view_mode, this method allows to set a page
    * callback, to be called when the page is to be rendered.
    */
   function pageCallback($callback, array $args) {
     $this->_info['page callback'] = $callback;
     $this->_info['page arguments'] = $callback;
     $this->_info['access'] = TRUE;
-    unset($this->_info['buildmode']);
+    unset($this->_info['view_mode']);
     unset($this->_info['redirect']);
     return $this;
   }
@@ -183,9 +176,9 @@ class nodeaspect_API_PageInfo {
     return $this;
   }
 
-  function buildmode($buildmode) {
-    $this->_info['buildmode'] = $buildmode;
-    $this->_info['access'] = ($buildmode === 'full') || user_access('nodeaspect view ' . $buildmode);
+  function viewMode($view_mode) {
+    $this->_info['view_mode'] = $view_mode;
+    $this->_info['access'] = ($view_mode === 'full') || user_access('nodeaspect view ' . $view_mode);
     unset($this->_info['page callback']);
     unset($this->_info['redirect']);
     return $this;
@@ -195,7 +188,7 @@ class nodeaspect_API_PageInfo {
     $this->_info['redirect'] = $path;
     $this->_info['access'] = TRUE;
     unset($this->_info['page callback']);
-    unset($this->_info['buildmode']);
+    unset($this->_info['view_mode']);
   }
 
   function pageTitle($title) {

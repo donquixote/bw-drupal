@@ -3,26 +3,26 @@
 
 function _nodeaspect_info_build() {
   $pages = array();
-  $buildmodes = array();
-  $api = new nodeaspect_API($pages, $buildmodes);
+  $view_modes = array();
+  $api = new nodeaspect_API($pages, $view_modes);
   module_invoke_all('nodeaspect', $api);
-  return new nodeaspect_InfoWrapper($pages, $buildmodes);
+  return new nodeaspect_InfoWrapper($pages, $view_modes);
 }
 
 
 class nodeaspect_InfoWrapper {
 
   protected $_pages;
-  protected $_buildmodes;
+  protected $_view_modes;
 
-  function __construct(array $pages, array $buildmodes) {
+  function __construct(array $pages, array $view_modes) {
     $this->_pages = $pages;
-    $this->_buildmodes = $buildmodes;
+    $this->_view_modes = $view_modes;
   }
 
   function hook_perm() {
     $perm = array();
-    foreach ($this->_buildmodes as $key => $info) {
+    foreach ($this->_view_modes as $key => $info) {
       $perm[] = 'nodeaspect view ' . $key;
     }
     return $perm;
@@ -82,7 +82,7 @@ class nodeaspect_InfoWrapper {
   }
 
   function hook_entity_info_alter(&$entity_info) {
-    $entity_info['node']['view modes'] += $this->_buildmodes;
+    $entity_info['node']['view modes'] += $this->_view_modes;
   }
 }
 
@@ -93,19 +93,19 @@ class nodeaspect_InfoWrapper {
 class nodeaspect_API {
 
   protected $_pages;
-  protected $_buildmodes;
+  protected $_view_modes;
 
-  function __construct(array &$pages, array &$buildmodes) {
+  function __construct(array &$pages, array &$view_modes) {
     $this->_pages =& $pages;
-    $this->_buildmodes =& $buildmodes;
+    $this->_view_modes =& $view_modes;
   }
 
   function page($node_subpath) {
     $this->_pages[$node_subpath] = TRUE;
   }
 
-  function buildmode($buildmode_suffix, $title) {
-    $this->_buildmodes[$buildmode_suffix] = array(
+  function viewMode($view_mode, $title) {
+    $this->_view_modes[$view_mode] = array(
       'label' => t($title),
       'custom settings' => FALSE,
     );
