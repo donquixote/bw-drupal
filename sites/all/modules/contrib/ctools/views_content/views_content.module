@@ -281,6 +281,3 @@ function _views_content_get_context_from_display($view, $id, $parent, $required 
     'view display id' => $id,
   );
 }
-
-
-
