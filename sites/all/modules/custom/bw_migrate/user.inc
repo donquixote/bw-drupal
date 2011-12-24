@@ -1,71 +1,57 @@
 <?php
 
+
 class BWUserMigration extends BWMigration {
-  public function __construct() {
-    parent::__construct();
-    $this->description = t('BW users');
-    $this->map = new MigrateSQLMap($this->machineName,
-        array('id' => array(
-                'type' => 'int',
-                'not null' => TRUE,
-                'description' => 'User ID.'
-                )
-             ),
-        MigrateDestinationUser::getKeySchema()
-    );
 
-    $query = $this->roxdb_connection
-      ->select('members', 'm')
-      ->fields('m', array('id', 'Username'));
-    $query->leftJoin('user', 'u', 'u.handle = m.Username');
-    $query->fields('u', array('email', 'pw', 'active', 'lastlogin'));
-    $this->source = $this->roxMigrateSource($query);
-    $this->destination = new MigrateDestinationUser();
+  protected function _init($src, $dest, $map) {
 
+    $this->description = 'BW users';
+
+    $dest->entity('user');
+
+    $src->id('User ID.');
+    $src->rox_query('members', 'm')
+      ->fields('m', array('id', 'Username'))
+      ->leftJoin('user', 'u', 'u.handle = m.Username')
+      ->fields('u', array('email', 'pw', 'active', 'lastlogin'))
+    ;
 
     // Dedupe assures that value is unique. Use it when source data is non-unique.
     // Pass the Drupal table and column for determining uniqueness.
-    $this->addFieldMapping('name', 'username')
-         ->dedupe('users', 'name');
+    $map->map('name', 'Username')->dedupe('users', 'name');
+
+    $map->map('field_bw_rox_username', 'Username');
 
     // Here we have a special case - we want to transform a date/time string
     // into a UNIX timestamp, and also apply a specific timezone. The
     // mapping of posted to created here is primarily for the sake of
     // documentation - the prepare method below actually populates the field.
-    $this->addFieldMapping('login', 'lastlogin');
-    $this->addFieldMapping('access', 'lastlogin');
+    $map->map('login', 'lastlogin');
+    $map->map('access', 'lastlogin');
 
-    $this->addFieldMapping('mail', 'email');
-    $this->addFieldMapping('pass', 'pw');  // TODO: like D6->7 migration
+    $map->map('mail', 'email');
+    $map->map('pass', 'pw');  // TODO: like D6->7 migration
 
     // Instead of mapping a source field to a destination field, you can
     // hardcode a default value. You can also use both together - if a default
     // value is provided in addition to a source field, the default value will
     // be applied to any rows where the source field is empty or NULL.
-    $this->addFieldMapping('roles')
-         ->defaultValue(drupal_map_assoc(array(2)));
-    // $this->addFieldMapping('field_migrate_example_gender', 'sex');
+    $map->map('roles')->defaultValue(drupal_map_assoc(array(2)));
+    // $map->map('field_migrate_example_gender', 'sex');
 
     // TODO: fix
-    //    $this->addFieldMapping('active', 'status');
-    $this->addFieldMapping('status')
-         ->defaultValue(1); // 1 => active
+    //    $map->map('active', 'status');
+    $map->map('status')->defaultValue(1); // 1 => active
 
     // Unmapped source fields
-    $this->addFieldMapping(NULL, 'nickname')
-         ->issueGroup(t('DNM'));
+    $map->map(NULL, 'nickname')->issueGroup(t('DNM'));
 
     // Unmapped destination fields
-    $this->addFieldMapping('theme')
-         ->issueGroup(t('DNM'));
-    $this->addFieldMapping('signature')
-         ->issueGroup(t('DNM'));
-    $this->addFieldMapping('timezone')
-         ->issueGroup(t('DNM'));
-    $this->addFieldMapping('language')
-         ->issueGroup(t('DNM'));
-    $this->addFieldMapping('picture')
-         ->issueGroup(t('DNM'));
+    $map->map('theme')->issueGroup(t('DNM'));
+    $map->map('signature')->issueGroup(t('DNM'));
+    $map->map('timezone')->issueGroup(t('DNM'));
+    $map->map('language')->issueGroup(t('DNM'));
+    $map->map('picture')->issueGroup(t('DNM'));
   }
 
   // If you define a prepare() method in your migration, it will be called
