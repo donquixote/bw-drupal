@@ -41,8 +41,14 @@ abstract class BWMigration extends Migration {
       $source_api = new bw_migrate_SourceAPI($this, $roxdb, $info);
       $destination_api = new bw_migrate_DestinationAPI($this, $info);
       $map_api = new bw_migrate_MapAPI($this, $info);
-      $this->_init($source_api, $destination_api, $map_api);
-      $source_api->flush();
+      try {
+        $this->_init($source_api, $destination_api, $map_api);
+      }
+      catch (Exception $e) {
+        dpm($e);
+        ddebug_backtrace();
+      }
+      $this->source = $source_api->flush();
       $destination_api->flush();
 
       list($type, $bundle) = $info['entity'];
@@ -78,6 +84,14 @@ abstract class BWMigration extends Migration {
       $sentence = $code;
     }
     return $sentence;
+  }
+
+  /**
+   * Public wrapper for a protected function.
+   * We only want this for the API thingy.
+   */
+  public function p_addFieldMapping($dest_field, $src_column) {
+    return $this->addFieldMapping($dest_field, $src_column);
   }
 
   /**
@@ -149,6 +163,10 @@ class bw_migrate_DestinationAPI {
     $this->entity('node', $bundle);
   }
 
+  function comment($node_bundle) {
+    $this->entity('comment', 'comment_node_'. $node_bundle);
+  }
+
   function flush() {
     
   }
@@ -188,6 +206,7 @@ class bw_migrate_SourceAPI {
         $options['length'] = 255;
         break;
       case 'int':
+        $options['unsigned'] = TRUE;
         break;
       default:
         throw new Exception('Argument combination not supported');
@@ -213,7 +232,23 @@ class bw_migrate_SourceAPI {
       NULL,
       array('map_joinable' => FALSE)
     );
-    $this->_migration->source = $source;
+    return $source;
+  }
+
+  function getTranslation($code, $lang = 'en') {
+    // Method to get BW Rox translation string
+    $result = $this->_roxdb->query(
+      'SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
+      array(':code' => $code, ':lang' => $lang)
+    );
+    // this shouldn't be a loop but just want working code now
+    foreach ($result as $row) {
+      $sentence = $row->sentence;
+    }
+    if (!isset($sentence)) {
+      $sentence = $code;
+    }
+    return $sentence;
   }
 }
 
@@ -229,7 +264,7 @@ class bw_migrate_MapAPI {
   }
 
   function map($dest_field, $src_column = NULL) {
-    return $this->_migration->addFieldMapping($dest_field, $src_column);
+    return $this->_migration->p_addFieldMapping($dest_field, $src_column);
   }
 }
 

@@ -3,7 +3,7 @@
 
 class FaqTermMigration extends BWMigration {
 
-  protected function _init($src, $dest) {
+  protected function _init($src, $dest, $map) {
 
     $this->description = 'Migrate FAQ categories from the source database to taxonomy terms';
 
@@ -26,7 +26,7 @@ class FaqTermMigration extends BWMigration {
 
 class FaqNodeMigration extends BWMigration {
 
-  public function _init($src, $dest) {
+  public function _init($src, $dest, $map) {
 
     $this->description = t('FAQ');
     $this->dependencies = array('FaqTerm');
@@ -34,14 +34,13 @@ class FaqNodeMigration extends BWMigration {
     $dest->node('faq_item');
 
     $src->id('FAQ ID.');
-    $src->rox_select('faq')
-      ->fields('faq', array(
-        'id', 'QandA', 'updated', 'created',
-        'Active', 'SortOrder', 'IdCategory', 'PageTitle',
-      ))
-      ->leftJoin('faqcategories', 'fc', 'faq.IdCategory = fc.id')
-      ->addExpression('fc.Description', 'faq_category')
-    ;
+    $q = $src->rox_select('faq');
+    $q->fields('faq', array(
+      'id', 'QandA', 'updated', 'created',
+      'Active', 'SortOrder', 'IdCategory', 'PageTitle',
+    ));
+    $q->leftJoin('faqcategories', 'fc', 'faq.IdCategory = fc.id');
+    $q->addExpression('fc.Description', 'faq_category');
 
     // Mapped fields
     $map->map('title', 'title')->description('Mapping something to node title');

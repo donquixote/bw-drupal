@@ -10,11 +10,10 @@ class BWUserMigration extends BWMigration {
     $dest->entity('user');
 
     $src->id('User ID.');
-    $src->rox_query('members', 'm')
-      ->fields('m', array('id', 'Username'))
-      ->leftJoin('user', 'u', 'u.handle = m.Username')
-      ->fields('u', array('email', 'pw', 'active', 'lastlogin'))
-    ;
+    $q = $src->rox_select('members', 'm');
+    $q->leftJoin('user', 'u', 'u.handle = m.Username');
+    $q->fields('m', array('id', 'Username'));
+    $q->fields('u', array('email', 'pw', 'active', 'lastlogin'));
 
     // Dedupe assures that value is unique. Use it when source data is non-unique.
     // Pass the Drupal table and column for determining uniqueness.

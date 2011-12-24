@@ -3,43 +3,35 @@
 
 
 class WikiNodeMigration extends BWMigration {
-  public function __construct() {
-    parent::__construct();
-    $this->description = t('wiki');
 
+  /**
+   * TODO:
+   *   What about a destination plugin for node revision?
+   */
+  public function _init($src, $dest, $map) {
+
+    $this->description = 'Migrate wiki pages.';
+
+    $dest->node('bw_wikipage');
 
     // pagename as source key doesn't really work yet
     // somehow type varchar is not picked up
-    $this->map = new MigrateSQLMap($this->machineName,
-                 array('version' => array( // should be pagename but that causes mayhem with its type varchar
-						       'type' => 'int',
-						       // 'not null' => TRUE,
-						       // 'description' => 'Wiki pagename.'
-						       )
-					 ),
-				   MigrateDestinationNode::getKeySchema()
-				   );
+    $src->primary('version', 'Wiki page version', array('type' => 'int'));
 
-    // Set up our destination - nodes of type migrate_example_beer
-    $this->destination = new MigrateDestinationNode('bw_wikipage');
-    $query = $this->roxdb_connection
-      ->select('ewiki', 'w')
-      ->fields('w', array('pagename', 'version', 'flags',
-			  'content', 'author', 'created', 'lastmodified',
-			  ));
-    $this->source = $this->roxMigrateSource($query);
+    $q = $src->rox_select('ewiki', 'w');
+    $q->fields('w', array(
+      'pagename', 'version', 'flags', 'content', 'author', 'created',
+      'lastmodified',
+    ));
 
     // Mapped fields
-    $this->addFieldMapping('title', 'pagename')
-         ->description(t('Mapping something to node title'));
-
-    $this->addFieldMapping('body', 'content');
+    $map->map('title', 'pagename')->description(t('Mapping something to node title'));
+    $map->map('body', 'content');
 
     // Unmapped destination fields
     //$this->addUnmigratedDestinations(array('name', 'created', 'changed', 'status',
     //  'promote', 'revision', 'language'));
   }
-
 }
 
 

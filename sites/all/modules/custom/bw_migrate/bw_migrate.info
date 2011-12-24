@@ -16,6 +16,7 @@ files[] = members.inc
 files[] = comments.inc
 files[] = faq.inc
 files[] = ewiki.inc
+files[] = groups.inc
 
 
 ;node_reference is useful but not required
