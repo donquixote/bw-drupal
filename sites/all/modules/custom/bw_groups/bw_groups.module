@@ -1,0 +1,92 @@
+<?php
+
+
+/**
+ * Implements hook_nodeaspect()
+ */
+function bw_groups_nodeaspect($api) {
+
+  $api->page('forum');
+  $api->page('wiki');
+  $api->page('wiki/view');
+  $api->page('wiki/edit');
+  $api->page('members');
+  $api->viewMode('group_forum', 'Group discussions');
+  $api->viewMode('group_wiki', 'Group wiki');
+  $api->viewMode('group_wikiedit', 'Group wiki edit');
+  $api->viewMode('group_members', 'Group members');
+
+  // Hijack node/%/view, so we can override the title (needs pageapi).
+  $api->page('view');
+
+  // Hijack node/%, so our registered pageapi callback fires in all cases.
+  $api->page('');
+}
+
+
+/**
+ * Implements hook_nodeaspect_page()
+ */
+function bw_groups_nodeaspect_page($node, $suffix, $api) {
+
+  if ($node->type === 'group') {
+    $u = $GLOBALS['user'];
+    $is_member = og_is_member($node->nid);
+
+    $skip = FALSE;
+    switch ($suffix) {
+
+      case '':
+        $api->viewMode('full');
+        break;
+
+      case 'view':
+        // That's the "default local task".
+        $api->tab(t('Overview'), -4);
+        break;
+
+      case 'forum':
+        $api->tab(t('Discussions'), -3);
+        $api->viewMode('group_forum');
+        $api->pageTitle(t('Dedicated forum for @group_name', array('@group_name' => $node->title)));
+        break;
+
+      case 'wiki':
+        $api->tab(t('Wiki'), -2);
+        $api->viewMode('group_wiki');
+        break;
+
+      case 'wiki/view':
+        $api->tab(t('View'), -0);
+        $api->viewMode('group_wikiedit');
+        break;
+
+      case 'wiki/edit':
+        $api->tab(t('Edit'), 1);
+        $api->viewMode('group_wikiedit');
+        break;
+
+      case 'members':
+        $api->tab(t('Members'), -1);
+        $api->viewMode('group_members');
+        break;
+
+      default:
+        $skip = TRUE;
+    }
+
+    if (!$skip) {
+      $api->pageapiCallback('_bw_groups_pageapi');
+    }
+  }
+}
+
+
+function _bw_groups_pageapi($api, $node, $suffix) {
+  $api->css('css/bw_groups.css');
+}
+
+
+
+
+
