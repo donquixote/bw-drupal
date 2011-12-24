@@ -13,7 +13,9 @@ function bw_migrate_migrate_api() {
 
 
 abstract class BWMigration extends Migration {
+
   public function __construct() {
+
     // Always call the parent constructor first for basic setup
     parent::__construct();
 
@@ -31,7 +33,26 @@ abstract class BWMigration extends Migration {
     // ->issueNumber(1234) to a mapping.
     $this->issuePattern = 'http://drupal.org/node/:id:';
 
-    $this->roxdb_connection = Database::getConnection('default', 'bwroxdb');
+    $roxdb = $this->roxdb_connection = Database::getConnection('default', 'bwroxdb');
+
+    if (method_exists($this, '_init')) {
+      // Now call the _init() of the child class.
+      $info = array();
+      $source_api = new bw_migrate_SourceAPI($this, $roxdb, $info);
+      $destination_api = new bw_migrate_DestinationAPI($this, $info);
+      $map_api = new bw_migrate_MapAPI($this, $info);
+      $this->_init($source_api, $destination_api, $map_api);
+      $source_api->flush();
+      $destination_api->flush();
+
+      list($type, $bundle) = $info['entity'];
+      $primary_keys = $info['primary'];
+
+      $destination_class = 'MigrateDestination'. ucfirst($type);
+      $schema = call_user_func(array($destination_class, 'getKeySchema'));
+      $this->map = new MigrateSQLMap($this->machineName, $primary_keys, $schema);
+      $this->destination = isset($bundle) ? new $destination_class($bundle) : new $destination_class();
+    }
   }
 
   public function roxMigrateSource($query) {
@@ -43,14 +64,15 @@ abstract class BWMigration extends Migration {
     return $source;
   }
 
-
   public function getTranslation($code, $lang = 'en') {
     // Method to get BW Rox translation string
-    $result = $this->roxdb_connection
-      ->query('SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
-	      array(':code' => $code, ':lang' => $lang));
-    foreach ($result as $row) { // this shouldn't be a loop but just want working code now
-      $sentence = $row->sentence ;
+    $result = $this->roxdb_connection->query(
+      'SELECT Sentence FROM {words} WHERE code = :code AND ShortCode = :lang',
+      array(':code' => $code, ':lang' => $lang)
+    );
+    // this shouldn't be a loop but just want working code now
+    foreach ($result as $row) {
+      $sentence = $row->sentence;
     }
     if (!isset($sentence)) {
       $sentence = $code;
@@ -58,6 +80,159 @@ abstract class BWMigration extends Migration {
     return $sentence;
   }
 
+  /**
+   * Create a map object for tracking the relationships between source rows
+   * and their resulting Drupal objects. Usually, you'll use the MigrateSQLMap
+   * class, which uses database tables for tracking. Pass the machine name
+   * (FaqTerm) of this migration to use in generating map and message tables.
+   * And, pass schema definitions for the primary keys of the source and
+   * destination - we need to be explicit for our source, but the destination
+   * class knows its schema already.
+   */
+  protected function _initSQLMap($type, $primary_key_name, $primary_key_options, $type = 'int') {
+
+    if (is_string($primary_key_options)) {
+      $primary_key_options = array(
+        'description' => $primary_key_options,
+        'not null' => TRUE,
+        'type' => $type,
+      );
+      switch ($type) {
+        case 'varchar':
+          $primary_key_options['length'] = 255;
+          break;
+        case 'int':
+          break;
+        default:
+          throw new Exception("Called with invalid arguments.");
+      }
+    }
+
+    $this->map = $this->_createSQLMap(
+      'MigrateDestination'. ucfirst($type),
+      $primary_key_name,
+      $primary_key_options
+    );
+  }
+
+  protected function _createSQLMap($destination_class, $primary_key_name, $primary_key_options) {
+    $schema = call_user_func(array($destination_class, 'getKeySchema'));
+    return new MigrateSQLMap(
+      $this->machineName,
+      array($primary_key_name => $primary_key_options),
+      $schema
+    );
+  }
+
+  protected function _initDestination($destination_class_suffix, $bundle) {
+    $destination_class = 'MigrateDestination'. $destination_class_suffix;
+    $this->destination = isset($bundle) ? new $destination_class($bundle) : new $destination_class();
+  }
 }
+
+
+class bw_migrate_DestinationAPI {
+
+  protected $_migration;
+  protected $_info;
+
+  function __construct($migration, array &$info) {
+    $this->_migration = $migration;
+    $this->_info =& $info;
+  }
+
+  function entity($type, $bundle = NULL) {
+    $this->_info['entity'] = array($type, $bundle);
+  }
+
+  function node($bundle) {
+    $this->entity('node', $bundle);
+  }
+
+  function flush() {
+    
+  }
+}
+
+
+class bw_migrate_SourceAPI {
+
+  protected $_migration;
+  protected $_roxdb;
+  protected $_info;
+  protected $_query;
+
+  function __construct($migration, $roxdb, array &$info) {
+    $this->_migration = $migration;
+    $this->_roxdb = $roxdb;
+    $this->_info =& $info;
+  }
+
+  function rox_select($table, $alias = NULL) {
+    $alias = isset($alias) ? $alias : $table;
+    $this->_query = $this->_roxdb->select($table, $alias);
+    return $this->_query;
+  }
+
+  /**
+   * Shortcut for ->primary('id', ..)
+   */
+  function id($description, $type = 'int') {
+    $options = array(
+      'type' => $type,
+      'not null' => TRUE,
+      'description' => $description,
+    );
+    switch ($type) {
+      case 'varchar':
+        $options['length'] = 255;
+        break;
+      case 'int':
+        break;
+      default:
+        throw new Exception('Argument combination not supported');
+    }
+    $this->primary('id', $options);
+  }
+
+  function primary($primary, $options = array()) {
+    if (!is_array($primary)) {
+      $primary = array($primary => $options);
+    }
+    $this->_info['primary'] = $primary;
+  }
+
+  function flush() {
+    $query_count = array();
+    // Create a MigrateSource object, which manages retrieving the input data.
+    // The map_joinable should be false because we're using another database
+    // (and we don't want silly SQL errors because of unjoinable cross database JOINs)
+    $source = new MigrateSourceSQL(
+      $this->_query,
+      $query_count,
+      NULL,
+      array('map_joinable' => FALSE)
+    );
+    $this->_migration->source = $source;
+  }
+}
+
+
+class bw_migrate_MapAPI {
+
+  protected $_migration;
+  protected $_info;
+
+  function __construct($migration, array &$info) {
+    $this->_migration = $migration;
+    $this->_info =& $info;
+  }
+
+  function map($dest_field, $src_column = NULL) {
+    return $this->_migration->addFieldMapping($dest_field, $src_column);
+  }
+}
+
+
 
 
