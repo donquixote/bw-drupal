@@ -97,10 +97,18 @@ function node_export_access_export($node) {
   if (is_int($node)) {
     $node = node_load($node);
   }
-  // Check basic role permissions first.
-  $access = (user_access('export nodes') || ($user->uid && ($node->uid == $user->uid) && user_access('export own nodes')));
-  // Make sure the user can view the original node content.
-  $access = $access && node_access('view', $node);
+
+  if (function_exists('drush_main')) {
+    // Always allow drush to export nodes.
+    $access = TRUE;
+  }
+  else {
+    // Check basic role permissions first.
+    $access = (user_access('export nodes') || ($user->uid && ($node->uid == $user->uid) && user_access('export own nodes')));
+    // Make sure the user can view the original node content.
+    $access = $access && node_access('view', $node);
+  }
+
   // Let other modules alter this - for example to only allow some users
   // to export specific nodes or types.
   drupal_alter("node_export_access_export", $access, $node);
@@ -113,7 +121,11 @@ function node_export_access_export($node) {
 function node_export_access_import($node = NULL) {
   global $user;
 
-  if (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install') {
+  if (function_exists('drush_main')) {
+    // Always allow drush to import nodes.
+    $access = TRUE;
+  }
+  elseif (defined('MAINTENANCE_MODE') && MAINTENANCE_MODE == 'install') {
     // During the install phase $user is the Anonymous user; however, in
     // practice $user is performing tasks only granted to the admin user
     // (eg: installing modules, changing site settings).  For this reason
@@ -702,9 +714,12 @@ function node_export_node_clone($original_node) {
     if (variable_get('node_export_reset_path_' . $node->type, TRUE)) {
       $node->path = NULL;
     }
-    elseif (module_exists('pathauto')) {
-      // Prevent pathauto from creating a new path alias.
-      $node->path['pathauto'] = FALSE;
+    else {
+      unset($node->path['pid']);
+      if (module_exists('pathauto')) {
+        // Prevent pathauto from creating a new path alias.
+        $node->path['pathauto'] = FALSE;
+      }
     }
 
     if (variable_get('node_export_reset_book_mlid_' . $node->type, TRUE) && isset($node->book['mlid'])) {

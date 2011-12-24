@@ -5,9 +5,9 @@ package = "Node export"
 dependencies[] = uuid
 configure = admin/config/content/node_export
 files[]=views/views_handler_field_node_link_export.inc
-; Information added by drupal.org packaging script on 2011-10-03
+; Information added by drupal.org packaging script on 2011-12-20
 version = "7.x-3.x-dev"
 core = "7.x"
 project = "node_export"
-datestamp = "1317644682"
+datestamp = "1324383380"
 
