@@ -1,0 +1,7 @@
+name = Views content DS support
+description = Make views_content views displays available as fields in Display Suite.
+dependencies[] = views_content
+dependencies[] = ds
+package = ZZZ
+core = 7.x
+files[] = views_content_ds.module
