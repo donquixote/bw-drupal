@@ -61,7 +61,7 @@ class nodeaspect_InfoWrapper {
         // to allow the bulk access checking for node/% menu items.
         'access callback' => 'node_access',
         'access arguments' => array('view', 1),
-        'type' => MENU_CALLBACK,
+        'module' => 'nodeaspect',
         // 'module' => 'node',  // TODO: Why is this?
       );
     }

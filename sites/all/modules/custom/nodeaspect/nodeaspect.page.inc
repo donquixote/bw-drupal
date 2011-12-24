@@ -106,6 +106,10 @@ class nodeaspect_PageInfo {
     }
   }
 
+  function hook_preprocess_page(&$vars, $node, $suffix) {
+    
+  }
+
   /**
    * Adapted from function node_show()
    */

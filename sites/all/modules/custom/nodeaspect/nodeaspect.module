@@ -41,7 +41,7 @@ function nodeaspect_nodeaspect_page__($node, $api) {
   // This is the main node/% route, with emtpy suffix.
   $api->title($node->title);
   $api->pageTitle(check_plain($node->title));
-  $api->view_mode('full');
+  $api->viewMode('full');
   // We make this easy to override, by setting a low override weight.
   $api->override(-10);
 }
@@ -63,6 +63,14 @@ function nodeaspect_nodeaspect_page__view($node, $api) {
  */
 function nodeaspect_entity_info_alter(&$entity_info) {
   nodeaspect_info()->hook_entity_info_alter($entity_info);
+}
+
+
+/**
+ * Implements hook_preprocess_page()
+ */
+function nodeaspect_preprocess_page(&$vars) {
+  nodeaspect_page_info_cache()->hook_preprocess_page($vars);
 }
 
 
@@ -169,19 +177,50 @@ class nodeaspect_PageInfoCache {
   }
 
   function hook_pageapi($api) {
-    // This will trigger access callbacks.
-    $api->initLocalTasks();
-    foreach ($this->_pages as $nid => $pages) {
-      foreach ($pages as $suffix => $info) {
-        $weight = $info->localTaskWeight();
-        if (isset($weight)) {
-          $api->moveLocalTask('node/%/'. $suffix, $weight);
-        }
-      }
-    }
     if (!empty($this->_active)) {
       list($page_info, $node, $suffix) = $this->_active;
       $page_info->hook_pageapi($api, $node, $suffix);
+    }
+  }
+
+  function hook_preprocess_page(&$vars) {
+
+    // Rearrange tabs.
+    $weights = array();
+    foreach ($this->_pages as $nid => $pages) {
+      foreach ($pages as $suffix => $info) {
+        $weight = $info->localTaskWeight();
+        $weights["node/%/$suffix"] = $weight;
+      }
+    }
+    foreach (array('#primary', '#secondary') as $k) {
+      if (is_array($vars['tabs'][$k])) {
+        // stable sort, please.
+        $sorted = array();
+        foreach ($vars['tabs'][$k] as $i => $item) {
+          $path = $item['#link']['path'];
+          $weight = isset($weights[$path]) ? $weights[$path] : $item['#link']['weight'];
+          if ($weight === FALSE) {
+            unset($vars['tabs'][$k][$i]);
+          }
+          else {
+            $sorted[$weight][] = $item;
+          }
+        }
+        ksort($sorted);
+        $vars['tabs'][$k] = array();
+        foreach ($sorted as $items) {
+          foreach ($items as $item) {
+            $vars['tabs'][$k][] = $item;
+          }
+        }
+      }
+    }
+
+    // Specific stuff for the active page.
+    if (!empty($this->_active)) {
+      list($page_info, $node, $suffix) = $this->_active;
+      $page_info->hook_preprocess_page(&$vars, $node, $suffix);
     }
   }
 }
