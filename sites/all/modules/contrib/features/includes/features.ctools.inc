@@ -1,5 +1,33 @@
 <?php
 
+function ctools_features_declare_functions() {
+/**
+ * This is called by Features to ensure ctools component functions are defined
+ * Dynamically declare functions under a ctools component's namespace if they are not already declared.
+ */
+  if (function_exists('_ctools_features_get_info')) {
+   foreach (_ctools_features_get_info() as $component => $info) {
+      $code = '';
+      if (!function_exists("{$info['module']}_features_api")) {
+        $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
+      }
+      if (!function_exists("{$component}_features_export")) {
+        $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
+      }
+      if (!function_exists("{$component}_features_export_options")) {
+        $code .= 'function '. $component .'_features_export_options() { return ctools_component_features_export_options("'. $component .'"); }';
+      }
+      if (!function_exists("{$component}_features_export_render")) {
+        $code .= 'function '. $component .'_features_export_render($module, $data, $export = NULL) { return ctools_component_features_export_render("'. $component .'", $module, $data, $export); }';
+      }
+      if (!function_exists("{$component}_features_revert")) {
+        $code .= 'function '. $component .'_features_revert($module) { return ctools_component_features_revert("'. $component .'", $module); }';
+      }
+      eval($code);
+    }
+  }
+}
+
 /**
  * Implements hook_features_api().
  */
@@ -296,4 +324,16 @@ function page_manager_pages_features_export_render($module, $data) {
   // Ensure that handlers have their code included before exporting.
   page_manager_get_tasks();
   return ctools_component_features_export_render('page_manager_pages', $module, $data);
+}
+
+/**
+ * Implements hook_features_revert() for page_manager.
+ */
+function page_manager_pages_features_revert($module) {
+  if ($pages = features_get_default('page_manager_pages', $module)) {
+    require_once drupal_get_path('module', 'ctools') . '/page_manager/plugins/tasks/page.inc';
+    foreach ($pages as $page) {
+      page_manager_page_delete($page);
+    }
+  }
 }
