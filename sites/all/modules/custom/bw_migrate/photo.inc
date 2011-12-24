@@ -8,15 +8,15 @@ class PhotoNodeMigration extends BWMigration {
     $this->description = t('FAQ');
     $this->dependencies = array('FaqTerm');
 
-    $this->map = new MigrateSQLMap($this->machineName,
-				   array('fid' => array(
-						       'type' => 'int',
-						       'not null' => TRUE,
-						       'description' => 'FAQ ID.'
-						       )
-					 ),
-				   MigrateDestinationNode::getKeySchema()
-				   );
+    $this->map = new MigrateSQLMap(
+      $this->machineName,
+      array('fid' => array(
+        'type' => 'int',
+        'not null' => TRUE,
+        'description' => 'FAQ ID.',
+      )),
+      MigrateDestinationNode::getKeySchema()
+    );
 
     // Set up our destination - nodes of type migrate_example_beer
     $this->destination = new MigrateDestinationNode('pr9photo');
