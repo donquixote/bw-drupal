@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the BeWelcome Frontpage feature.
+ */
+
+include_once('bw_frontpage.features.inc');

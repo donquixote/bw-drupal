@@ -27,7 +27,7 @@ function bewelcome_profile_modules() {
     'node',
     'openid',
     'search',
-    'system', 
+    'system',
     'taxonomy',
     'text',
     'user',
@@ -47,7 +47,7 @@ function bewelcome_profile_modules() {
     'privatemsg', 'pm_email_notify',
     // Development
     'openidadmin', 'devel', 'migrate',
-    'views_ui', 
+    'views_ui',
     // This BW module has all other BW dependencies
     'bewelcome_main',
   );
@@ -88,8 +88,8 @@ function system_form_install_select_profile_form_alter(&$form, $form_state) {
 
 /**
  * Set English as default language.
- * 
- * If no language selected, the installation crashes. I guess English should be the default 
+ *
+ * If no language selected, the installation crashes. I guess English should be the default
  * but it isn't in the default install. @todo research, core bug?
  */
 function system_form_install_select_locale_form_alter(&$form, $form_state) {
@@ -121,7 +121,9 @@ function system_form_install_configure_form_alter(&$form, $form_state) {
 
 function bewelcome_install() {
   // check http://drupal.org/node/585012
-  theme_enable(array('bewelcometheme', 'seven'));
-  variable_set('theme_default', 'bwminimal');
-  variable_set('admin_theme', 'bwminimal');
+
+  theme_enable(array('bw_adaptive', 'adaptivetheme_admin'));
+  variable_set('theme_default', 'bw_adaptive');
+  variable_set('admin_theme', 'adaptivetheme_admin');
+  variable_set('site_frontpage', 'bw_frontpage');
 }

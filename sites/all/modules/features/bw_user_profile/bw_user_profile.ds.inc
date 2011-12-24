@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_ds_custom_fields_info().
+ * Implements hook_ds_custom_fields_info().
  */
 function bw_user_profile_ds_custom_fields_info() {
   $export = array();
@@ -33,7 +33,7 @@ print $entity->field_firstname[\'und\'][0][\'value\'] . \' \' . $entity->field_s
 }
 
 /**
- * Implementation of hook_ds_layout_settings_info().
+ * Implements hook_ds_layout_settings_info().
  */
 function bw_user_profile_ds_layout_settings_info() {
   $export = array();

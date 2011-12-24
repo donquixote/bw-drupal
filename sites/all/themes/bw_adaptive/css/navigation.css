@@ -1,0 +1,128 @@
+/**
+ * @file
+ * Navigation Styling
+ */
+
+
+/*
+ * Navigation bar
+ */
+#navigation {
+  /* overflow: hidden; /* Sometimes you want to prevent overlapping with main div. */
+  margin-top: -6em;
+  margin-left: 150px;
+}
+
+#navigation .content ul /* Main menu and secondary menu links */ {
+  margin: 0;
+  padding: 0;
+  text-align: left; /* LTR */
+}
+
+#navigation .content li /* A simple method to get navigation links to appear in one line. */ {
+  float: left; /* LTR */
+  padding: 0 10px 0 0; /* LTR */
+}
+
+#navigation li a {
+  color: #fff;
+  font-weight: bold;
+  text-decoration: none;
+}
+
+.region-navigation {
+}
+
+/*
+ * Main menu and Secondary menu links
+ */
+#main-menu {
+    
+}
+#main-menu, #main-menu ul {
+    float: left;
+    font-size: 1.2em;
+    font-weight: bold;
+    margin: 0;
+    padding: 0;
+    z-index: 999;
+}
+#main-menu a {
+    color: #FFFFFF;
+    display: block;
+    line-height: 1.2em;
+    padding: 1.25em 1em;
+    text-decoration: none;
+}
+#main-menu li {
+    border-left: 1px solid #FF9922;
+    display: block;
+    float: left;
+    padding: 0;
+}
+#main-menu li ul {
+    background: url("images/nav_main_ul.png") no-repeat scroll left bottom transparent;
+    font-size: 0.8em;
+    height: auto;
+    left: -999em;
+    margin: 0;
+    padding: 1em 0;
+    position: absolute;
+    width: 160px;
+}
+#main-menu li li {
+    border: medium none;
+    width: 140px;
+}
+#main-menu li li.bottom {
+    width: 140px;
+}
+#main-menu li ul a {
+    padding: 0.4em 1.6em;
+    width: 140px;
+}
+#main-menu li:hover ul ul, #main-menu li:hover ul ul ul, #main-menu li.sfhover ul ul, #main-menu li.sfhover ul ul ul {
+    left: -999em;
+}
+#main-menu li:hover ul, #main-menu li li:hover ul, #main-menu li li li:hover ul, #main-menu li.sfhover ul, #main-menu li li.sfhover ul, #main-menu li li li.sfhover ul {
+    left: auto;
+}
+#main-menu li:hover, #main-menu li.sfhover {
+    background: none repeat scroll 0 0 #333333;
+}
+#main-menu li#logo, #main-menu li#logo:hover {
+    background: none repeat scroll 0 0 transparent;
+    border: medium none;
+}
+#main-menu li ul li:hover, #main-menu li ul li.sfhover {
+    background: none repeat scroll 0 0 #454B54;
+}
+
+ #secondary-menu-bar {
+     position: relative;
+     float: right;
+     text-align: right;
+     z-index: 1;
+     margin-right: 25px;
+ }
+ #secondary-menu-bar li {
+     display: inline;
+     font-size: 11px;
+     margin-left: 2px;
+     padding: 0px 10px 6px 12px;
+ }
+ #secondary-menu-bar li a {
+     color: #777777;
+ }
+
+/*
+ * Menu blocks
+ */
+.block-menu {
+}
+
+/*
+ * "Menu block" blocks. See http://drupal.org/project/menu_block
+ */
+.block-menu-block {
+}

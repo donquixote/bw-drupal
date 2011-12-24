@@ -42,5 +42,12 @@ function bw_main_update_7005() {
 }
 
 function bw_main_update_7006() {
-  module_enable(array('panels'));
+  module_enable(array('bw_frontpage'));
+}
+
+function bw_main_update_7007() {
+  theme_enable(array('bw_adaptive', 'adaptivetheme_admin'));
+  variable_set('theme_default', 'bw_adaptive');
+  variable_set('admin_theme', 'adaptivetheme_admin');
+  variable_set('site_frontpage', 'bw_frontpage');
 }

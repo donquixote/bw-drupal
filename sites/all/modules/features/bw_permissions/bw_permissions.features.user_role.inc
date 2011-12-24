@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_user_default_roles().
+ * Implements hook_user_default_roles().
  */
 function bw_permissions_user_default_roles() {
   $roles = array();
@@ -13,6 +13,12 @@ function bw_permissions_user_default_roles() {
   // Exported role: accepted
   $roles['accepted'] = array(
     'name' => 'accepted',
+    'weight' => '3',
+  );
+
+  // Exported role: admin
+  $roles['admin'] = array(
+    'name' => 'admin',
     'weight' => '3',
   );
 
