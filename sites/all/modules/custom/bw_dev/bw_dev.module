@@ -1,0 +1,15 @@
+<?php
+
+
+function bw_dev_pageapi($api) {
+  $router_item = menu_get_item();
+  switch ($router_item['path']) {
+    case 'admin/structure/views/view/%/edit':
+      // Without contextual.css, the preview will look odd.
+      $api->css('contextual.css', 'module:contextual');
+      break;
+  }
+}
+
+
+
