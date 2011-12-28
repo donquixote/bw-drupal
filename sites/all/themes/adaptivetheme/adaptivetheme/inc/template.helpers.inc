@@ -20,6 +20,7 @@ function load_subtheme_media_queries($files, $theme_name) {
       'group' => CSS_THEME,
       'media' => 'screen',
       'every_page' => TRUE,
+      'weight' => 99,
       )
     );
   }
@@ -75,6 +76,10 @@ function get_color_scheme_name($theme_name) {
  * Add classes for platforms and browsers.
  */
 function css_browser_selector($ua = NULL) {
+  // Avoid errors if the user agent string is empty
+  if ($ua == NULL && !isset($_SERVER['HTTP_USER_AGENT'])) {
+    return;
+  }
   $ua = ($ua) ? strtolower($ua) : strtolower($_SERVER['HTTP_USER_AGENT']);
   $g = 'gecko';
   $w = 'webkit';

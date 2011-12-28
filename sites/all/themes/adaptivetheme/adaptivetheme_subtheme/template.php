@@ -2,9 +2,9 @@
 
 /**
  * Preprocess and Process Functions SEE: http://drupal.org/node/254940#variables-processor
- * 1. Rename each function and instance of "adaptivetheme_subtheme" to match 
+ * 1. Rename each function and instance of "adaptivetheme_subtheme" to match
  *    your subthemes name, e.g. if you name your theme "footheme" then the function
- *    name will be "footheme_preprocess_hook". Tip - you can search/replace 
+ *    name will be "footheme_preprocess_hook". Tip - you can search/replace
  *    on "adaptivetheme_subtheme".
  * 2. Uncomment the required function to use.
  */
@@ -14,7 +14,7 @@
  */
 function adaptivetheme_subtheme_preprocess_html(&$vars) {
   // Load the media queries styles
-  // Remember to rename these files to match the names used here - they are 
+  // Remember to rename these files to match the names used here - they are
   // in the CSS directory of your subtheme.
   $media_queries_css = array(
     'adaptivetheme_subtheme.responsive.style.css',
