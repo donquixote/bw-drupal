@@ -1,4 +1,4 @@
-; $Id: migrate_example.info,v 1.1.2.9 2010/10/30 20:44:10 mikeryan Exp $
+
 name = "BW migrate"
 description = "BW migrate"
 package = "BeWelcome"
@@ -11,17 +11,14 @@ dependencies[] = image
 dependencies[] = migrate
 dependencies[] = list
 dependencies[] = number
-files[] = user.inc
-files[] = members.inc
-files[] = comments.inc
-files[] = faq.inc
-files[] = ewiki.inc
-files[] = groups.inc
 
 
 ;node_reference is useful but not required
 ;dependencies[] = node_reference
 
-files[] = bwmigrate.module
-; files[] = beer.inc
-; files[] = wine.inc
+dependencies[] = registry_wildcard
+
+; Files to be scanned for autoload.
+; Only classes within these files will be recognized as migrations.
+; Thanks to registry_wildcard module, we can use wildcards here.
+files[] = lib/**/*.inc
