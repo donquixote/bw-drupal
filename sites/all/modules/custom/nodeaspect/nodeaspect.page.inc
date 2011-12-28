@@ -36,6 +36,7 @@ function _nodeaspect_page_info_build($node, $suffix) {
     'render as page' => TRUE,
     'render links' => TRUE,
     'tab' => TRUE,
+    'weight' => 0,
   );
   return new nodeaspect_PageInfo($info);
 }
