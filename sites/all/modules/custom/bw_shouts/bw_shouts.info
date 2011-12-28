@@ -1,0 +1,7 @@
+name = BW Shouts
+description = Provide a ds layout for comments, to replicate the shouts on bewelcome.
+dependencies[] = ds
+package = BeWelcome
+core = 7.x
+files[] = bw_forum.module
+

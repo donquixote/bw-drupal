@@ -6,12 +6,19 @@
  */
 function views_content_ds_ds_fields_info($entity_type) {
 
-  if ($entity_type != 'node') {
-    // For now, only node is supported. See below, "Problem".
-    return;
+  static $_fields;
+
+  if (!isset($_fields)) {
+    $_fields = _views_content_ds_collect_fields();
   }
 
-  $fields = array();
+  return $_fields;
+}
+
+
+function _views_content_ds_collect_fields() {
+
+  $collector = new _views_content_ds_FieldCollector();
 
   $views = views_get_all_views();
 
@@ -31,36 +38,74 @@ function views_content_ds_ds_fields_info($entity_type) {
       if (count($display->display_options['argument_input']) > 1) {
         continue;
       }
+
       // Pick the first and only argument.
       foreach ($display->display_options['argument_input'] as $arg_name => $arg_options) {}
+
       // Problem: What is the equivalent to "node.nid" for other entity types?
-      if ($arg_options['context'] != "entity:$entity_type.nid") {
+      if (!isset($arg_options['context'])) {
         continue;
       }
-      $title = t('Views') .': '. t($view->human_name);
-      $fieldname = "views_content_ds__{$view_id}";
-      if (!isset($fields[$fieldname])) {
-        $fields[$fieldname] = array(
-          'title' => $title,
-          'field_type' => DS_FIELD_TYPE_FUNCTION,
-          'function' => '_views_content_ds_field_print',
-          // These two settings have no meaning for ds api,
-          // we just need them in the callback.
-          '_view_id' => $view_id,
-          // We could restrict to specific bundles and view modes, if we wanted.
-          'ui_limit' => array('*|*'),
-        );
-      }
-      $formatter_name = $display_id;
-      $formatter_title = t($display->display_title);
-      $fields[$fieldname]['properties']['formatters'][$formatter_name] = $formatter_title;
+
+      $collector->viewsPane($arg_options, $display);
     }
 
     $view->destroy();
   }
 
-  if (!empty($fields)) {
-    return array($entity_type => $fields);
+  return $collector->fields();
+}
+
+
+class _views_content_ds_FieldCollector {
+
+  protected $_fields = array();
+
+  function fields() {
+    return $this->_fields;
+  }
+
+  function viewsPane($arg_options, $display) {
+    switch ($arg_options['context']) {
+      case 'entity:node.tnid':
+      case 'entity:node.nid':
+      case 'entity:group.entity_id':
+        $this->_viewsPane('node', $display);
+        break;
+      case 'entity:group.gid':
+        break;
+    }
+  }
+
+  protected function _viewsPane($entity_type, $display) {
+    $fieldname = $this->_field($entity_type, $display->handler->view);
+    $this->_formatter($entity_type, $fieldname, $display);
+  }
+
+  protected function _field($entity_type, $view) {
+    $view_id = $view->name;
+    $view_nicename = t($view->human_name);
+    $fieldname = "views_content_ds__$view_id";
+    $title = t('Views: !field_name', array('!field_name' => $view_nicename));
+    if (!isset($this->_fields[$entity_type][$fieldname])) {
+      $this->_fields[$entity_type][$fieldname] = array(
+        'title' => $title,
+        'field_type' => DS_FIELD_TYPE_FUNCTION,
+        'function' => '_views_content_ds_field_print',
+        // These two settings have no meaning for ds api,
+        // we just need them in the callback.
+        '_view_id' => $view_id,
+        // We could restrict to specific bundles and view modes, if we wanted.
+        'ui_limit' => array('*|*'),
+      );
+    }
+    return $fieldname;
+  }
+
+  protected function _formatter($entity_type, $fieldname, $display) {
+    $formatter_name = $display->id;
+    $formatter_title = t($display->display_title);
+    $this->_fields[$entity_type][$fieldname]['properties']['formatters'][$formatter_name] = $formatter_title;
   }
 }
 
@@ -69,6 +114,7 @@ function views_content_ds_ds_fields_info($entity_type) {
  * Callback to render our ds field..
  */
 function _views_content_ds_field_print($field) {
+  // return __FUNCTION__;
   $entity = $node = $field['entity'];
   $entity_type = $field['entity_type'];
   $view_id = $field['_view_id'];
@@ -80,12 +126,16 @@ function _views_content_ds_field_print($field) {
     'override_title' => 0,
     'override_title_text' => '',
   );
-  $panel_args = array();
-  $contexts = array();
-  ds_create_entity_context($entity_type, $entity, &$contexts);
-  module_load_include('inc', 'views_content', 'plugins/content_types/views_panes');
-  $result = views_content_views_panes_content_type_render("$view_id-$display_id", $conf, $panel_args, $contexts);
-  return $result->content;
+  $view = views_get_view($view_id);
+  $view->set_display($display_id);
+  $view->set_arguments(array($node->nid));
+  $view->execute();
+  $result = $view->render();
+  return $result;
 }
+
+
+
+
 
 
