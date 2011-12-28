@@ -1,0 +1,6 @@
+name = Registry wildcard
+description = "Allow module info files to use '*' and '**' wildcards in their files[] settings."
+package = zzz
+core = 7.x
+
+
