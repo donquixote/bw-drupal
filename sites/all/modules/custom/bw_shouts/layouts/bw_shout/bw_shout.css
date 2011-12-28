@@ -1,0 +1,32 @@
+
+/* region layout */
+/* -------------------------------------------------------------------------- */
+
+.bw_shout-middle-outer {
+  display:inline;
+  float:right;
+  width:100%;
+  margin-left:-100%;
+}
+
+.bw_shout-middle {
+  margin-left:70px;
+}
+
+.bw_shout-left {
+  display:inline;
+  float:left;
+  width:50px;
+}
+
+.bw_shout-bottom {
+  background:white;
+  padding:2px;
+}
+
+
+/* fields */
+/* -------------------------------------------------------------------------- */
+
+
+

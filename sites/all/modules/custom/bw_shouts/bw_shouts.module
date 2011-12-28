@@ -1,0 +1,63 @@
+<?php
+
+
+/**
+ * Implements hook_ds_layout_info().
+ */
+function bw_shouts_ds_layout_info() {
+  $path = drupal_get_path('module', 'bw_shouts');
+
+  $layouts = array(
+    'bw_shout' => array(
+      'label' => t('BW Shout'),
+      'path' => $path . '/layouts/bw_shout',
+      'regions' => array(
+        'left' => 'Left (user picture)',
+        'main' => 'Content (shout text)',
+        'bottom' => 'Bottom (shout links)',
+      ),
+      'css' => TRUE,
+    ),
+  );
+
+  return $layouts;
+}
+
+
+/**
+ * Implements hook_ds_fields_info_alter()
+ *
+ * Some nd fields that allow forum-style discussions via nd/ds.
+ */
+function bw_shouts_ds_fields_info($entity_type) {
+
+  $fields = array();
+
+  if ($entity_type === 'comment') {
+    $fields['bw_shouts_userpic'] = array(
+      'title' => 'BW Shouts: User picture',
+      'field_type' => DS_FIELD_TYPE_FUNCTION,
+      'function' => '_bw_shouts_userpic',
+    );
+  }
+
+  return array($entity_type => $fields);
+}
+
+
+function _bw_shouts_userpic($field) {
+  $u = user_load($field['entity']->uid);
+  if (!$u) {
+    // TODO: Show a 'no longer here' picture.
+    return '?';
+  }
+  if (!$u->picture) {
+    // TODO: Show a default picture.
+    return 'no pic';
+  }
+  // TODO: Show the user picture.
+  
+  return 'userpic';
+}
+
+
