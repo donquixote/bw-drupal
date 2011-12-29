@@ -50,10 +50,6 @@ class bw_migrate_Migration_user extends bw_migrate_Migration {
       'path', 'pathauto',
     ));
   }
-
-  function prepare($dest, $row) {
-    dpm($dest);
-  }
 }
 
 
