@@ -8,34 +8,38 @@ class bw_migrate_InjectedAPI_dest {
 
   protected $_migration;
   protected $_info;
+  protected $_map;
 
-  function __construct($migration, array &$info) {
+  function __construct($migration, array &$info, $map) {
     $this->_migration = $migration;
     $this->_info =& $info;
+    $this->_map = $map;
   }
 
   function dest($suffix) {
     $args = func_get_args();
-    $this->_info['dest'] = $args;
+    return $this->_migration->p_setDestination($args);
   }
 
   function node($bundle, $options = array()) {
+    foreach (array(
+      'is_new', 'status', 'promote', 'sticky', 'revision', 'path', 'comment',
+    ) as $key) {
+      $this->_map->overridable($key)->issueGroup(t('DNM'));
+    }
+    $this->_map->overridable('pathauto')->defaultValue(FALSE);
+    $this->_map->overridable('language')->defaultValue('en');
     $options += array(
       'text_format' => 'filtered_html',
     );
-    $this->dest('node', $bundle, $options);
-    $this->ignore(array(
-      'is_new', 'status', 'promote', 'sticky', 'revision', 'path', 'comment',
-    ));
-    $this->_migration->p_addFieldMapping('pathauto')->defaultValue(FALSE);
-    $this->_migration->p_addFieldMapping('language')->defaultValue('en');
+    return $this->dest('node', $bundle, $options);
   }
 
   function comment($node_bundle, $options = array()) {
     $options += array(
       'text_format' => 'filtered_html',
     );
-    $this->dest('comment', 'comment_node_'. $node_bundle, $options);
+    return $this->dest('comment', 'comment_node_'. $node_bundle, $options);
   }
 
   function ignore(array $names) {

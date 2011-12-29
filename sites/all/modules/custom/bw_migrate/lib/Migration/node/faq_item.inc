@@ -21,16 +21,16 @@ class bw_migrate_Migration_node_faq_item extends bw_migrate_Migration {
     $map->foreignKey('field_faq_category', 'idcategory', 'term_faq_categories');
     $map->uidAdmin('uid');
     $map->uidAdmin('revision_uid');
+    $map->strtotime('created', 'created');
+    $map->strtotime('changed', 'updated');
 
     // Unmapped fields
     $src->ignore(array(
-      'qanda', 'updated', 'created', 'active', 'sortorder', 'idcategory',
+      'qanda', 'active', 'sortorder', 'idcategory',
       'pagetitle',
     ));
     $dest->ignore(array(
-      // 'name', 'created', 'changed', 'status', 'promote', 'revision', 'language'
-      'is_new', 'created', 'changed', 'status', 'promote', 'sticky', 'revision',
-      'language', 'path', 'comment', 'pathauto',
+      // These are all dealt with in $dest->node().
     ));
   }
 }

@@ -5,6 +5,7 @@ abstract class bw_migrate_Migration extends Migration {
 
   protected $_rox_info;
   protected $_roxdb;
+  protected $_overridables = array();
 
   /**
    * Allow alternative machine names.
@@ -55,9 +56,9 @@ abstract class bw_migrate_Migration extends Migration {
         'enum' => array(),
         'strtotime' => array(),
       );
-      $source_api = new bw_migrate_InjectedAPI_src($this, $roxdb, $info);
-      $destination_api = new bw_migrate_InjectedAPI_dest($this, $info);
       $map_api = new bw_migrate_InjectedAPI_map($this, $info);
+      $source_api = new bw_migrate_InjectedAPI_src($this, $roxdb, $info);
+      $destination_api = new bw_migrate_InjectedAPI_dest($this, $info, $map_api);
       try {
         $this->_init($source_api, $destination_api, $map_api);
       }
@@ -68,12 +69,7 @@ abstract class bw_migrate_Migration extends Migration {
       $this->source = $source_api->flush();
       $destination_api->flush();
 
-      $dest_args = $info['dest'];
-      $dest_suffix = array_shift($dest_args);
-      $dest_class = 'MigrateDestination'. ucfirst($dest_suffix);
-      $dest_class_reflect = new ReflectionClass($dest_class);
-      $this->destination = $dest = $dest_class_reflect->newInstanceArgs($dest_args);
-      $dest_schema = $dest->getKeySchema();
+      $dest_schema = $this->destination->getKeySchema();
 
       $src_primary = $info['primary'];
       $this->map = new MigrateSQLMap($this->machineName, $src_primary, $dest_schema);
@@ -113,8 +109,25 @@ abstract class bw_migrate_Migration extends Migration {
    * Public wrapper for a protected function,
    * so it can be called from within bw_migrate_InjectedAPI_map.
    */
-  function p_addFieldMapping($dest_field, $src_column = NULL) {
+  function p_addFieldMapping($dest_field, $src_column = NULL, $overridable = FALSE) {
+    if (!is_null($dest_field) && !empty($this->_overridables[$dest_field])) {
+      // Suppress the warning for field override.
+      unset($this->fieldMappings[$dest_field]);
+      unset($this->_overridables[$dest_field]);
+    }
+    if (!is_null($dest_field) && $overridable) {
+      // Next time, we suppress again the override warning for this field.
+      $this->_overridables[$dest_field] = TRUE;
+    }
     return $this->addFieldMapping($dest_field, $src_column);
+  }
+
+  function p_setDestination(array $dest_args) {
+    $dest_suffix = array_shift($dest_args);
+    $dest_class = 'MigrateDestination'. ucfirst($dest_suffix);
+    $dest_class_reflect = new ReflectionClass($dest_class);
+    $this->destination = $dest_class_reflect->newInstanceArgs($dest_args);
+    return $this->destination;
   }
 
   /**

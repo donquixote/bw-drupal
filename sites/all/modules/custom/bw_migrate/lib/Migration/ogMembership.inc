@@ -1,7 +1,7 @@
 <?php
 
 
-class bw_migrate_Migration_ogMembership {
+abstract class bw_migrate_Migration_ogMembership {
 
   protected function _init($src, $dest, $map) {
 

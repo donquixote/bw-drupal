@@ -53,6 +53,15 @@ class bw_migrate_InjectedAPI_src {
     }
   }
 
+  function rox_select_members($alias_m, $alias_u) {
+    $q = $this->rox_select('members', $alias_m);
+    // Only select members that have a user record associated with them.
+    $q->innerJoin('user', $alias_u, "$alias_u.handle = $alias_m.Username");
+    // Unfortunately, rox user.handle is not unique in the test db.
+    $q->groupBy("$alias_m.id");
+    return $q;
+  }
+
   function flush() {
     $query_count = array();
     // Create a MigrateSource object, which manages retrieving the input data.

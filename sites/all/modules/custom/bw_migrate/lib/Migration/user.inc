@@ -10,15 +10,18 @@ class bw_migrate_Migration_user extends bw_migrate_Migration {
     $dest->dest('User');
     $src->primary('id');
 
-    $q = $src->rox_select('members', 'm');
-    $q->innerJoin('user', 'u', 'u.handle = m.Username');
+    $q = $src->rox_select_members('m', 'u');
     $q->fields('m', array('id', 'Username'));
     $q->fields('u', array('email', 'pw', 'active', 'lastlogin'));
-    // Unfortunately, rox user.handle is not unique.
-    $q->groupBy('m.id');
+    $q->leftJoin('membersphotos', 'p', 'm.id = p.IdMember');
+    $q->fields('p', array('FilePath', 'id'));
 
     // Dedupe assures that value is unique. Use it when source data is non-unique.
     // Pass the Drupal table and column for determining uniqueness.
+    //
+    // Attention:
+    //   Dedupe overdedupes on udpate, see http://drupal.org/node/1358318
+    // 
     $map->map('name', 'username')->dedupe('users', 'name');
 
     $map->strtotime('login', 'lastlogin');
@@ -35,15 +38,21 @@ class bw_migrate_Migration_user extends bw_migrate_Migration {
 
     // TODO: fix
     //    $map->map('active', 'status');
-    $map->map('status')->defaultValue(1); // 1 => active
+    $map->map('status')->defaultValue(1);  // 1 => active
+
+    $map->map('picture', 'p_id')->sourceMigration('file_membersphotos');
 
     // Unmapped fields
     $src->ignore(array('active'));
     $dest->ignore(array(
-      'theme', 'signature', 'timezone', 'language', 'picture',
+      'theme', 'signature', 'timezone', 'language',
       'is_new', 'signature_format', 'created', 'init', 'group_audience',
       'path', 'pathauto',
     ));
+  }
+
+  function prepare($dest, $row) {
+    dpm($dest);
   }
 }
 

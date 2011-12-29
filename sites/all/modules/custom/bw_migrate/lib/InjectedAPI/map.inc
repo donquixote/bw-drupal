@@ -59,6 +59,14 @@ class bw_migrate_InjectedAPI_map {
     $this->_info['yesno'][$src_column] = $src_column;
     return $this->map($dest_field, $src_column);
   }
+
+  /**
+   * This allows to specify a default mapping,
+   * without generating a warning when it is overridden.
+   */
+  function overridable($dest_field, $src_column = NULL) {
+    return $this->_migration->p_addFieldMapping($dest_field, $src_column, TRUE);
+  }
 }
 
 
