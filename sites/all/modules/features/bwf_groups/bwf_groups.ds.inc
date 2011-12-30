@@ -53,19 +53,19 @@ function bwf_groups_ds_field_settings_info() {
   $ds_fieldsetting->view_mode = 'default';
   $ds_fieldsetting->settings = array(
     'submitted' => array(
-      'weight' => '3',
+      'weight' => '4',
       'label' => 'hidden',
       'format' => 'default',
     ),
     'title' => array(
-      'weight' => '1',
+      'weight' => '2',
       'label' => 'hidden',
       'format' => 'default',
     ),
-    'author' => array(
-      'weight' => '0',
+    'ds_user_picture' => array(
+      'weight' => '1',
       'label' => 'hidden',
-      'format' => 'default',
+      'format' => 'ds_picture_thumb-50',
     ),
   );
   $export['comment|comment_node_group|default'] = $ds_fieldsetting;
@@ -173,22 +173,22 @@ function bwf_groups_ds_field_settings_info() {
   $ds_fieldsetting->view_mode = 'default';
   $ds_fieldsetting->settings = array(
     'comments' => array(
-      'weight' => '3',
+      'weight' => '4',
       'label' => 'above',
       'format' => 'default',
     ),
     'author' => array(
-      'weight' => '4',
+      'weight' => '5',
       'label' => 'hidden',
       'format' => 'author',
     ),
     'views_content_ds__bw_group_posts' => array(
-      'weight' => '2',
+      'weight' => '3',
       'label' => 'above',
       'format' => 'panel_pane_1',
     ),
     'views_content_ds__bw_group_members' => array(
-      'weight' => '5',
+      'weight' => '6',
       'label' => 'above',
       'format' => 'panel_pane_2',
     ),
@@ -297,25 +297,27 @@ function bwf_groups_ds_layout_settings_info() {
   $ds_layout->entity_type = 'comment';
   $ds_layout->bundle = 'comment_node_group';
   $ds_layout->view_mode = 'default';
-  $ds_layout->layout = 'ds_2col';
+  $ds_layout->layout = 'bw_shout';
   $ds_layout->settings = array(
     'hide_empty_regions' => 0,
     'hide_sidebars' => 0,
     'regions' => array(
       'left' => array(
-        0 => 'author',
+        0 => 'ds_user_picture',
       ),
-      'right' => array(
+      'main' => array(
         0 => 'title',
         1 => 'comment_body',
-        2 => 'submitted',
+      ),
+      'bottom' => array(
+        0 => 'submitted',
       ),
     ),
     'fields' => array(
-      'author' => 'left',
-      'title' => 'right',
-      'comment_body' => 'right',
-      'submitted' => 'right',
+      'ds_user_picture' => 'left',
+      'title' => 'main',
+      'comment_body' => 'main',
+      'submitted' => 'bottom',
     ),
     'classes' => array(),
   );

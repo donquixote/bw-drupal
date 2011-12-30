@@ -49,7 +49,7 @@ function bwf_groups_field_default_fields() {
           'module' => 'text',
           'settings' => array(),
           'type' => 'text_default',
-          'weight' => '1',
+          'weight' => '2',
         ),
         'full' => array(
           'label' => 'hidden',
@@ -332,7 +332,7 @@ function bwf_groups_field_default_fields() {
           'label' => 'above',
           'settings' => array(),
           'type' => 'hidden',
-          'weight' => '11',
+          'weight' => '12',
         ),
         'full' => array(
           'label' => 'above',
@@ -454,7 +454,7 @@ function bwf_groups_field_default_fields() {
           'label' => 'above',
           'settings' => array(),
           'type' => 'hidden',
-          'weight' => '10',
+          'weight' => '11',
         ),
         'full' => array(
           'label' => 'above',
@@ -587,10 +587,9 @@ function bwf_groups_field_default_fields() {
       'display' => array(
         'default' => array(
           'label' => 'above',
-          'module' => 'og_ui',
           'settings' => array(),
-          'type' => 'og_group_subscribe',
-          'weight' => 12,
+          'type' => 'hidden',
+          'weight' => '13',
         ),
         'group_forum' => array(
           'label' => 'above',
@@ -728,7 +727,7 @@ function bwf_groups_field_default_fields() {
           'summary_rows' => 5,
         ),
         'type' => 'text_textarea_with_summary',
-        'weight' => 1,
+        'weight' => '1',
       ),
     ),
   );
@@ -810,7 +809,7 @@ function bwf_groups_field_default_fields() {
           'opt_group' => 'auto',
         ),
         'type' => 'group_audience',
-        'weight' => 0,
+        'weight' => '0',
       ),
       'widget_type' => 'group_audience',
     ),
@@ -893,7 +892,7 @@ function bwf_groups_field_default_fields() {
         'module' => 'options',
         'settings' => array(),
         'type' => 'options_select',
-        'weight' => 2,
+        'weight' => '2',
       ),
       'widget_type' => 'options_select',
     ),

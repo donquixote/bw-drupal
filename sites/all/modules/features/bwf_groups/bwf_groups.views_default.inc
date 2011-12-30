@@ -38,7 +38,13 @@ function bwf_groups_views_default_views() {
   $handler->display->display_options['relationships']['og_membership_rel']['id'] = 'og_membership_rel';
   $handler->display->display_options['relationships']['og_membership_rel']['table'] = 'users';
   $handler->display->display_options['relationships']['og_membership_rel']['field'] = 'og_membership_rel';
-  $handler->display->display_options['relationships']['og_membership_rel']['required'] = 0;
+  $handler->display->display_options['relationships']['og_membership_rel']['required'] = 1;
+  /* Relationship: OG membership: Group gid */
+  $handler->display->display_options['relationships']['group']['id'] = 'group';
+  $handler->display->display_options['relationships']['group']['table'] = 'og_membership';
+  $handler->display->display_options['relationships']['group']['field'] = 'group';
+  $handler->display->display_options['relationships']['group']['relationship'] = 'og_membership_rel';
+  $handler->display->display_options['relationships']['group']['required'] = 1;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
@@ -61,21 +67,19 @@ function bwf_groups_views_default_views() {
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['relationship'] = 'og_membership_rel';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Contextual filter: OG membership: Group gid */
-  $handler->display->display_options['arguments']['group']['id'] = 'group';
-  $handler->display->display_options['arguments']['group']['table'] = 'og_membership';
-  $handler->display->display_options['arguments']['group']['field'] = 'group';
-  $handler->display->display_options['arguments']['group']['relationship'] = 'og_membership_rel';
-  $handler->display->display_options['arguments']['group']['default_action'] = 'not found';
-  $handler->display->display_options['arguments']['group']['title_enable'] = 1;
-  $handler->display->display_options['arguments']['group']['title'] = '%1 group members';
-  $handler->display->display_options['arguments']['group']['default_argument_type'] = 'fixed';
-  $handler->display->display_options['arguments']['group']['default_argument_skip_url'] = 0;
-  $handler->display->display_options['arguments']['group']['summary']['number_of_records'] = '0';
-  $handler->display->display_options['arguments']['group']['summary']['format'] = 'default_summary';
-  $handler->display->display_options['arguments']['group']['summary_options']['items_per_page'] = '25';
-  $handler->display->display_options['arguments']['group']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['group']['not'] = 0;
+  /* Contextual filter: OG group: Entity id */
+  $handler->display->display_options['arguments']['etid']['id'] = 'etid';
+  $handler->display->display_options['arguments']['etid']['table'] = 'og';
+  $handler->display->display_options['arguments']['etid']['field'] = 'etid';
+  $handler->display->display_options['arguments']['etid']['relationship'] = 'group';
+  $handler->display->display_options['arguments']['etid']['default_action'] = 'not found';
+  $handler->display->display_options['arguments']['etid']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['etid']['default_argument_skip_url'] = 0;
+  $handler->display->display_options['arguments']['etid']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['etid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['etid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['etid']['break_phrase'] = 0;
+  $handler->display->display_options['arguments']['etid']['not'] = 0;
   /* Filter criterion: User: Active */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'users';
@@ -230,24 +234,30 @@ function bwf_groups_views_default_views() {
   $handler->display->display_options['relationships']['og_membership_rel']['table'] = 'node';
   $handler->display->display_options['relationships']['og_membership_rel']['field'] = 'og_membership_rel';
   $handler->display->display_options['relationships']['og_membership_rel']['required'] = 0;
+  /* Relationship: OG membership: Group gid */
+  $handler->display->display_options['relationships']['group']['id'] = 'group';
+  $handler->display->display_options['relationships']['group']['table'] = 'og_membership';
+  $handler->display->display_options['relationships']['group']['field'] = 'group';
+  $handler->display->display_options['relationships']['group']['relationship'] = 'og_membership_rel';
+  $handler->display->display_options['relationships']['group']['required'] = 0;
   /* Sort criterion: Content: Post date */
   $handler->display->display_options['sorts']['created']['id'] = 'created';
   $handler->display->display_options['sorts']['created']['table'] = 'node';
   $handler->display->display_options['sorts']['created']['field'] = 'created';
   $handler->display->display_options['sorts']['created']['order'] = 'DESC';
-  /* Contextual filter: OG membership: Group gid */
-  $handler->display->display_options['arguments']['group']['id'] = 'group';
-  $handler->display->display_options['arguments']['group']['table'] = 'og_membership';
-  $handler->display->display_options['arguments']['group']['field'] = 'group';
-  $handler->display->display_options['arguments']['group']['relationship'] = 'og_membership_rel';
-  $handler->display->display_options['arguments']['group']['default_action'] = 'not found';
-  $handler->display->display_options['arguments']['group']['default_argument_type'] = 'fixed';
-  $handler->display->display_options['arguments']['group']['default_argument_skip_url'] = 0;
-  $handler->display->display_options['arguments']['group']['summary']['number_of_records'] = '0';
-  $handler->display->display_options['arguments']['group']['summary']['format'] = 'default_summary';
-  $handler->display->display_options['arguments']['group']['summary_options']['items_per_page'] = '25';
-  $handler->display->display_options['arguments']['group']['break_phrase'] = 0;
-  $handler->display->display_options['arguments']['group']['not'] = 0;
+  /* Contextual filter: OG group: Entity id */
+  $handler->display->display_options['arguments']['etid']['id'] = 'etid';
+  $handler->display->display_options['arguments']['etid']['table'] = 'og';
+  $handler->display->display_options['arguments']['etid']['field'] = 'etid';
+  $handler->display->display_options['arguments']['etid']['relationship'] = 'group';
+  $handler->display->display_options['arguments']['etid']['default_action'] = 'not found';
+  $handler->display->display_options['arguments']['etid']['default_argument_type'] = 'fixed';
+  $handler->display->display_options['arguments']['etid']['default_argument_skip_url'] = 0;
+  $handler->display->display_options['arguments']['etid']['summary']['number_of_records'] = '0';
+  $handler->display->display_options['arguments']['etid']['summary']['format'] = 'default_summary';
+  $handler->display->display_options['arguments']['etid']['summary_options']['items_per_page'] = '25';
+  $handler->display->display_options['arguments']['etid']['break_phrase'] = 0;
+  $handler->display->display_options['arguments']['etid']['not'] = 0;
   /* Filter criterion: Content: Published */
   $handler->display->display_options['filters']['status']['id'] = 'status';
   $handler->display->display_options['filters']['status']['table'] = 'node';
@@ -356,13 +366,13 @@ function bwf_groups_views_default_views() {
   $handler->display->display_options['allow']['exposed_form'] = 0;
   $handler->display->display_options['allow']['fields_override'] = 0;
   $handler->display->display_options['argument_input'] = array(
-    'group' => array(
+    'etid' => array(
       'type' => 'context',
       'context' => 'entity:node.nid',
       'context_optional' => 0,
       'panel' => '0',
       'fixed' => '',
-      'label' => 'Organic groups membership: Group gid',
+      'label' => 'OG group: Entity id',
     ),
   );
 
@@ -439,6 +449,12 @@ function bwf_groups_views_default_views() {
   $handler->display->display_options['relationships']['uid']['table'] = 'node';
   $handler->display->display_options['relationships']['uid']['field'] = 'uid';
   $handler->display->display_options['relationships']['uid']['required'] = 0;
+  /* Relationship: OG membership: Group gid */
+  $handler->display->display_options['relationships']['group']['id'] = 'group';
+  $handler->display->display_options['relationships']['group']['table'] = 'og_membership';
+  $handler->display->display_options['relationships']['group']['field'] = 'group';
+  $handler->display->display_options['relationships']['group']['relationship'] = 'og_membership_rel';
+  $handler->display->display_options['relationships']['group']['required'] = 0;
   $handler->display->display_options['defaults']['fields'] = FALSE;
   /* Field: Content: Title */
   $handler->display->display_options['fields']['title']['id'] = 'title';
