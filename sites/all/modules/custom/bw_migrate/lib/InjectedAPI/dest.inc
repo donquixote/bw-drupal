@@ -42,6 +42,11 @@ class bw_migrate_InjectedAPI_dest {
     return $this->dest('comment', 'comment_node_'. $node_bundle, $options);
   }
 
+  function table($table_name) {
+    $this->_info['dest_schema'] = MigrateDestinationTable::getKeySchema($table_name);
+    return $this->dest('table', $table_name);
+  }
+
   function ignore(array $names) {
     foreach ($names as $name) {
       $this->_info['dest_ignore'][$name] = $name;

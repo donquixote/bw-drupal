@@ -69,7 +69,12 @@ abstract class bw_migrate_Migration extends Migration {
       $this->source = $source_api->flush();
       $destination_api->flush();
 
-      $dest_schema = $this->destination->getKeySchema();
+      if (isset($info['dest_schema'])) {
+        $dest_schema = $info['dest_schema'];
+      }
+      else {
+        $dest_schema = $this->destination->getKeySchema();
+      }
 
       $src_primary = $info['primary'];
       $this->map = new MigrateSQLMap($this->machineName, $src_primary, $dest_schema);

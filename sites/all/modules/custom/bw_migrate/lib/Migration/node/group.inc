@@ -28,6 +28,7 @@ class bw_migrate_Migration_node_group extends bw_migrate_Migration {
     $map->uidAdmin('revision_uid');
 
     $map->strtotime('created', 'created');
+    $map->defaultValue('group_group', NULL);
 
     // Unmigrated fields
     $src->ignore(array(
@@ -39,10 +40,6 @@ class bw_migrate_Migration_node_group extends bw_migrate_Migration {
     $dest->ignore(array(
       'changed', 'field_group_picture', 'field_wiki_text',
     ));
-  }
-
-  function _prepareRow($row) {
-    
   }
 }
 

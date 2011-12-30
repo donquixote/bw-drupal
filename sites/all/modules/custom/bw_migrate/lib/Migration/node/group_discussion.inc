@@ -42,7 +42,7 @@ class bw_migrate_Migration_node_group_discussion extends bw_migrate_Migration {
     $map->strtotime('created', 'create_time');
     $map->strtotime('changed', 'last_edittime');
 
-    $map->foreignKey('group_audience', 'idgroup', 'node_group');
+    $map->foreignKey('group_audience', 'idgroup', 'ogGroup');
 
     // Unmigrated fields
     $src->ignore(array(
