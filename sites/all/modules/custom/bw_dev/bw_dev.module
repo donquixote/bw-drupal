@@ -9,6 +9,46 @@ function bw_dev_pageapi($api) {
       $api->css('contextual.css', 'module:contextual');
       break;
   }
+
+  _bw_dev_dependencies_warning();
+}
+
+
+function _bw_dev_dependencies_warning() {
+  // Get current list of modules and their files.
+  $modules = db_query("SELECT * FROM {system} WHERE type = 'module' AND status = 1")->fetchAll();
+  $by_name = array();
+  foreach ($modules as $module) {
+    $module->info = unserialize($module->info);
+    $by_name[$module->name] = $module->info['dependencies'];
+  }
+  $missing = array();
+  foreach ($by_name as $module => $dependencies) {
+    foreach ($dependencies as $dependency) {
+      if (!isset($by_name[$dependency])) {
+        $missing[$dependency][$module] = $module;
+      }
+    }
+  }
+  $html = '';
+  $drush = 'drush en';
+  foreach ($missing as $m => $required_by) {
+    $drush .= " $m";
+    $msg = implode(', ', $required_by);
+    $html .= <<<EOT
+<li><strong>$m</strong>, required by $msg</li>
+EOT;
+  }
+  $html = <<<EOT
+Unmet module dependencies.<br/>
+<br/>
+Please enable the following modules:<br/>
+<ul>$html</ul>
+<br/>
+The drush command would be:
+<pre>$drush</pre>
+EOT;
+  drupal_set_message($html);
 }
 
 
