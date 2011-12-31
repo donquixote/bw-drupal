@@ -156,6 +156,38 @@ a:focus {
  text-decoration: underline;
 }
 
+ul.primary {
+	border-bottom: 0px;
+	padding-bottom: 40px;
+}
+
+ul.primary li a {
+	border-width: 0px;
+	background-color: #F7F7F7;
+}
+
+ul li a:hover {
+ text-decoration: underline;
+}
+
+#tasks li {
+	font-size: 1.2em;
+	font-weight: bold;
+}
+
+#tasks a {
+	padding: 0.5em 0.8em;
+	padding-bottom: 1.4em;
+	color: #888888;
+}
+
+#tasks li.active a {
+	background: url("../images/small_arrow_down_bg.gif") no-repeat scroll center bottom transparent;
+	border: medium none;
+    color: #333333;
+    padding-bottom: 1.4em;
+}
+
 a:active {
 }
 
