@@ -83,18 +83,32 @@ function bw_groups_nodeaspect_page($node, $suffix, $api) {
 }
 
 
+/**
+ * Pageapi callback registered with hook_nodeaspect().
+ * Only executed on group pages, that is, node/[group nid]/[something].
+ */
 function _bw_groups_pageapi($api, $node, $suffix) {
   $api->css('css/bw_groups.css');
 }
 
 
+/**
+ * Implements hook_crumbs_plugins()
+ */
 function bw_groups_crumbs_plugins() {
   return array('x' => new _bw_groups_CrumbsPlugin());
 }
 
 
+/**
+ * Crumbs plugin.
+ * Adapted from the native crumbs plugin for og.
+ */
 class _bw_groups_CrumbsPlugin {
 
+  /**
+   * This plugin returns exactly one rule, not many.
+   */
   function defineOne($api) {
     // do nothing..
     $api->setTitle('BW Groups');
