@@ -81,11 +81,11 @@ class _pageapi_CallbackRegistry {
   protected static $_callbacks = array();
   protected static $_weights = array();
 
-  function registerCallback($callback, $args, $weight) {
+  static function registerCallback($callback, $args, $weight) {
     self::$_callbacks[$weight][] = array($callback, $args);
   }
 
-  function executeCallbacks($api) {
+  static function executeCallbacks($api) {
     ksort(self::$_callbacks, SORT_NUMERIC);
     foreach (self::$_callbacks as $weight => $callbacks) {
       foreach ($callbacks as $callback_info) {
