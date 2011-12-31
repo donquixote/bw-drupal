@@ -62,37 +62,22 @@ function entity_translation_entity_info_alter(&$entity_info) {
   $edit_form_info = array();
 
   // Provide defaults for translation info.
-  foreach ($entity_info as $entity_type => $info) {
+  foreach ($entity_info as $entity_type => &$info) {
     if (entity_translation_enabled($entity_type, TRUE)) {
       if (!isset($entity_info[$entity_type]['translation']['entity_translation'])) {
         $entity_info[$entity_type]['translation']['entity_translation'] = array();
       }
+      $info_et = &$info['translation']['entity_translation'];
 
-      // If no base path is provided we default to the common "node/%node"
-      // pattern.
-      if (!isset($entity_info[$entity_type]['translation']['entity_translation']['base path'])) {
-        // Give a hint we are not done yet with entity translation information
-        // building, since if caches have been cleared also menu cache is going
-        // to be rebuilt and would retrieve an incomplete entity information.
-        $GLOBALS['entity_translation_info_building'] = TRUE;
-        $router = menu_get_router();
-        unset($GLOBALS['entity_translation_info_building']);
-
-        // If we cannot find a usable base path we skip to the next entity type.
-        if (!isset($router["$entity_type/%"])) {
-          unset($entity_info[$entity_type]['translation']['entity_translation']);
-          continue;
-        }
-
-        $path = "$entity_type/%$entity_type";
-        $entity_info[$entity_type]['translation']['entity_translation']['base path'] = $path;
+      if (isset($info_et['base path'])) {
+        $path = $info_et['base path'];
+        $info_et += array(
+          'view path' => $path,
+          'edit path' => "$path/$edit",
+        );
       }
 
-      $path = $entity_info[$entity_type]['translation']['entity_translation']['base path'];
-
-      $entity_info[$entity_type]['translation']['entity_translation'] += array(
-        'view path' => $path,
-        'edit path' => "$path/edit",
+      $info_et += array(
         'class' => 'EntityTranslationDefaultHandler',
         'path wildcard' => "%$entity_type",
         'access callback' => 'entity_translation_tab_access',
@@ -102,7 +87,7 @@ function entity_translation_entity_info_alter(&$entity_info) {
         'edit form' => TRUE,
       );
 
-      $entity_info[$entity_type]['entity keys'] += array(
+      $info['entity keys'] += array(
         'translations' => 'translations',
       );
     }
@@ -122,91 +107,176 @@ function entity_translation_enabled($entity_type, $skip_handler = FALSE) {
 /**
  * Implements hook_menu_alter().
  */
-function entity_translation_menu_alter(&$items) {
-  $backup = array();
+function entity_translation_menu() {
 
-  // If entity translation information is being rebuilt we must not proceed to
-  // avoid recursion.
-  if (!empty($GLOBALS['entity_translation_info_building'])) {
-    return;
-  }
+  $items = array();
+  $path_info_registry = _entity_translation_path_info_registry();
+  $path_info_registry->reset();
 
   // Create tabs for all possible entity types.
+  // Some of them are postponed to hook_menu_alter()..
   foreach (entity_get_info() as $entity_type => $info) {
-    // Menu is rebuilt while determining entity translation base paths and
-    // callbacks so we might not have them available yet.
     if (entity_translation_enabled($entity_type)) {
-      // Extract informations from the bundle description.
-      $path = $info['translation']['entity_translation']['base path'];
-      $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
-      $item = array_intersect_key($info['translation']['entity_translation'], drupal_map_assoc($keys));
-
-      $item += array(
-        'file' => 'entity_translation.admin.inc',
-        'module' => 'entity_translation',
-      );
-
-      $entity_position = count(explode('/', $path)) - 1;
-      $source_position = $entity_position + 4;
-      $language_position = $entity_position + 3;
-
-      // Backup existing values for the translate overview page.
-      if (isset($items["$path/translate"])) {
-        $backup[$entity_type] = $items["$path/translate"];
+      // Process anything that we can process here, the rest in hook_menu_alter().
+      if (isset($info['translation']['entity_translation']['base path'])) {
+        // Extract informations from the bundle description.
+        $path = $info['translation']['entity_translation']['base path'];
+        $info = $entity_types[$entity_type];
+        $items += _entity_translation_router_items($path, $entity_type, $info);
+        $path_info_registry->typeSetInfo($entity_type, $info['translation']['entity_translation']);
       }
-
-      $items["$path/translate"] = array(
-        'title' => 'Translate',
-        'page callback' => 'entity_translation_overview',
-        'page arguments' => array($entity_type, $entity_position),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 2,
-      ) + $item;
-
-      $items["$path/translate/list"] = array(
-        'title' => 'List',
-        'type' => MENU_DEFAULT_LOCAL_TASK,
-        'weight' => 0,
-      );
-
-      $items["$path/translate/add/%entity_translation_language/%entity_translation_language"] = array(
-        'title' => 'Add',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('entity_translation_edit_form', $entity_type, $entity_position, $language_position, $source_position),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 1,
-      ) + $item;
-
-      $items["$path/translate/edit/%entity_translation_language"] = array(
-        'title' => 'Edit',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('entity_translation_edit_form', $entity_type, $entity_position, $language_position),
-        'access callback' => 'entity_translation_edit_access',
-        'access arguments' => array_merge(array($entity_type, $entity_position, $language_position, $item['access callback']), $item['access arguments']),
-        'type' => MENU_LOCAL_TASK,
-        'weight' => 1,
-      ) + $item;
-
-      $items["$path/translate/delete/%entity_translation_language"] = array(
-        'title' => 'Delete',
-        'page callback' => 'drupal_get_form',
-        'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
-      ) + $item;
     }
   }
 
   $items['admin/config/regional/entity_translation'] = array(
     'title' => 'Entity translation',
-    'description' => 'Configure which entities can be translated and enable or disable language falback.',
+    'description' => 'Configure which entities can be translated and enable or disable language fallback.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('entity_translation_admin_form'),
     'access arguments' => array('administer entity translation'),
     'file' => 'entity_translation.admin.inc',
-    'module' => 'entity_translation',
   );
+
+  return $items;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function entity_translation_menu_alter(&$items) {
+
+  // Collect those entity types that were not processed in hook_menu().
+  $entity_types = array();
+  $preg_types = array();
+  foreach (entity_get_info() as $entity_type => $info) {
+    if (entity_translation_enabled($entity_type)) {
+      if (!isset($info['translation']['entity_translation']['base path'])) {
+        // Check if the entity has a regular loader function..
+        if (function_exists($entity_type . '_load')) {
+          // Skip entity types with exotic names.
+          if ($entity_type == preg_quote($entity_type)) {
+            $entity_types[$entity_type] = $info;
+          }
+        }
+      }
+    }
+  }
+
+  $backup = array();
+
+  if (!empty($entity_types)) {
+    // Find candidates in the router items.
+    $preg_types = implode('|', array_keys($entity_types));
+    $candidate_paths = preg_grep("#/%($preg_types)$#", array_keys($items));
+    $by_type_and_weight = array();
+    foreach ($candidate_paths as $path) {
+      $item = $items[$path];
+      if (preg_match("#^(.*)/%($preg_types)$#", $path, $m)) {
+        list(, $prefix, $type) = $m;
+        $prefix_fragments = explode('/', $prefix);
+        // We might have more than one match for a given entity type,
+        // so we use a heuristic to pick a "good" one.
+        $weight = 0;
+        $weight -= count($prefix_fragments) * 7;
+        $weight -= strlen($prefix);
+        if ($type === $prefix) {
+          $weight += 25;
+        }
+        if (isset($items["$prefix/%$type/edit"])) {
+          $weight += 25;
+        }
+        if (isset($items["$prefix/%$type/view"])) {
+          $weight += 25;
+        }
+        if (isset($items["$prefix/%$type/translate"])) {
+          $weight += 25;
+        }
+        $by_type_and_weight[$type][$weight][$path] = $path;
+      }
+    }
+
+    $path_info_registry = _entity_translation_path_info_registry();
+
+    foreach ($by_type_and_weight as $entity_type => $by_weight) {
+      $info = $entity_types[$entity_type];
+      ksort($by_weight);
+      $path = end(end($by_weight));
+      $items += _entity_translation_router_items($path, $entity_type, $info, $backup);
+      $path_info = array('base path' => $path);
+      if (isset($items["$path/view"])) {
+        $path_info['view path'] = "$path/view";
+      }
+      if (isset($items["$path/edit"])) {
+        $path_info['edit path'] = "$path/edit";
+      }
+      $path_info_registry->typeSetInfo($entity_type, $path_info);
+    }
+
+    $path_info_registry->save();
+  }
 
   // Node-specific menu alterations.
   entity_translation_node_menu_alter($items, $backup);
+
+  return $items;
+}
+
+function _entity_translation_router_items($path, $entity_type, $info, &$backup = array()) {
+
+  $keys = array('theme callback', 'theme arguments', 'access callback', 'access arguments', 'load arguments');
+  $item = array_intersect_key($info['translation']['entity_translation'], drupal_map_assoc($keys));
+
+  $item += array(
+    'file' => 'entity_translation.admin.inc',
+    'module' => 'entity_translation',
+  );
+
+  $entity_position = count(explode('/', $path)) - 1;
+  $source_position = $entity_position + 4;
+  $language_position = $entity_position + 3;
+
+  // Backup existing values for the translate overview page.
+  if (isset($items["$path/translate"])) {
+    $backup[$entity_type] = $items["$path/translate"];
+  }
+
+  $items["$path/translate"] = array(
+    'title' => 'Translate',
+    'page callback' => 'entity_translation_overview',
+    'page arguments' => array($entity_type, $entity_position),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 2,
+  ) + $item;
+
+  $items["$path/translate/list"] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => 0,
+  );
+
+  $items["$path/translate/add/%entity_translation_language/%entity_translation_language"] = array(
+    'title' => 'Add',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_translation_edit_form', $entity_type, $entity_position, $language_position, $source_position),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  ) + $item;
+
+  $items["$path/translate/edit/%entity_translation_language"] = array(
+    'title' => 'Edit',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_translation_edit_form', $entity_type, $entity_position, $language_position),
+    'access callback' => 'entity_translation_edit_access',
+    'access arguments' => array_merge(array($entity_type, $entity_position, $language_position, $item['access callback']), $item['access arguments']),
+    'type' => MENU_LOCAL_TASK,
+    'weight' => 1,
+  ) + $item;
+
+  $items["$path/translate/delete/%entity_translation_language"] = array(
+    'title' => 'Delete',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('entity_translation_delete_confirm', $entity_type, $entity_position, $language_position),
+  ) + $item;
 
   return $items;
 }
@@ -563,4 +633,63 @@ function entity_translation_edit_form_info($form) {
  */
 function entity_translation_access($entity_type, $translation) {
   return $translation['status'] || user_access('translate any entity') || user_access("translate $entity_type entities");
+}
+
+function _entity_translation_path_info_registry() {
+  static $_cache;
+  if (!isset($_cache)) {
+    $_cache = new _entity_translation_PathInfoRegistry();
+    $_cache->load();
+  }
+  return $_cache;
+}
+
+class _entity_translation_PathInfoRegistry {
+
+  protected $info = array();
+  protected $activeRecord = array();
+  protected $observers = array();
+
+  function load() {
+    $this->info = variable_get('entity_translation_path_info', array());
+    $this->activeRecord = $this->info;
+  }
+
+  function observe($entity_type, $observer) {
+    if (isset($this->info[$entity_type])) {
+      $observer->setPathInfo($this->info[$entity_type]);
+    }
+    $this->observers[$entity_type][] = $observer;
+  }
+
+  /**
+   * This is to be called only during menu rebuild.
+   */
+  function reset() {
+    $this->activeRecord = array();
+  }
+
+  /**
+   * This is to be called only during menu rebuild.
+   */
+  function typeSetInfo($entity_type, $info) {
+    foreach (array('base path', 'view path', 'edit path') as $key) {
+      $this->activeRecord[$entity_type][$key] = $info[$key];
+    }
+  }
+
+  /**
+   * This is to be called only during menu rebuild.
+   */
+  function save() {
+    variable_set('entity_translation_path_info', $this->activeRecord);
+    $this->info = $this->activeRecord;
+    // Now we need to notify all observers of the change.
+    foreach ($this->observers as $entity_type => $observers) {
+      $info = isset($this->info[$entity_type]) ? $this->info[$entity_type] : NULL;
+      foreach ($observers as $observer) {
+        $observer->setPathInfo($info);
+      }
+    }
+  }
 }

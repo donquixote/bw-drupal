@@ -177,8 +177,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   private $outdated;
 
   private $basePath;
-  private $editPath;
   private $viewPath;
+  private $editPath;
 
   public function __construct($entity_type, $entity_info, $entity, $entity_id) {
     $this->entityType = $entity_type;
@@ -190,9 +190,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->outdated = FALSE;
 
     $info = $entity_info['translation']['entity_translation'];
-    $this->basePath = $this->getPathInstance($info['base path']);
-    $this->editPath = isset($info['edit path']) ? $this->getPathInstance($info['edit path']) : FALSE;
-    $this->viewPath = isset($info['view path']) ? $this->getPathInstance($info['view path']) : FALSE;
+
+    // Let the path info registry call our setPathInfo() method.
+    _entity_translation_path_info_registry()->observe($entity_type, $this);
   }
 
   /**
@@ -434,6 +434,15 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   public function setOutdated($outdated) {
     $this->outdated = $outdated;
+  }
+
+  /**
+   * This is to be called only from entity_translation_PathInfoRegistry.
+   */
+  public function setPathInfo($info) {
+    $this->basePath = isset($info['edit path']) ? $this->getPathInstance($info['base path']) : FALSE;
+    $this->editPath = isset($info['edit path']) ? $this->getPathInstance($info['edit path']) : FALSE;
+    $this->viewPath = isset($info['view path']) ? $this->getPathInstance($info['view path']) : FALSE;
   }
 
   public function getBasePath() {
