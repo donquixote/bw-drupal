@@ -30,16 +30,17 @@ function _bw_dev_dependencies_warning() {
       }
     }
   }
-  $html = '';
-  $drush = 'drush en';
-  foreach ($missing as $m => $required_by) {
-    $drush .= " $m";
-    $msg = implode(', ', $required_by);
-    $html .= <<<EOT
+  if (!empty($missing)) {
+    $html = '';
+    $drush = 'drush en';
+    foreach ($missing as $m => $required_by) {
+      $drush .= " $m";
+      $msg = implode(', ', $required_by);
+      $html .= <<<EOT
 <li><strong>$m</strong>, required by $msg</li>
 EOT;
-  }
-  $html = <<<EOT
+    }
+    $html = <<<EOT
 Unmet module dependencies.<br/>
 <br/>
 Please enable the following modules:<br/>
@@ -48,7 +49,8 @@ Please enable the following modules:<br/>
 The drush command would be:
 <pre>$drush</pre>
 EOT;
-  drupal_set_message($html);
+    drupal_set_message($html);
+  }
 }
 
 
