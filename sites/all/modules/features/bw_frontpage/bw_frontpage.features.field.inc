@@ -5,7 +5,7 @@
  */
 
 /**
- * Implementation of hook_field_default_fields().
+ * Implements hook_field_default_fields().
  */
 function bw_frontpage_field_default_fields() {
   $fields = array();
@@ -62,6 +62,7 @@ function bw_frontpage_field_default_fields() {
           'weight' => 0,
         ),
       ),
+      'ds_extras_field_template' => '',
       'entity_type' => 'node',
       'field_name' => 'field_bw_front_image',
       'label' => 'Image',
@@ -72,7 +73,7 @@ function bw_frontpage_field_default_fields() {
         'file_extensions' => 'png gif jpg jpeg',
         'max_filesize' => '',
         'max_resolution' => '',
-        'min_resolution' => '',
+        'min_resolution' => '360x240',
         'title_field' => 0,
         'user_register_form' => FALSE,
       ),
