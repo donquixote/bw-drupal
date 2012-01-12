@@ -3,4 +3,4 @@ description = Groups for BW
 dependencies[] = bwf_groups
 package = BW
 core = 7.x
-files[] = bw_groups.module
+files[] = bw_groups.crumbs.inc
