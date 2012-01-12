@@ -4,9 +4,10 @@
 /**
  * Implements hook_crumbs_plugins()
  */
-function path_crumbs_plugins($api) {
+function menu_position_crumbs_plugins($api) {
   // Just one plugin for the entire module.
-  $api->monoPlugin();
+  $api->multiPlugin();
+  $api->disabledByDefault('*');
 }
 
 
@@ -14,26 +15,17 @@ function path_crumbs_plugins($api) {
  * Implementation of class hook class_CrumbsParentFinder
  * on the behalf of path module.
  */
-class path_CrumbsMonoPlugin implements crumbs_MonoPlugin {
+class path_CrumbsMultiPlugin implements crumbs_MultiPlugin {
 
   function describe($api) {
-    return t('Chop off the last fragment of the path alias, consider the result as the parent path.');
-  }
-
-  function disabledByDefault() {
-    return TRUE;
+    $api->addRule('*', t("Use the rule configured with 'Menu position' module."));
+    return array();
   }
 
   function findParent($path, $item) {
+    return;
     if ($alias = $item['alias']) {
       return crumbs_reduce_path($alias, 1);
     }
   }
 }
-
-
-
-
-
-
-
