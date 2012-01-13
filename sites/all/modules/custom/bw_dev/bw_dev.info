@@ -1,4 +1,4 @@
-; $Id: migrate_example.info,v 1.1.2.9 2010/10/30 20:44:10 mikeryan Exp $
+
 name = "BW development"
 description = "BW development module (for dependencies)"
 package = "BeWelcome"
