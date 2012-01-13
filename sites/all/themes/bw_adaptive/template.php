@@ -12,7 +12,7 @@
 /**
  * Override or insert variables into the html templates.
  */
-function adaptivetheme_subtheme_preprocess_html(&$vars) {
+function bw_adaptive_preprocess_html(&$vars) {
   // Load the media queries styles
   // Remember to rename these files to match the names used here - they are 
   // in the CSS directory of your subtheme.
