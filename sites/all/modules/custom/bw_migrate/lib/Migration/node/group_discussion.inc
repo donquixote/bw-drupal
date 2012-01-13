@@ -33,7 +33,6 @@ class bw_migrate_Migration_node_group_discussion extends bw_migrate_Migration {
 
     $map->map('title', 'title');
     $map->map('body', 'message');
-    $map->defaultValue('format', 'filtered_html');
     $map->map('sticky', 'stickyvalue');
 
     $map->uid('uid', 'idwriter');

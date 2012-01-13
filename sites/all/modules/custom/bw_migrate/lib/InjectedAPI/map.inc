@@ -27,9 +27,8 @@ class bw_migrate_InjectedAPI_map {
     return $this->map($dest_field, $src_column);
   }
 
-  function trad($dest_field, $src_column) {
-    $this->_info['trads'][$src_column] = $src_column;
-    return $this->map($dest_field, $src_column);
+  function trad($dest_field, $src_id_column, $trad_key) {
+    $this->_info['trads'][$dest_field] = array($src_id_column, $trad_key);
   }
 
   function strtotime($dest_field, $src_column) {

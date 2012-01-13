@@ -1,0 +1,4 @@
+name = Autoload
+description = "PSR-0 style autoloading, similar to what is likely to come in Drupal 8."
+core = 7.x
+php = 5.2

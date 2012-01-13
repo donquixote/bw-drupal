@@ -173,8 +173,21 @@ abstract class bw_migrate_Migration extends Migration {
       $row->$key = strtotime($row->$key);
     }
 
-    foreach ($this->_rox_info['trads'] as $key) {
-      
+    foreach ($this->_rox_info['trads'] as $key => $trad_info) {
+      list($id_col, $trad_key) = $trad_info;
+      if (isset($row->$id_col)) {
+        $q = $this->_roxdb->select('memberstrads', 'mt');
+        $q->condition('TableColumn', $trad_key);
+        $q->condition('IdTrad', $row->$id_col);
+        $q->leftJoin('languages', 'l', 'l.id = mt.IdLanguage');
+        $q->fields('mt');
+        $q->addExpression('l.ShortCode', 'lang');
+        $trads = array();
+        foreach ($q->execute() as $trad) {
+          $trads[$trad->lang] = $trad;
+        }
+        // dpm($trads);
+      }
     }
 
     foreach ($this->_rox_info['yesno'] as $key) {

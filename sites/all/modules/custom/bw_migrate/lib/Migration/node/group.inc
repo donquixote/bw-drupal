@@ -20,9 +20,10 @@ class bw_migrate_Migration_node_group extends bw_migrate_Migration {
 
     $map->map('title', 'name');
     $map->map('language')->defaultValue('en');
-    $map->trad('body', 'iddescription');
     $map->yesno('promoted', 'displayedonprofile');
     $map->yesno('group_access', 'visibleposts');
+
+    $map->trad('body', 'iddescription', 'groups.IdDescription');
 
     $map->uidAdmin('uid');
     $map->uidAdmin('revision_uid');

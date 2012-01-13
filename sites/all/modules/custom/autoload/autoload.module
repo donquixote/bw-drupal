@@ -1,0 +1,59 @@
+<?php
+
+
+// TODO:
+//   Is this an ok moment to initialize the autoloader?
+//   We want our autoloader to come after Drupal's native one.
+//   But, hook_init() could be too late.
+spl_autoload_register('_autoload_class');
+
+
+function _autoload_class($class) {
+  $file = _autoload_finder()->findFile($class);
+  if ($file) {
+    require_once $file;
+  }
+}
+
+
+function _autoload_finder() {
+  static $_finder;
+  if (!isset($_finder)) {
+    $modules = module_list();
+    foreach ($modules as $module => $m) {
+      $path = drupal_get_path('module', $module) . '/lib/';
+      if (is_dir($path)) {
+        $modules[$module] = $path;
+      }
+    }
+    $_finder = new autoload_ClassFinder($modules);
+  }
+  return $_finder;
+}
+
+
+/**
+ * This is not in the lib folder.
+ */
+class autoload_ClassFinder {
+
+  protected $modules = array();
+
+  function __construct($modules) {
+    $this->modules = $modules;
+  }
+
+  function findFile($class) {
+    if (preg_match('/^([a-z0-9_]+)_([A-Z].*)$/', $class, $m)) {
+      list(,$module,$name) = $m;
+      if (isset($this->modules[$module])) {
+        $path = strtr($name, '_', '/');
+        $path = $this->modules[$module] . $path . '.inc';
+        if (file_exists($path)) {
+          return $path;
+        }
+      }
+    }
+  }
+}
+
