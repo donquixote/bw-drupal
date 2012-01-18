@@ -239,11 +239,11 @@ class pageapi_InjectedAPI {
     while ($piece = array_pop($pieces)) {
       $value = array($piece => $value);
     }
-    drupal_add_js($value, 'setting');
+    drupal_add_js($value, array('type' => 'setting'));
   }
 
   function jsSettings(array $values) {
-    drupal_add_js($values, 'setting');
+    drupal_add_js($values, array('type' => 'setting'));
   }
 
   /**

@@ -21,20 +21,32 @@ function crumbs_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('crumbs_admin_form'),
     'access arguments' => array('administer crumbs'),
-    'file' => 'crumbs.admin.inc',
+    'file' => 'admin/crumbs.admin.inc',
   );
-  $items['admin/structure/crumbs/settings'] = array(
-    'title' => 'Settings',
+  $items['admin/structure/crumbs/plugins'] = array(
+    'title' => 'Plugins',
     'type' => MENU_DEFAULT_LOCAL_TASK,
-    'weight' => 0,
+    'weight' => -1,
   );
   $items['admin/structure/crumbs/debug'] = array(
     'title' => 'Debug',
     'page callback' => 'crumbs_debug_page',
     'access arguments' => array('administer crumbs'),
-    'file' => 'crumbs.debug.inc',
+    'file' => 'admin/crumbs.debug.inc',
     'type' => MENU_LOCAL_TASK,
-    'weight' => 1,
+  );
+  $items['admin/structure/crumbs/plugins/list'] = array(
+    'title' => 'List',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -1,
+  );
+  $items['admin/structure/crumbs/plugins/entities'] = array(
+    'title' => 'Entities',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('crumbs_admin_entities_form'),
+    'access arguments' => array('administer crumbs'),
+    'file' => 'admin/crumbs.admin.entities.inc',
+    'type' => MENU_LOCAL_TASK,
   );
   return $items;
 }

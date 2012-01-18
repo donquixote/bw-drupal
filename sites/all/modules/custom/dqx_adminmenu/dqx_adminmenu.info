@@ -1,0 +1,6 @@
+name = "DQX AdminMenu"
+description = "Alternative to the 'Administration Menu' module."
+package = Administration
+core = 7.x
+php = 5.2
+dependencies[] = pageapi
