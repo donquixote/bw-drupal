@@ -38,10 +38,15 @@ installation, fetch and enable modules and many more great things.
 It's also not so hard to add drush support to modules - so many
 modules have some kind of support.
 
+Make sure you have at least version 4.5
+
 Once you have enabled the bwmigrate module, run drush with arguments
 to see the possibilities.
 
 A migration development session could look like this:
+
+# Make sure you have all dependencies
+drush dep
 
 # Write a new migration thing...
 drush ms           # Check if it's there with migration status
