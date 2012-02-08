@@ -14,6 +14,7 @@ Drupal.dqx_adminmenu = {
 (function(){
 
   var d = Drupal.dqx_adminmenu;
+  var $ = jQuery;
 
 
   d.getMillis = function() {
@@ -307,6 +308,16 @@ Drupal.dqx_adminmenu = {
   };
 
 
+  d.itemLink = function(item) {
+    switch (item.tagName) {
+      case 'TR':
+        return $(item).children('td').children('a');
+      case 'LI':
+        return $(item).children('a');
+    }
+  };
+
+
   d.MenuItem = function($trail, isLeft) {
 
     this.element = function() {
@@ -353,6 +364,23 @@ Drupal.dqx_adminmenu = {
     this.lastExpandable = function(depth) {
       return $trail.filter('.expandable')[0];
     };
+
+    this.href = function() {
+      switch ($trail[0].tagName) {
+        case 'TR':
+          return $($trail[0]).children('td').children('a').attr('href');
+        case 'LI':
+          return $($trail[0]).children('a').attr('href');
+      }
+    };
+
+    this.trailPaths = function() {
+      var paths = [];
+      $trail.each(function(){
+        paths.push(d.itemLink(this).attr('pathname'));
+      });
+      return paths;
+    };
   };
 
 
@@ -365,7 +393,8 @@ Drupal.dqx_adminmenu = {
       return $(this).is('li, tr');
     });
     var isLeft = $($trail[$trail.length - 1].parentNode).is('#dqx_adminmenu > ul.dqx_adminmenu-left');
-    return new d.MenuItem($trail, isLeft);
+    var wrapped = new d.MenuItem($trail, isLeft);
+    return wrapped;
   };
 
 
@@ -420,6 +449,9 @@ Drupal.dqx_adminmenu = {
     }
 
     function flush() {
+      if (activeItem === mouseItem) {
+        return;
+      }
       var prevDepth = activeItem ? activeItem.depth() : 0;
       var depth = mouseItem ? mouseItem.depth() : 0;
       if (depth !== prevDepth) {
@@ -946,12 +978,10 @@ Drupal.dqx_adminmenu = {
 
 
   d.menufy = function($body, url) {
-
     var $divRoot = $('<div>').attr('id', 'dqx_adminmenu-wrapper');
     var $divInner = $('<div>').attr('id', 'dqx_adminmenu').prependTo($divRoot);
     $divRoot.prependTo('body');
     $('body').addClass('dqx_adminmenu');
-
     $.ajax({
       url: url,
       cache: true,
@@ -962,7 +992,7 @@ Drupal.dqx_adminmenu = {
           $('> div > ul', $divRoot); // .css('display', 'none').fadeIn(400);
           d.init($divRoot);
         }
-      }
+      },
     });
   };
 
@@ -970,13 +1000,15 @@ Drupal.dqx_adminmenu = {
   /*
    * stuff to run when the page loads.
    */
-  Drupal.behaviors.dqx_adminmenu = function(context){
-    $('body', context).each(function(){
-      if (Drupal.settings.dqx_adminmenu && Drupal.settings.dqx_adminmenu.xml_url) {
-        var url = Drupal.settings.dqx_adminmenu.xml_url;
-        d.menufy($(this), url);
-      }
-    });
+  Drupal.behaviors.dqx_adminmenu = {
+    attach: function(context){
+      $('body', context).each(function(){
+        if (Drupal.settings.dqx_adminmenu && Drupal.settings.dqx_adminmenu.xml_url) {
+          var url = Drupal.settings.dqx_adminmenu.xml_url;
+          d.menufy($(this), url);
+        }
+      });
+    }
   };
 })();
 

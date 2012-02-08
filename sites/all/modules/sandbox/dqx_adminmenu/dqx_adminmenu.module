@@ -126,7 +126,7 @@ function dqx_adminmenu_menu_alter(&$items) {
 /**
  * A hidden form to provide CSRF protection for things like flush cache.
  */
-function dqx_adminmenu_hidden_action_form($form_state) {
+function dqx_adminmenu_hidden_action_form(&$form_state) {
   $form = array();
   $form['#attributes']['style'] = 'display:none;';
   $form['action'] = array(
