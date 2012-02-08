@@ -1,6 +1,6 @@
 
 name = "BW development"
-description = "BW development module (for dependencies)"
+description = "BW development module"
 package = "BeWelcome"
 core = 7.x
 dependencies[] = bw_migrate
