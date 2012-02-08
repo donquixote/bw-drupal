@@ -1,0 +1,4 @@
+name = "ImaGene Image Generator"
+description = "Automatically create smooth gradients and other images."
+core = 7.x
+php = 5.2
