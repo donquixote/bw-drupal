@@ -11,6 +11,22 @@ dependencies[] = "openid"
 dependencies[] = "privatemsg"
 dependencies[] = "user_relationships"
 dependencies[] = "pm_email_notify"
+dependencies[] = bw_groups
+dependencies[] = bw_forum
+dependencies[] = bw_shouts
+dependencies[] = bw_wiki
+dependencies[] = entity_translation
+dependencies[] = crumbs
+dependencies[] = xautoload
+dependencies[] = path
+dependencies[] = help
+
+; do we actually need block, or should we use boxes instead?
+dependencies[] = block
+
+; do we actually use this?
+dependencies[] = date_all_day
+
 description = "BeWelcome main features"
 name = "BeWelcome main features"
 package = "Features"

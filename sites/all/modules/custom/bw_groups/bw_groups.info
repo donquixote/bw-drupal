@@ -1,6 +1,13 @@
 name = BW Groups
 description = Groups for BW
 dependencies[] = bwf_groups
+dependencies[] = pageapi
+dependencies[] = nodeaspect
+dependencies[] = comment
+dependencies[] = og_context
+dependencies[] = og_access
+dependencies[] = ds_extras
+dependencies[] = ctools_custom_content
 package = BW
 core = 7.x
 files[] = bw_groups.crumbs.inc

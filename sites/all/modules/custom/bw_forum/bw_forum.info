@@ -3,3 +3,5 @@ description = "Forum stuff, within and outside of groups."
 package = BW
 core = 7.x
 files[] = bw_forum.module
+
+dependencies[] = author_pane
