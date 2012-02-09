@@ -1,0 +1,11 @@
+name = "BW Lemon"
+description = "Dependencies specific to lemonhead's sandbox stuff."
+core = 7.x
+php = 5.2
+dependencies[] = dqx_adminmenu
+dependencies[] = imagene
+dependencies[] = entityreference
+
+; no idea if these should be shared?
+dependencies[] = admin_theme
+dependencies[] = admin_devel
