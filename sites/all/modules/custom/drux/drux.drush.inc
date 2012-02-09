@@ -161,8 +161,8 @@ function drush_drux_find_obsolete() {
   ));
   $tracker->requireModules($args);
   $obsolete = $tracker->obsoleteModules();
-  print count($obsolete) . "\n";
-  print implode(" ", $obsolete) . "\n";
+  $rows = $extinfo->modulesTableRows($obsolete);
+  drush_print_table($rows, array('Module', 'Human name'));
 }
 
 

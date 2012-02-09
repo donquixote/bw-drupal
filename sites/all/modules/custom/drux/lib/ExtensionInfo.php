@@ -40,6 +40,24 @@ class drux_ExtensionInfo {
     }
   }
 
+  function modulesTableRows($modules) {
+    $rows = array();
+    foreach ($modules as $module) {
+      $info = $this->extensionInfo[$module];
+      if (isset($info)) {
+        $rows[$module] = array(
+          $module, $info->info['name'], $info->type,
+        );
+      }
+      else {
+        $rows[$module] = array(
+          $module, '', '',
+        );
+      }
+    }
+    return $rows;
+  }
+
   function classify(&$list) {
     $modules = array();
     $themes = array();
