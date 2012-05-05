@@ -220,7 +220,7 @@ class nodeaspect_PageInfoCache {
     // Specific stuff for the active page.
     if (!empty($this->_active)) {
       list($page_info, $node, $suffix) = $this->_active;
-      $page_info->hook_preprocess_page(&$vars, $node, $suffix);
+      $page_info->hook_preprocess_page($vars, $node, $suffix);
     }
   }
 }
