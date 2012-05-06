@@ -123,58 +123,37 @@ class MigrateDestinationProfile2 extends MigrateDestinationEntity {
         }
       }
       else {
-        $entity->$this->entity_key = $row->migrate_map_destid1;
+        $entity->{$this->entity_key} = $row->migrate_map_destid1;
       }
     }
     if ($migration->getSystemOfRecord() == Migration::DESTINATION) {
       if (empty($id)) {
         throw new MigrateException(t('System-of-record is DESTINATION, but no destination id provided'));
       }
-      $old_entity = entity_load_single($this->entitytype, $id);
+      $old_entity = entity_load_single($this->entity_type, $id);
       if (!isset($entity->created)) {
         $entity->created = $old_entity->created;
-      }
-      if (empty($vid)) {
-        $entity->vid = $old_entity->vid;
-      }
-      if (!isset($entity->status)) {
-        $entity->status = $old_entity->status;
       }
       if (!isset($entity->uid)) {
         $entity->uid = $old_entity->uid;
       }
     }
 
-    if ($migration->getSystemOfRecord() == Migration::SOURCE) {
-      if (!isset($entity->language)) {
-        $entity->language = $this->language;
-      }
-
-      // Apply defaults, allow standard prepare hooks to fire.
-      // node_object_prepare() will blow these away, so save them here and
-      // stuff them in later if need be.
-      //// TODO: stub.
-    }
-
     // Invoke migration prepare handlers
     $this->prepare($entity, $row);
-    if (!isset($entity->revision)) {
-      $entity->revision = 0; // Saves disk space and writes. Can be overridden.
-    }
 
     // Trying to update an existing entity
     if ($migration->getSystemOfRecord() == Migration::DESTINATION) {
-      // Incoming data overrides existing data, so only copy non-existent fields
-      foreach ($old_entity as $field => $value) {
-        // An explicit NULL in the source data means to wipe to old value (i.e.,
-        // don't copy it over from $old_entity)
-        if (property_exists($entity, $field) && $entity->$field === NULL) {
-          // Ignore this field
-        }
-        elseif (!isset($entity->$field)) {
-          $entity->$field = $old_entity->$field;
-        }
+      // Incoming data overrides existing data.
+      foreach ($entity as $field => $value) {
+        $old_entity->$field = $value;
       }
+      // Use the loaded entity from now on.
+      $entity = $old_entity;
+    }
+    else {
+      // Create a full profile class.
+      $entity = entity_create($this->entity_type, (array) $entity);
     }
 
     if (empty($id) && !(isset($entity->is_new) && $entity->is_new)) {

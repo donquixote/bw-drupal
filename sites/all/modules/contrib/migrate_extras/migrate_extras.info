@@ -5,9 +5,13 @@ package=Development
 
 dependencies[] = migrate
 files[] = addressfield.inc
-files[] = date.inc
+files[] = cck_phone.inc
+files[] = entity_api.inc
 files[] = flag.inc
+files[] = geofield.inc
+files[] = interval.inc
 files[] = media.inc
+files[] = name.inc
 files[] = pathauto.inc
 files[] = profile2.inc
 files[] = rules.inc
@@ -15,12 +19,12 @@ files[] = og.inc
 files[] = privatemsg.inc
 files[] = votingapi.inc
 files[] = user_relationships.inc
-files[] = tests/date.test
+files[] = webform.inc
 files[] = tests/pathauto.test
 
-; Information added by drupal.org packaging script on 2011-09-18
-version = "7.x-2.2"
+; Information added by drupal.org packaging script on 2012-03-21
+version = "7.x-2.3"
 core = "7.x"
 project = "migrate_extras"
-datestamp = "1316388405"
+datestamp = "1332348948"
 

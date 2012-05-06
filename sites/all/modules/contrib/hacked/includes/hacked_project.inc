@@ -44,7 +44,7 @@ class hackedProject {
    */
   function title() {
     $this->identify_project();
-    return $this->project_info['title'];
+    return isset($this->project_info['title']) ? $this->project_info['title'] : $this->name;
   }
 
   /**
@@ -97,6 +97,11 @@ class hackedProject {
         break;
       }
     }
+
+    // Logging.
+    if (!$this->project_identified) {
+      watchdog('hacked', 'Could not identify project: @name', array('@name' => $this->name), WATCHDOG_WARNING);
+    }
   }
 
   /**
@@ -109,10 +114,12 @@ class hackedProject {
     }
 
     $this->identify_project();
-    $this->remote_files_downloader->download();
+    $this->remote_downloaded = (bool)$this->remote_files_downloader->download();
 
-    $this->remote_downloaded = TRUE;
-
+    // Logging.
+    if (!$this->remote_downloaded) {
+      watchdog('hacked', 'Could not download project: @title', array('@title' => $this->title()), WATCHDOG_ERROR);
+    }
   }
 
   /**
@@ -132,7 +139,12 @@ class hackedProject {
     $this->remote_files = hackedFileGroup::fromDirectory($base_path);
     $this->remote_files->compute_hashes();
 
-    $this->remote_hashed = TRUE;
+    $this->remote_hashed = !empty($this->remote_files->files);
+
+    // Logging.
+    if (!$this->remote_hashed) {
+      watchdog('hacked', 'Could not hash remote project: @title', array('@title' => $this->title()), WATCHDOG_ERROR);
+    }
   }
 
   /**
@@ -149,7 +161,8 @@ class hackedProject {
 
     // If this project is drupal it, we need to handle it specially
     if ($this->project_type != 'core') {
-      $include = array_shift(array_keys($this->project_info['includes']));
+      $includes = array_keys($this->project_info['includes']);
+      $include = array_shift($includes);
       $include_type = $this->project_info['project_type'];
     }
     else {
@@ -192,7 +205,12 @@ class hackedProject {
     $this->local_files = hackedFileGroup::fromList($location, $this->remote_files->files);
     $this->local_files->compute_hashes();
 
-    $this->local_hashed = TRUE;
+    $this->local_hashed = !empty($this->local_files->files);
+
+    // Logging.
+    if (!$this->local_hashed) {
+      watchdog('hacked', 'Could not hash local project: @title', array('@title' => $this->title()), WATCHDOG_ERROR);
+    }
   }
 
   /**
@@ -247,15 +265,25 @@ class hackedProject {
         'missing' => count($this->result['missing']),
         'access_denied' => count($this->result['access_denied']),
       ),
-      'title' => $this->project_info['title'],
-      'link' => $this->project_info['link'],
-      'name' => $this->project_info['name'],
-      'existing_version' => $this->project_info['existing_version'],
-      'install_type' => $this->project_info['install_type'],
-      'datestamp' => $this->project_info['datestamp'],
-      'project_type' => $this->project_info['project_type'],
-      'includes' => $this->project_info['includes'],
+      'title' => $this->title(),
     );
+
+    // Add more details into the report result (if we can).
+    $details = array(
+      'link',
+      'name',
+      'existing_version',
+      'install_type',
+      'datestamp',
+      'project_type',
+      'includes',
+    );
+    foreach ($details as $item) {
+      if (isset($this->project_info[$item])) {
+        $report[$item] = $this->project_info[$item];
+      }
+    }
+
 
     if ($report['counts']['access_denied'] > 0) {
       $report['status'] = HACKED_STATUS_PERMISSION_DENIED;
@@ -436,7 +464,7 @@ class hackedProjectWebDownloader {
 
 
 /**
- * Downloads a project using a standard web method, and unpacking the tar-ball.
+ * Downloads a project using a standard Drupal method.
  */
 class hackedProjectWebFilesDownloader extends hackedProjectWebDownloader {
 
@@ -454,39 +482,102 @@ class hackedProjectWebFilesDownloader extends hackedProjectWebDownloader {
     }
 
     // If our directory already exists, we can just return the path to this cached version
-    if (file_exists($dir)) {
+    if (file_exists($dir) && count(hacked_file_scan_directory($dir, '/.*/', array('.', '..', 'CVS', '.svn', '.git')))) {
       return $dir;
     }
 
-    // We've not downloaded this release before:
-    // Let's try to download it:
-    $request = drupal_http_request($release_url);
-
-    // If we downloaded it, try to unpack it:
-    if ($request->code == 200) {
-
-      // Build the destination folder tree if it doesn't already exists.
-      if (!file_prepare_directory($dir, FILE_CREATE_DIRECTORY) && !mkdir($dir, 0775, TRUE)) {
-        watchdog('hacked', 'Failed to create temp directory: %dir', array('%dir' => $dir), WATCHDOG_ERROR);
-        return FALSE;
-      }
-
-      // Save the tarball someplace:
-      $project_path = $dir . '/' . basename($release_url);
-      file_unmanaged_save_data($request->data, $project_path);
-      shell_exec("cd $dir; tar -zxf ". basename($project_path));
-      file_unmanaged_delete($project_path);
-      return TRUE;
+    // Build the destination folder tree if it doesn't already exists.
+    if (!file_prepare_directory($dir, FILE_CREATE_DIRECTORY) && !mkdir($dir, 0775, TRUE)) {
+      watchdog('hacked', 'Failed to create temp directory: %dir', array('%dir' => $dir), WATCHDOG_ERROR);
+      return FALSE;
     }
 
-    // Something went wrong:
-    return FALSE;
+    if (!($local_file = $this->file_get($release_url))) {
+      watchdog('hacked', 'Could not download the project: @name from URL: @url', array('@name' => $this->project->title(), '@url' => $release_url), WATCHDOG_ERROR);
+      return FALSE;
+    }
+    try {
+      $this->archive_extract($local_file, $dir);
+    }
+    catch (Exception $e) {
+      watchdog('hacked', 'Could not extract the project: @name. Error was: !error', array('@name' => $this->project->title(), '!error' => $e->getMessage()), WATCHDOG_ERROR);
+      return FALSE;
+    }
+
+    return TRUE;
   }
+
+  /**
+   * Copies a file from $url to the temporary directory for updates.
+   *
+   * If the file has already been downloaded, returns the the local path.
+   *
+   * @param $url
+   *   The URL of the file on the server.
+   *
+   * @return string
+   *   Path to local file.
+   */
+  function file_get($url) {
+    $parsed_url = parse_url($url);
+    $remote_schemes = array('http', 'https', 'ftp', 'ftps', 'smb', 'nfs');
+    if (!in_array($parsed_url['scheme'], $remote_schemes)) {
+      // This is a local file, just return the path.
+      return drupal_realpath($url);
+    }
+
+    // Check the cache and download the file if needed.
+    $cache_directory = 'temporary://hacked-cache';
+    $local = $cache_directory . '/' . basename($parsed_url['path']);
+
+    if (!file_exists($cache_directory)) {
+      mkdir($cache_directory);
+    }
+
+    return system_retrieve_file($url, $local, FALSE, FILE_EXISTS_REPLACE);
+  }
+
+  /**
+   * Unpack a downloaded archive file.
+   *
+   * @param string $project
+   *   The short name of the project to download.
+   * @param string $file
+   *   The filename of the archive you wish to extract.
+   * @param string $directory
+   *   The directory you wish to extract the archive into.
+   * @return Archiver
+   *   The Archiver object used to extract the archive.
+   * @throws Exception on failure.
+   */
+  function archive_extract($file, $directory) {
+    $archiver = archiver_get_archiver($file);
+    if (!$archiver) {
+      throw new Exception(t('Cannot extract %file, not a valid archive.', array ('%file' => $file)));
+    }
+
+    // Remove the directory if it exists, otherwise it might contain a mixture of
+    // old files mixed with the new files (e.g. in cases where files were removed
+    // from a later release).
+    $files = $archiver->listContents();
+    // Unfortunately, we can only use the directory name for this. :(
+    $project = drupal_substr($files[0], 0, -1);
+    $extract_location = $directory . '/' . $project;
+    if (file_exists($extract_location)) {
+      file_unmanaged_delete_recursive($extract_location);
+    }
+
+    $archiver->extract($directory);
+    return $archiver;
+  }
+
 
 }
 
 /**
  * Downloads a project using CVS.
+ *
+ * @deprecated
  */
 class hackedProjectWebCVSDownloader extends hackedProjectWebDownloader {
 
