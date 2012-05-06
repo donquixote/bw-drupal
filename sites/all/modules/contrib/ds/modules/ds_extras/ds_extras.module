@@ -276,8 +276,7 @@ function ds_preprocess_field(&$variables) {
   $config = array();
   static $field_settings = array();
   if (!isset($field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']])) {
-    $layout = ds_get_layout($variables['element']['#entity_type'], $variables['element']['#bundle'], $variables['element']['#view_mode']);
-    $field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']] = ds_get_field_settings($variables['element']['#entity_type'], $variables['element']['#bundle'], $layout['view_mode']);
+    $field_settings[$variables['element']['#entity_type']][$variables['element']['#bundle']][$variables['element']['#view_mode']] = ds_get_field_settings($variables['element']['#entity_type'], $variables['element']['#bundle'], $variables['element']['#view_mode']);
   }
 
   // Get the field name and field instance info - if available.

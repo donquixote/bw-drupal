@@ -836,10 +836,10 @@ function ds_ds_field_settings_form($field) {
         $action = 'add';
         $args = '';
         $conf = array();
-        $link_options = array('query' => array('selection' => 1));
+        $query = array('query' => array('selection' => 1));
         $title = t('Select content');
         if (isset($settings[$key])) {
-          $link_options = array();
+          $query = array();
           $ctools = unserialize($settings['ctools']);
           $type = $ctools['type'];
           $subtype = $ctools['subtype'];
@@ -848,10 +848,8 @@ function ds_ds_field_settings_form($field) {
           $conf = $ctools['conf'];
           $title = t('Edit content');
         }
-        $link_path = 'admin/structure/ds/fields/manage_ctools/content/' . $action . '/' . $field['entity_type'] . '/' . $field['name'] . $args;
-        $link_options['attributes']['class'] = array('ctools-use-modal');
         $form['select'] = array(
-          '#markup' => '<div class="select-content-link">' . l($title, $link_path, $link_options) . '</div>',
+          '#markup' => '<div class="select-content-link">' . l($title, 'admin/structure/ds/fields/manage_ctools/content/' . $action . '/' . $field['entity_type'] . '/' . $field['name'] . $args, array('attributes' => array('class' => array('ctools-use-modal'), $query))) . '</div>',
           '#weight' => -10,
         );
         $form['load_terms'] = array(

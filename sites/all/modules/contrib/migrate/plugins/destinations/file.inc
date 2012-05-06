@@ -260,60 +260,19 @@ class MigrateDestinationFile extends MigrateDestinationEntity {
     }
 
     migrate_instrument_start('file_save');
-
-    // Look for existing files
-    $existing_by_uri = file_load_multiple(array(), array('uri' => $file->uri));
-    if (!empty($existing_by_uri)) {
-      $conflict_fid = reset($existing_by_uri)->fid;
-    }
-    // TODO:
-    //   We already load $old_file above, but only for Migration::DESTINATION.
-    $old_file = file_load($file->fid);
-    if (empty($file->fid)) {
-      // We are creating a new file entity.
-      if (isset($conflict_fid)) {
-        // Another file entity does already exist, which refers to the same physical file.
-        // -> dedupe the uri!
-        // In fact, we should have done this before already.
-        // So, we rather throw an exception.
-        throw new MigrateException(t('Trying to create a new file entity for an already-existing physical file location.'));
-      }
-      else {
-        // We are safe to create a new file.
-        $file->status |= FILE_STATUS_PERMANENT; // Save a write in file_field_presave().
-        $file = file_save($file);
-      }
-    }
-    elseif (empty($old_file)) {
-      // Trying to save a file with explicit fid,
-      // but there is no existing entity to overwrite.
-      // Do we allow this?
+    // Save this file to DB.
+    if ($existing_files = file_load_multiple(array(), array('uri' => $file->uri))) {
+      // Existing record exists. Reuse it.
+      $file = reset($existing_files);
+      // TODO: Do we really need to save again? Copied from File Field.
+      // $file = file_save($file);
     }
     else {
-      // This is an update.
-      if ($old_file->uri === $file->uri) {
-        // uri has not changed, but the file contents might have.
-        // At least, we don't need to be afraid of conflicts with other file entities.
-        // In fact, we assume most of the work to be already done.
-        $file->status |= FILE_STATUS_PERMANENT; // Save a write in file_field_presave().
-        $file = file_save($file);
-      }
-      elseif (isset($conflict_fid)) {
-        // Another file entity does already exist, with the same file location (uri).
-        // -> dedupe the uri!
-        // In fact, we should have done this before already.
-        // So, we rather throw an exception.
-        throw new MigrateException(t('Trying to update a file entity with an uri that is already occupied.'));
-      }
-      else {
-        // uri has changed. file contents might have changed.
-        // Delete the old one, create the new file, update the uri.
-        // In fact, we assume this has already happened.
-        $file->status |= FILE_STATUS_PERMANENT; // Save a write in file_field_presave().
-        $file = file_save($file);
-      }
+      // Get this orphaned file into the file table.
+      $file->fid = NULL;
+      $file->status |= FILE_STATUS_PERMANENT; // Save a write in file_field_presave().
+      $file = file_save($file);
     }
-
     migrate_instrument_stop('file_save');
     $this->complete($file, $row);
 

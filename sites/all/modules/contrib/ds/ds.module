@@ -474,14 +474,12 @@ function ds_get_layout($entity_type, $bundle, $view_mode, $fallback = TRUE) {
     // Check if a layout is configured.
     if (isset($entity_info[$entity_type]['bundles'][$bundle]['layouts'][$view_mode]) && ($overriden || $view_mode == 'default')) {
       $layouts[$layout_key] = $entity_info[$entity_type]['bundles'][$bundle]['layouts'][$view_mode];
-      $layouts[$layout_key]['view_mode'] = $view_mode;
     }
 
     // In case $view_mode is not found, check if we have a default layout,
     // but only if the view mode settings aren't overridden for this view mode.
     if ($view_mode != 'default' && !$overriden && $fallback && isset($entity_info[$entity_type]['bundles'][$bundle]['layouts']['default'])) {
       $layouts[$layout_key] = $entity_info[$entity_type]['bundles'][$bundle]['layouts']['default'];
-      $layouts[$layout_key]['view_mode'] = 'default';
     }
 
     // Register the false return value as well.
@@ -681,7 +679,7 @@ function ds_field_attach_view_alter(&$build, $context) {
   $bundle = $build['#bundle'];
   $view_mode = $context['view_mode'];
   $entity = $context['entity'];
-  $layout = ds_get_layout($entity_type, $bundle, $view_mode);
+  $layout = ds_get_layout($build['#entity_type'], $build['#bundle'], $context['view_mode']);
 
   // Do not render panel layouts.
   if (!empty($layout['settings']['ds_panels'])) {
@@ -702,7 +700,7 @@ function ds_field_attach_view_alter(&$build, $context) {
 
   // Add Display Suite display fields.
   $fields = ds_get_fields($entity_type);
-  $field_values = ds_get_field_settings($entity_type, $bundle, $layout['view_mode']);
+  $field_values = ds_get_field_settings($entity_type, $bundle, $view_mode);
 
   foreach ($field_values as $key => $field) {
 

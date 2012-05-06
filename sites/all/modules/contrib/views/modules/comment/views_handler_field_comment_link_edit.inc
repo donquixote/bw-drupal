@@ -30,16 +30,9 @@ class views_handler_field_comment_link_edit extends views_handler_field_comment_
   function render_link($data, $values) {
     parent::render_link($data, $values);
     // ensure user has access to edit this comment.
-    if (FALSE) {
-      // Patched by Andreas Hennings
-      // See http://drupal.org/node/1292386
-      $comment = new stdClass();
-      $comment->cid = $this->get_value($values, 'cid');
-      $comment->uid = $this->get_value($values, 'uid');
-    }
-    else {
-      $comment = comment_load($this->get_value($values, 'cid'));
-    }
+    $comment = new stdClass();
+    $comment->cid = $this->get_value($values, 'cid');
+    $comment->uid = $this->get_value($values, 'uid');
     if (!comment_access('edit', $comment)) {
       return;
     }
