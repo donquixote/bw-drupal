@@ -345,7 +345,16 @@ abstract class MigrationBase {
    */
   static public function registerMigration($class_name, $machine_name = NULL, array $arguments = array()) {
     if (!$machine_name) {
-      $machine_name = self::machineFromClass($class_name);
+      $reflect = new ReflectionClass($class_name);
+      if ($reflect->isAbstract()) {
+        ddebug_backtrace(); die;
+      }
+      if (is_subclass_of($class_name, 'MigrationBase')) {
+        $machine_name = call_user_func(array($class_name, 'machineFromClass'), $class_name);
+      }
+      else {
+        $machine_name = self::machineFromClass($class_name);
+      }
     }
 
     // See if this migration is already registered
@@ -387,7 +396,13 @@ abstract class MigrationBase {
    */
   protected function generateMachineName() {
     $class_name = get_class($this);
-    return self::machineFromClass($class_name);
+    if (is_subclass_of($class_name, 'MigrationBase')) {
+      $machine_name = call_user_func(array($class_name, 'machineFromClass'), $class_name);
+    }
+    else {
+      $machine_name = self::machineFromClass($class_name);
+    }
+    return $machine_name;
   }
 
   protected static function machineFromClass($class_name) {
