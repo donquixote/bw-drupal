@@ -16,6 +16,10 @@ class MigrateDestinationOGMembership extends MigrateDestination {
     $this->rid = $roles[OG_ADMINISTRATOR_ROLE];
   }
 
+  public function __toString() {
+    return t('group');
+  }
+  
   static public function getKeySchema() {
     return array(
       'gid' => array(

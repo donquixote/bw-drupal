@@ -14,6 +14,11 @@ class MigrateDestinationFlagSimple extends MigrateDestination {
     $this->fid = $fid;
   }
 
+  public function __toString() {
+    $flag = flag_get_flag(NULL, $this->fid);
+    return t('flag (!flag)', array('!flag' => $flag->name));
+  }
+
   static public function getKeySchema() {
     return array(
       'fcid' => array(
@@ -32,7 +37,8 @@ class MigrateDestinationFlagSimple extends MigrateDestination {
   public function bulkRollback(array $ids) {
     migrate_instrument_start(__METHOD__);
     db_delete('flag_content')
-      ->condition('fcid', $ids, 'IN');
+      ->condition('fcid', $ids, 'IN')
+      ->execute();
     migrate_instrument_stop(__METHOD__);
   }
 
@@ -61,6 +67,26 @@ class MigrateDestinationFlagSimple extends MigrateDestination {
       $return = drupal_write_record('flag_content', $entity);
     }
     if ($return) {
+      // Update the flag_counts table.
+      $count = db_select('flag_content')
+        ->fields('flag_content')
+        ->condition('fid', $this->fid)
+        ->condition('content_type', $entity->content_type)
+        ->condition('content_id', $entity->content_id)
+        ->countQuery()
+        ->execute()
+        ->fetchField();
+      db_merge('flag_counts')
+        ->key(array(
+          'fid' => $this->fid,
+          'content_id' => $entity->content_id,
+        ))
+        ->fields(array(
+          'content_type' => $entity->content_type,
+          'count' => $count,
+          'last_updated' => REQUEST_TIME,
+        ))
+        ->execute();
       return array($entity->fcid);
     }
   }
