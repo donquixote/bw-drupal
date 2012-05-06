@@ -60,11 +60,9 @@ embed,
 video {
   max-width: 100%;
 }
-.ie6 img,
-.ie6 object,
-.ie6 embed,
-.ie6 video {
-  width: 100%
+/* Kill flexible images in IE6-8 */
+.ie6-8 img {
+  max-width: none;
 }
 /* Override max-width 100% for map displays */
 .gmap img,
