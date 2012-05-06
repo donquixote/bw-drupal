@@ -1,25 +1,6 @@
 
 Entity translation 7.x-1.x, xxxx-xx-xx
 --------------------------------------
-#1380380 by bojanz: Fixed Prevent notice when translation has been removed from
-  the form.
-#1367832 by floretan: Fixed Check #parents and #field_parents() for source
-  language in new translation form.
-#1174242 by djac, good_man, plach | Jerome F: Properly override the
-  node/%node/translate menu router path.
-#1293638 by das-peter: Fixed Language fallback on Taxonomy Terms (or any entity
-  type without locale support).
-#1283200 by plach: Enable content language negotiation the right way.
-#1280660 by mvc, plach: Fixed Gracefully handle module being disabled and
-  re-enabled.
-#1280544 by mvc, emarchak: Added Clarify difference between multilingual support
-  options.
-#1280506 by tarmstrong | plach: Fixed Simpletests broken after upgrading to
-  D7.7.
-#1262512 by claudiu.cristea: Fixed Clear the entity cache after translate.
-#1230858 by tarmstrong, plach | valderama: Fixed Compatibility with
-  node_clone(); entity_id() of old node is used, resulting in integrity
-  constraint violation.
 
 
 Entity translation 7.x-1.0-alpha1, 2011-09-07

@@ -52,10 +52,17 @@ function entity_translation_admin_form_submit($form, $form_state) {
 /**
  * Translations overview menu callback.
  */
-function entity_translation_overview($entity_type, $entity, $callback = NULL) {
+function entity_translation_overview($entity_type, $entity) {
   // Entity translation and node translation share the same system path.
-  if ($callback && entity_translation_node($entity_type, $entity)) {
-    return entity_translation_overview_callback($callback, $entity);
+  if (entity_translation_node($entity_type, $entity)) {
+    if (module_exists('i18n_node')) {
+      module_load_include('inc', 'i18n_node', 'i18n_node.pages');
+      return i18n_node_translation_overview($entity);
+    }
+    else {
+      module_load_include('inc', 'translation', 'translation.pages');
+      return translation_node_overview($entity);
+    }
   }
 
   $handler = entity_translation_get_handler($entity_type, $entity);
@@ -157,19 +164,6 @@ function entity_translation_overview($entity_type, $entity, $callback = NULL) {
   );
 
   return $build;
-}
-
-/**
- * Call the appropriate translation overview callback.
- */
-function entity_translation_overview_callback($callback, $entity) {
-  if (module_exists($callback['module'])) {
-    if (isset($callback['file'])) {
-      $path = isset($callback['file path']) ? $callback['file path'] : drupal_get_path('module', $callback['module']);
-      require_once DRUPAL_ROOT . '/' . $path . '/' . $callback['file'];
-    }
-    return $callback['page callback']($entity);
-  }
 }
 
 /**
@@ -291,7 +285,7 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
     elseif ($prepare_fields && !isset($entity->{$field_name}[$langcode]) && isset($source_form[$field_name][$source])) {
       $form[$field_name][$langcode] = $source_form[$field_name][$source];
       // Update #language keys in the field form subtree.
-      _entity_translation_form_language($form[$field_name][$langcode], $source, $langcode);
+      array_walk_recursive($form[$field_name][$langcode], '_entity_translation_form_language', $langcode);
     }
   }
 
@@ -350,28 +344,11 @@ function entity_translation_edit_form($form, $form_state, $entity_type, $entity,
 }
 
 /**
- * Helper function: recursively replace the source language with the given one.
+ * Helper callback: replace the source language with the given one.
  */
-function _entity_translation_form_language(&$element, $source, $langcode) {
-  // Iterate through the form structure recursively.
-  foreach (element_children($element) as $key) {
-    _entity_translation_form_language($element[$key], $source, $langcode);
-  }
-
-  // Replace specific occurrences of the source language with the target
-  // language.
-  foreach (element_properties($element) as $key) {
-    if ($key === '#language') {
-      $element[$key] = $langcode;
-    }
-
-    if ($key === '#parents' || $key === '#field_parents') {
-      foreach ($element[$key] as $delta => $value) {
-        if ($value === $source) {
-          $element[$key][$delta] = $langcode;
-        }
-      }
-    }
+function _entity_translation_form_language(&$item, $key, $langcode) {
+  if ($key === '#language') {
+    $item = $langcode;
   }
 }
 
@@ -411,11 +388,6 @@ function entity_translation_edit_form_save_submit($form, &$form_state) {
   field_attach_submit($form['#entity_type'], $form['#entity'], $form, $form_state);
   field_attach_presave($form['#entity_type'], $form['#entity']);
   field_attach_update($form['#entity_type'], $form['#entity']);
-
-  // Clear the cache for this entity.
-  $entity_info = entity_get_info($form['#entity_type']);
-  $id_key = $entity_info['entity keys']['id'];
-  entity_get_controller($form['#entity_type'])->resetCache(array($form['#entity']->{$id_key}));
 
   // Update URL alias.
   if (_entity_translation_path_enabled($handler) && (user_access('create url aliases') || user_access('administer url aliases'))) {
