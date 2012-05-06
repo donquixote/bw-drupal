@@ -92,11 +92,6 @@ class MigrateDestinationOGMembership extends MigrateDestination {
         'created' => 'Create date for this membership. Defaults to REQUEST_TIME',
     );
   }
-
-  public function __toString() {
-    // See http://drupal.org/node/1388952
-    return __FUNCTION__;
-  }
 }
 
 class MigrateGroupFieldHandler extends MigrateFieldHandler {
