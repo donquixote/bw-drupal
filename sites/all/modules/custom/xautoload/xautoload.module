@@ -5,8 +5,12 @@
  * Implements hook_boot()
  */
 function xautoload_boot() {
-  spl_autoload_register('_xautoload_autoload');
+  // Nothing happens here. The function only exists so Drupal recognizes
+  // xautoload as a boot-level module.
 }
+
+
+spl_autoload_register('_xautoload_autoload');
 
 
 /**
