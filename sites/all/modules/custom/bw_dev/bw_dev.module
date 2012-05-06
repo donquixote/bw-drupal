@@ -25,6 +25,10 @@ function _bw_dev_dependencies_warning() {
   $missing = array();
   foreach ($by_name as $module => $dependencies) {
     foreach ($dependencies as $dependency) {
+      if (preg_match('#^([A-Za-z_][A-Za-z0-9_]*) \((.*)\)$#', $dependency, $m)) {
+        list(,$dependency,$requirement) = $m;
+        // TODO: Check the requirement. E.g. ">7.10".
+      }
       if (!isset($by_name[$dependency])) {
         $missing[$dependency][$module] = $module;
       }
