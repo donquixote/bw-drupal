@@ -177,8 +177,8 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
   private $outdated;
 
   private $basePath;
-  private $viewPath;
   private $editPath;
+  private $viewPath;
 
   public function __construct($entity_type, $entity_info, $entity, $entity_id) {
     $this->entityType = $entity_type;
@@ -190,9 +190,9 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
     $this->outdated = FALSE;
 
     $info = $entity_info['translation']['entity_translation'];
-
-    // Let the path info registry call our setPathInfo() method.
-    _entity_translation_path_info_registry()->observe($entity_type, $this);
+    $this->basePath = $this->getPathInstance($info['base path']);
+    $this->editPath = isset($info['edit path']) ? $this->getPathInstance($info['edit path']) : FALSE;
+    $this->viewPath = isset($info['view path']) ? $this->getPathInstance($info['view path']) : FALSE;
   }
 
   /**
@@ -249,28 +249,22 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $columns = array('entity_type', 'entity_id', 'language', 'source', 'uid', 'status', 'translate', 'created', 'changed');
       $query = db_insert('entity_translation')->fields($columns);
 
-      // These values should overridde the translation ones as they are not
-      // supposed to change.
-      $overrides = array(
-        'entity_id' => $this->entityId,
-        'entity_type' => $this->entityType,
-      );
-
-      // These instead are just defaults.
-      $defaults = array(
-        'source' => '',
-        'uid' => $user->uid,
-        'translate' => 0,
-        'status' => 0,
-        'created' => REQUEST_TIME,
-        'changed' => REQUEST_TIME,
-      );
-
       foreach ($translations->data as $langcode => $translation) {
-        $translation = $overrides + $translation + $defaults;
+        $translation += array(
+          'entity_type' => $this->entityType,
+          'entity_id' => $this->entityId,
+          'source' => '',
+          'uid' => $user->uid,
+          'translate' => 0,
+          'status' => 0,
+          'created' => REQUEST_TIME,
+          'changed' => REQUEST_TIME,
+        );
+
         if ($this->outdated && $langcode != $translations->original) {
           $translation['translate'] = 1;
         }
+
         $query->values($translation);
       }
 
@@ -434,15 +428,6 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
 
   public function setOutdated($outdated) {
     $this->outdated = $outdated;
-  }
-
-  /**
-   * This is to be called only from entity_translation_PathInfoRegistry.
-   */
-  public function setPathInfo($info) {
-    $this->basePath = isset($info['edit path']) ? $this->getPathInstance($info['base path']) : FALSE;
-    $this->editPath = isset($info['edit path']) ? $this->getPathInstance($info['edit path']) : FALSE;
-    $this->viewPath = isset($info['view path']) ? $this->getPathInstance($info['view path']) : FALSE;
   }
 
   public function getBasePath() {

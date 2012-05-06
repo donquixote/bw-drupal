@@ -96,52 +96,6 @@ function entity_translation_install() {
 }
 
 /**
- * Implements hook_enable().
- */
-function entity_translation_enable() {
-  // Re-activate entity translation for content types which had used it when
-  // the module was last disabled (if any), unless these have since been altered
-  // by the user to use a different translation option.
-  $entity_translation_types = variable_get('entity_translation_disabled_content_types', array());
-  foreach ($entity_translation_types as $index => $type) {
-    if (variable_get("language_content_type_$type", 0) == 0) {
-      variable_set("language_content_type_$type", ENTITY_TRANSLATION_ENABLED);
-    }
-    // We should show the warning only if we actually restored at least one
-    // content type.
-    else {
-      unset($entity_translation_types[$index]);
-    }
-  }
-  if ($entity_translation_types) {
-    drupal_set_message(t('All content types previously configured to use field translation are now using it again.'), 'warning');
-  }
-  variable_del('entity_translation_disabled_content_types');
-}
-
-/**
- * Implements hook_disable().
- */
-function entity_translation_disable() {
-  // Store record of which types are using entity translation, and set those
-  // types to not be translated. These content types will be reset to use entity
-  // translation again if the module is later re-enabled, unless they have been
-  // changed by the user in the meantime.
-  $entity_translation_types = array();
-  $entity_translation_type_names = array();
-  foreach (node_type_get_types() as $type => $object) {
-    if (variable_get("language_content_type_$type", 0) == ENTITY_TRANSLATION_ENABLED) {
-      $entity_translation_types[] = $type;
-      variable_set("language_content_type_$type", 0);
-    }
-  }
-  if ($entity_translation_types) {
-    variable_set('entity_translation_disabled_content_types', $entity_translation_types);
-    drupal_set_message(t('All content types configured to use field translation now have multilingual support disabled. This change will be reverted if the entity translation module is enabled again.'), 'warning');
-  }
-}
-
-/**
  * Implements hook_uninstall().
  */
 function entity_translation_uninstall() {
@@ -149,7 +103,6 @@ function entity_translation_uninstall() {
   variable_del('locale_field_language_fallback');
   variable_del('entity_translation_edit_form_info');
   variable_del('entity_translation_entity_types');
-  variable_del('entity_translation_disabled_content_types');
 
   foreach (node_type_get_types() as $type => $object) {
     variable_del("entity_translation_node_metadata_$type");
