@@ -3,3 +3,5 @@ name = "Node aspect pages"
 description = "Node sub-pages (tabs) with associated build modes."
 core = 7.x
 php = 5.2
+
+dependencies[] = xautoload

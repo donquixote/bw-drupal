@@ -121,10 +121,18 @@ function nodeaspect_info($reset = FALSE) {
     $_info = NULL;
   }
   if (!isset($_info)) {
-    module_load_include('info.inc', 'nodeaspect');
     $_info = _nodeaspect_info_build();
   }
   return $_info;
+}
+
+
+function _nodeaspect_info_build() {
+  $pages = array();
+  $view_modes = array();
+  $api = new nodeaspect_InjectedAPI_hookNodeaspect($pages, $view_modes);
+  module_invoke_all('nodeaspect', $api);
+  return new nodeaspect_InfoWrapper($pages, $view_modes);
 }
 
 
@@ -153,80 +161,42 @@ function nodeaspect_page_info_cache() {
 }
 
 
-class nodeaspect_PageInfoCache {
-
-  protected $_pages = array();
-  protected $_active;
-
-  function reset() {
-    $this->_pages = array();
-  }
-
-  function pageInfo($node, $suffix) {
-    if (!isset($this->_pages[$node->nid][$suffix])) {
-      module_load_include('page.inc', 'nodeaspect');
-      $this->_pages[$node->nid][$suffix] = _nodeaspect_page_info_build($node, $suffix);
-    }
-    return $this->_pages[$node->nid][$suffix];
-  }
-
-  function page($node, $suffix) {
-    $page_info = $this->pageInfo($node, $suffix);
-    $this->_active = array($page_info, $node, $suffix);
-    return $page_info->page($node);
-  }
-
-  function hook_pageapi($api) {
-    if (!empty($this->_active)) {
-      list($page_info, $node, $suffix) = $this->_active;
-      $page_info->hook_pageapi($api, $node, $suffix);
-    }
-  }
-
-  function hook_preprocess_page(&$vars) {
-
-    // Rearrange tabs.
-    $weights = array();
-    foreach ($this->_pages as $nid => $pages) {
-      foreach ($pages as $suffix => $info) {
-        $weight = $info->localTaskWeight();
-        $weights["node/%/$suffix"] = $weight;
-      }
-    }
-    foreach (array('#primary', '#secondary') as $k) {
-      if (is_array($vars['tabs'][$k])) {
-        // stable sort, please.
-        $sorted = array();
-        foreach ($vars['tabs'][$k] as $i => $item) {
-          $path = $item['#link']['path'];
-          $weight = isset($weights[$path]) ? $weights[$path] : $item['#link']['weight'];
-          if ($weight === FALSE) {
-            unset($vars['tabs'][$k][$i]);
-          }
-          else {
-            $sorted[$weight][] = $item;
-          }
-        }
-        ksort($sorted);
-        $vars['tabs'][$k] = array();
-        foreach ($sorted as $items) {
-          foreach ($items as $item) {
-            $vars['tabs'][$k][] = $item;
-          }
+function _nodeaspect_page_info_build($node, $suffix) {
+  $info = array();
+  $info_tmp = array();
+  $api = new nodeaspect_InjectedAPI_hookNodeaspectPage($info_tmp);
+  if (preg_match('#[a-zA-Z0-9_]*#', $suffix)) {
+    // $suffix is a valid function suffix.
+    // Try the very specific hook.
+    foreach (module_implements('nodeaspect_page__' . $suffix) as $module) {
+      $f = $module . '_nodeaspect_page__' . $suffix;
+      $info_tmp = array('override' => 0, 'module' => $module);
+      $f($node, $api);
+      if (!isset($info['override']) || $info_tmp['override'] > $info['override']) {
+        if (!empty($info_tmp['access']) || strlen($info_tmp['title'])) {
+          $info = $info_tmp;
         }
       }
     }
-
-    // Specific stuff for the active page.
-    if (!empty($this->_active)) {
-      list($page_info, $node, $suffix) = $this->_active;
-      $page_info->hook_preprocess_page($vars, $node, $suffix);
+  }
+  foreach (module_implements('nodeaspect_page') as $module) {
+    $f = $module . '_nodeaspect_page';
+    $info_tmp = array('override' => 0, 'module' => $module);
+    $f($node, $suffix, $api);
+    if (!isset($info['override']) || $info_tmp['override'] > $info['override']) {
+      if (!empty($info_tmp['access']) || @strlen($info_tmp['title'])) {
+        $info = $info_tmp;
+      }
     }
   }
+  $info['access'] = @$info['access'] && node_access('view', $node);
+  $info += array(
+    // Use the defaults from node_show().
+    'render as teaser' => FALSE,
+    'render as page' => TRUE,
+    'render links' => TRUE,
+    'tab' => TRUE,
+    'weight' => 0,
+  );
+  return new nodeaspect_PageInfo($info);
 }
-
-
-
-
-
-
