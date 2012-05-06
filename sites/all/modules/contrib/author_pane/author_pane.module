@@ -229,50 +229,53 @@ function template_preprocess_author_pane(&$variables) {
 
 
 /**
- * Preprocesses template variables for the author pane picture template.
+ * Process variables for author-pane-user-picture.tpl.php.
  *
- * Available variables (All optional except 'account'):
- * $variables['account']: User account object.
- * $variables['caller']:  String identifying who called the theme function.
- *    Usually the name of the module but doesn't have to be.
- * $variables['picture_preset']: Imagecache preset to use to format the
- *    user picture.
+ * The $variables array contains the following arguments:
+ * - $variables['account']: User account object.
+ * - $variables['caller']: (optional) String identifying who called the theme
+ *   function. Usually the name of the module but doesn't have to be.
+ * - $variables['picture_preset']: (optional) Imagecache preset to use to format
+ *   the user picture.
+ *
+ * @see author-pane-user-picture.tpl.php
  */
 function template_preprocess_author_pane_user_picture(&$variables) {
   $variables['picture'] = '';
-  $account = $variables['account'];
 
-  // Get the imagecache preset, if any.
-  $style = (!empty($variables['picture_preset'])) ? $variables['picture_preset'] : '';
-
-  // If user pictures are enabled...
   if (variable_get('user_pictures', 0)) {
-    // Get the user's avatar if they have one or the default picture if exists.
-    if (isset($account->picture) && file_exists($account->picture->uri)) {
-      // We only want to get the full URL if not using imagecache.
-      $picture = (!empty($style) && module_exists('image')) ? $account->picture->uri : file_create_url($account->picture->uri);
+    $account = $variables['account'];
+
+    if (!empty($account->picture) && !empty($account->picture->uri)) {
+      $filepath = $account->picture->uri;
     }
     elseif (variable_get('user_picture_default', '')) {
-      $picture = variable_get('user_picture_default', '');
+      $filepath = variable_get('user_picture_default', '');
     }
 
-    // If we have a picture...
-    if (isset($picture)) {
-      // If there's a preset set and imagecache is enabled...
-      if (!empty($style) && module_exists('image')) {
-        // Toss the picture over to imagecache for sizing
-        $alt = t("@user's picture", array('@user' => $account->name ? $account->name : variable_get('anonymous', t('Anonymous'))));
-        // TODO Please change this theme call to use an associative array for the $variables parameter.
-        $variables['picture'] = theme('image_style', array('style_name' => $style, 'path' => $picture, 'alt' => $alt, 'title' => $alt));
+    if (isset($filepath)) {
+      $alt = t("@user's picture", array('@user' => format_username($account)));
+
+      // If the image does not have a valid Drupal scheme (for eg. HTTP),
+      // don't load image styles.
+      if (module_exists('image') && file_valid_uri($filepath) && $style = ((!empty($variables['picture_preset'])) ? $variables['picture_preset'] : '')) {
+        $variables['picture'] = theme('image_style', array('style_name' => $style, 'path' => $filepath, 'alt' => $alt, 'title' => $alt));
         $variables['imagecache_used'] = TRUE;
       }
       else {
-        // Just run the picture through theme_image. Note that we don't link
-        // the picture here since it doesn't make sense for many uses of AP.
-        // If the picture needs to be linked, it can be done in the template.
-        $alt = t("@user's picture", array('@user' => $account->name ? $account->name : variable_get('anonymous', t('Anonymous'))));
-        $variables['picture'] = theme('image', array('path' => $picture, 'alt' => $alt, 'title' => $alt, 'attributes' => '', 'getsize' => FALSE));
+        $variables['picture'] = theme('image', array('path' => $filepath, 'alt' => $alt, 'title' => $alt));
         $variables['imagecache_used'] = FALSE;
+      }
+
+      if (!empty($account->uid) && user_access('access user profiles')) {
+        $options = array(
+          'attributes' => array('title' => t('View user profile.')),
+          'html' => TRUE,
+        );
+        $variables['picture_link_profile'] = l($variables['picture'], "user/$account->uid", $options);
+      }
+      else {
+        $variables['picture_link_profile'] = FALSE;
       }
     }
   }

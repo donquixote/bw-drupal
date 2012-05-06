@@ -2,31 +2,28 @@
 
 /**
  * @file
- *   This file provides a CTools content type containing the author pane.
+ * This file provides a CTools content type containing the author pane.
  */
-
-/**
- * Callback function to supply a list of content types.
- */
-function author_pane_author_pane_ctools_content_types() {
-  return array(
-    'single' => TRUE,
-    'title' => t('Author Pane'),
-    'icon' => 'icon_user.png',
-    'description' => t('Author related variables gathered from helper modules.'),
-    'required context' => new ctools_context_required(t('User'), 'user'),
-    'category' => t('Advanced Profile Kit'),
-    'defaults' => array(
-      'caller' => 'advanced_profile',
-      'picture_preset' => '',
-    ),
-  );
-}
+$plugin = array(
+  'title' => t('Author Pane (content pane)'),
+  'description' => t('Author related variables gathered from helper modules.'),
+  'single' => TRUE,
+  'required context' => new ctools_context_required(t('User'), 'user'),
+  'category' => t('User'),
+  'icon' => 'icon_user.png',
+  'edit form' => 'author_pane_content_type_edit_form',
+  'render callback' => 'author_pane_content_type_render',
+  'admin title' => 'author_pane_content_type_admin_title',
+  'defaults' => array(
+    'caller' => 'advanced_profile',
+    'picture_preset' => '',
+  ),
+);
 
 /**
  * Output function for the 'author pane' content type.
  */
-function author_pane_author_pane_content_type_render($subtype, $conf, $panel_args, $context) {
+function author_pane_content_type_render($subtype, $conf, $panel_args, $context) {
   $account = isset($context->data) ? clone $context->data : NULL;
   $block = new stdClass();
 
@@ -52,13 +49,12 @@ function author_pane_author_pane_content_type_render($subtype, $conf, $panel_arg
 /**
  * Returns an edit form for the custom type.
  */
-function author_pane_author_pane_content_type_edit_form(&$form, &$form_state) {
+function author_pane_content_type_edit_form($form, &$form_state) {
   $conf = $form_state['conf'];
 
   if (module_exists('image')) {
     $options = array('' => '');
-    $styles = image_styles();
-    foreach ($styles as $style) {
+    foreach (image_styles() as $style) {
       $options[$style['name']] = $style['name'];
     }
 
@@ -78,13 +74,15 @@ function author_pane_author_pane_content_type_edit_form(&$form, &$form_state) {
     '#description' => t('Name of the calling program. This can be picked up during the preprocessing for specific changes. If using this in Advanced Profile Kit, it should be set to "advanced_profile"'),
     '#default_value' => $conf['caller'],
   );
+
+  return $form;
 }
 
 /**
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
  */
-function author_pane_author_pane_content_type_edit_form_submit(&$form, &$form_state) {
+function author_pane_content_type_edit_form_submit($form, &$form_state) {
   // Copy everything from our defaults.
   foreach (array_keys($form_state['plugin']['defaults']) as $key) {
     $form_state['conf'][$key] = $form_state['values'][$key];
@@ -95,8 +93,6 @@ function author_pane_author_pane_content_type_edit_form_submit(&$form, &$form_st
  * @todo Please document this function.
  * @see http://drupal.org/node/1354
  */
-function author_pane_author_pane_content_type_admin_title($subtype, $conf, $context) {
-  return t('Author Pane');
+function author_pane_content_type_admin_title($subtype, $conf, $context) {
+  return t('"@s" author pane', array('@s' => $context->identifier));
 }
-
-

@@ -1,6 +1,19 @@
 
 ------------------------ D7 2.x BRANCH --------------------------------------------------
 
+December 20, 2011
+-----------------
+Issue #1376608 by dberror, Scyther: Check whether the user has access to view userpoints or not.
+
+October 11, 2011
+----------------
+by Michelle, Scyther: Changed category for Author Pane content pane.
+by Scyther: Changed name for APs content pane for easier understand which one is the content pane and which one is the block in panels.
+
+October 10, 2011
+----------------
+Issue #1304856 by Scyther: Fixed Author Pane doesn't display in panel.
+
 September 15, 2011
 ------------------
 by Scyther: Updated User Badges integration.
