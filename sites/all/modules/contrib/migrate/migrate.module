@@ -52,15 +52,13 @@ function migrate_migrations() {
         }
       }
       else {
-        // TODO:
-        //   Message, as appropriate for either drush or web UI,
-        //   telling that the migration class no longer meets the requirements.
+        MigrationBase::displayMessage(t('Class !class is no longer a valid concrete migration class',
+                                      array('!class' => $row->class_name)));
       }
     }
     else {
-      // TODO:
-      //   Message, as appropriate for either drush or web UI,
-      //   telling that the migration's class is no more.
+      MigrationBase::displayMessage(t('Class !class no longer exists',
+                                    array('!class' => $row->class_name)));
     }
   }
 

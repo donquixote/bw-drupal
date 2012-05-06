@@ -144,6 +144,10 @@ class MigrateDestinationTable extends MigrateDestination {
         $id[] = $entity->{$key};
       }
 
+      // Increment the number of updated or inserted records by checking the
+      // result of drupal_write_record.
+      ($status == SAVED_NEW) ? $this->numCreated++ : $this->numUpdated++;
+
       return $id;
     }
   }
