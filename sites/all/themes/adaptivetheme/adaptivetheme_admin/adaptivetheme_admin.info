@@ -122,9 +122,9 @@
   settings[font_family] = 'ff-l'
   settings[font_size]   = 'fs-medium'
 
-; Information added by drupal.org packaging script on 2011-12-11
-version = "7.x-2.x-dev"
+; Information added by drupal.org packaging script on 2012-02-16
+version = "7.x-2.2"
 core = "7.x"
 project = "adaptivetheme"
-datestamp = "1323561690"
+datestamp = "1329397237"
 

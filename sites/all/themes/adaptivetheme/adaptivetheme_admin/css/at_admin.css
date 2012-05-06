@@ -143,6 +143,10 @@ h1#page-title {
 #blocks th {
   border-bottom: 1px solid #f9f9f9;
 }
+#block-admin-display-form div.messages {
+  margin-left: 0;
+  margin-right: 0;
+}
 
 /* Hyperlinks */
 a {
@@ -1473,7 +1477,7 @@ ul.action-links li a:focus {
 .views-displays .secondary a:hover, .views-displays .secondary .active a {
   background-color: #d7d7d7;
   border-bottom-width: 1px;
-  color: #666666;
+  color: #666;
 }
 .views-ui-dialog #views-ajax-popup {
   -moz-box-shadow: 0 4px 4px 4px rgba(0,0,0,0.4);
@@ -1482,4 +1486,101 @@ ul.action-links li a:focus {
 }
 .views-ui-dialog input.form-submit {
   margin: 3px 10px 3px 0;
+}
+.views-edit-view .ctools-dropbutton .ctools-content input,
+.views-edit-view .action-list input {
+  color: #3188d1;
+  outline: 0;
+  font-weight: 300;
+}
+
+/* Fix Panels whacky CSS */
+#page-manager-edit .page-manager-ajax-pad .content-title {
+  font-size: 1em;
+  line-height: 1.8em;
+  padding: 0 5px 0 20px;
+}
+.page-manager-ajax-pad .content-header {
+  background: transparent;
+}
+#page-manager-edit .secondary-actions {
+  border-bottom: 0;
+}
+#page-manager-edit .page-manager-tabs ul.page-manager-operations {
+  border-right: 0;
+  line-height: 2em;
+  border-bottom: 1px solid #aaa;
+}
+#page-manager-edit .page-manager-edit-operations ul.page-manager-operations {
+  border-bottom: 0;
+}
+#page-manager-edit .page-manager-edit-operations li li {
+  margin-left: 0;
+}
+#page-manager-edit .page-manager-edit-operations li a {
+  color: #3188D1
+}
+#page-manager-edit .page-manager-tabs #page-manager-page-summary  ul.page-manager-operations {
+    border-right: 1px solid #ddd;
+    border-bottom: 0;
+}
+#page-manager-edit .page-manager-tabs #page-manager-page-summary  ul.page-manager-operations li {
+  border-color: #ddd;
+}
+.handler-summary .handler-title {
+  border-bottom: 0 none;
+}
+#page-manager-edit .page-manager-wrapper  ul.links {
+  list-style: none;
+  margin: 10px 0 5px;
+  padding: 0;
+  font-weight: 700;
+}
+
+.panels-layouts-checkboxes .form-checkboxes .form-item,
+#panels-choose-layout .form-type-radio,
+.panels-choose-layout .form-type-radio {
+  float: left;
+  margin-right: 10px;
+  width: 120px;
+}
+.panels-layouts-checkboxes .form-checkboxes .option input,
+#panels-choose-layout .form-type-radio input,
+.panels-choose-layout .form-type-radio input {
+  display: block;
+  text-align: center;
+  width: 120px;
+  margin: 3px 0;
+}
+#page-manager-edit .description {
+  margin-bottom: 1em;
+}
+#ctools-context-handler-edit-context th,
+#ctools-context-handler-edit-context td {
+  width: 50%;
+  text-align: left;
+}
+#page-manager-edit .page-manager-edit-operations li.active,
+#page-manager-edit .page-manager-edit-operations li.active-group .page-manager-group-title,
+#page-manager-edit .page-manager-edit-operations li.active a,
+#page-manager-edit .page-manager-edit-operations li.active a:hover {
+  background-position: 98% center;
+}
+#page-manager-edit .changed-notification {
+  background-color: #fffce5;
+  border-color: #ed5;
+  color: #840;
+  margin: 15px 0 10px;
+  padding: 10px;
+}
+.wizard-trail {
+  font-size: 1em;
+  margin-bottom: 1em;
+  color: #aaa;
+}
+.wizard-trail-current {
+  color: #41a61e;
+}
+.page-manager-tabs div.messages {
+  margin: 15px 0;
 }

@@ -30,6 +30,9 @@
   regions[page_top]          = Page top
   regions[page_bottom]       = Page bottom
 
+;----------// Panels layouts
+  plugins[panels][layouts] = panels
+
 ;----------// Theme Settings
 
   ; Layout settings
@@ -122,9 +125,9 @@
   ; Extra markup
   settings[menu_item_span_elements] = 0
 
-; Information added by drupal.org packaging script on 2011-12-11
-version = "7.x-2.x-dev"
+; Information added by drupal.org packaging script on 2012-02-16
+version = "7.x-2.2"
 core = "7.x"
 project = "adaptivetheme"
-datestamp = "1323561690"
+datestamp = "1329397237"
 

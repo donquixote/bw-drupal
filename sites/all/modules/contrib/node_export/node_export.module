@@ -340,10 +340,13 @@ function node_export($nids, $format = NULL, $msg_t = 't') {
  */
 function node_export_prepare_node(&$original_node) {
   // Create UUID if it's not there.
-  if (!uuid_get_uuid('node', 'nid', $original_node->nid)) {
-    $original_node->uuid = uuid_set_uuid('node', 'nid', $original_node->nid);
-    // Save it so future node exports are consistent.
-    node_save($original_node);
+  // Currently this uses a module_exists() until UUID becomes a dependency.
+  if (module_exists('uuid')) {
+    if (!uuid_get_uuid('node', 'nid', $original_node->nid)) {
+      $original_node->uuid = uuid_set_uuid('node', 'nid', $original_node->nid);
+      // Save it so future node exports are consistent.
+      node_save($original_node);
+    }
   }
 
   $node = clone($original_node);
@@ -696,7 +699,7 @@ function node_export_node_clone($original_node) {
 
     $node->nid = NULL;
     $node->vid = NULL;
-    $node->name = $user->name;
+    $node->name = !empty($user->name) ? $user->name : (!empty($user->uid) ? NULL : variable_get('anonymous', t('Anonymous')));
     $node->uid = $user->uid;
 
     if (variable_get('node_export_reset_created_' . $node->type, TRUE)) {
@@ -715,7 +718,9 @@ function node_export_node_clone($original_node) {
       $node->path = NULL;
     }
     else {
-      unset($node->path['pid']);
+      if (is_array($node->path) && isset($node->path['pid'])) {
+        unset($node->path['pid']);
+      }
       if (module_exists('pathauto')) {
         // Prevent pathauto from creating a new path alias.
         $node->path['pathauto'] = FALSE;

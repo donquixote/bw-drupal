@@ -107,7 +107,7 @@ function node_export_csv_encode_sanitize_value($var) {
     elseif (is_null($var)) {
       return 'NULL';
     }
-    elseif (is_string($var)) {
+    elseif (is_string($var) && !empty($var)) {
       // Single-quote strings that could be confused for null or boolean.
       if (in_array(strtoupper($var), array('TRUE', 'FALSE', 'NULL'))) {
         $var = "'" . $var . "'";
@@ -133,7 +133,7 @@ function node_export_csv_decode_sanitize_value($var) {
     return $var;
   }
   // Assume this is a string.
-  return "'" . $var . "'";
+  return "'" . str_replace("'", "\'", $var) . "'";
 }
 
 /**
@@ -284,6 +284,9 @@ function node_export_csv_csv_to_array($string, $seperator = ',', $enclosure = '"
         $out_item[$position] .= $c;
       }
       else {
+        if ($string[$i - 1] == $seperator) {
+          $out_item[$position] .= '';
+        }
         $position++;
         $escape = FALSE;
         $double_escape = FALSE;

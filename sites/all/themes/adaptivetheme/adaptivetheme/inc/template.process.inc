@@ -47,16 +47,9 @@ function adaptivetheme_preprocess_html(&$vars) {
       // Add unique class for each website section.
       list($section, ) = explode('/', $path, 2);
       $arg = explode('/', $_GET['q']);
-      if ($arg[0] == 'node') {
-        if (isset($arg[1]) && $arg[1] == 'add') {
-          $section = 'node-add';
-        }
-        elseif (isset($arg[2]) && is_numeric($arg[1]) && ($arg[2] == 'edit' || $arg[2] == 'delete')) {
-          $section = 'node-' . $arg[2];
-        }
-      }
       $vars['classes_array'][] = drupal_html_class('section-' . $section);
     }
+
     // Set classes for views and panels pages, thanks again Zen, you're amazing!
     $vars['menu_item'] = menu_get_item();
     switch ($vars['menu_item']['page_callback']) {
@@ -91,7 +84,7 @@ function adaptivetheme_preprocess_html(&$vars) {
     drupal_add_css($filepath, array(
       'preprocess' => variable_get('preprocess_css', '') == 1 ? TRUE : FALSE,
       'group' => CSS_THEME,
-      'media' => 'screen',
+      'media' => 'all',
       'every_page' => TRUE,
       )
     );
