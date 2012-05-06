@@ -2,8 +2,6 @@
 
 /**
  * Filter to handle dates stored as a timestamp.
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_date extends views_handler_filter_numeric {
   function option_definition() {

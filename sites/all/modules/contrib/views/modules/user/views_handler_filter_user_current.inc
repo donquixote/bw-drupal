@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Filter handler for the current user.
- *
- * @ingroup views_filter_handlers
+ * Filter handler for the current user
  */
 class views_handler_filter_user_current extends views_handler_filter_boolean_operator {
   function construct() {

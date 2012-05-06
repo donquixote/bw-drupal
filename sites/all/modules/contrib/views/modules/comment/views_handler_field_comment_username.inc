@@ -1,8 +1,6 @@
 <?php
 /**
- * Field handler to allow linking to a user account or homepage.
- *
- * @ingroup views_field_handlers
+ * Field handler to allow linking to a user account or homepage
  */
 class views_handler_field_comment_username extends views_handler_field {
   /**

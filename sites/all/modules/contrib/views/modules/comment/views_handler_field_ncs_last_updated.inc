@@ -1,8 +1,6 @@
 <?php
 /**
- * Field handler to display the newer of last comment / node updated.
- *
- * @ingroup views_field_handlers
+ * Field handler to display the newer of last comment / node updated
  */
 class views_handler_field_ncs_last_updated extends views_handler_field_date {
   function query() {

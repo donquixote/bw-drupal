@@ -1,10 +1,8 @@
 <?php
 /**
- * Handler for showing comment module's node link.
- *
- * @ingroup views_field_handlers
+* Handler for showing comment module's node link.
  */
-class views_handler_field_comment_node_link extends views_handler_field_entity {
+class views_handler_field_comment_node_link extends views_handler_field {
   function construct() {
     parent::construct();
 
@@ -45,7 +43,10 @@ class views_handler_field_comment_node_link extends views_handler_field_entity {
 
   function render($values) {
     // Build fake $node.
-    $node = $this->get_value($values);
+    $node = new stdClass();
+    $node->nid      = $this->get_value($values, 'nid');
+    $node->type     = $this->get_value($values, 'type');
+    $node->comment  = $this->get_value($values, 'comment');
 
     // Call comment.module's hook_link: comment_link($type, $node = NULL, $teaser = FALSE)
     // Call node by reference so that something is changed here

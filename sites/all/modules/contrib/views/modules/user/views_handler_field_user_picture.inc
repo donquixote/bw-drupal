@@ -1,9 +1,7 @@
 <?php
 
 /**
- * Field handler to provide simple renderer that allows using a themed user link.
- *
- * @ingroup views_field_handlers
+ * Field handler to provide simple renderer that allows using a themed user link
  */
 class views_handler_field_user_picture extends views_handler_field {
   function construct() {
@@ -16,20 +14,6 @@ class views_handler_field_user_picture extends views_handler_field {
   function element_type($none_supported = FALSE, $default_empty = FALSE, $inline = FALSE) {
     if ($inline) {
       return 'span';
-    }
-    if ($none_supported) {
-      if ($this->options['element_type'] === '0') {
-        return '';
-      }
-    }
-    if ($this->options['element_type']) {
-      return check_plain($this->options['element_type']);
-    }
-    if ($default_empty) {
-      return '';
-    }
-    if (isset($this->definition['element type'])) {
-      return $this->definition['element type'];
     }
 
     return 'div';

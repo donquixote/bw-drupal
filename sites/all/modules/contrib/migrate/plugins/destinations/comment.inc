@@ -17,6 +17,7 @@ class MigrateDestinationComment extends MigrateDestinationEntity {
       'cid' => array(
         'type' => 'int',
         'unsigned' => TRUE,
+        'not null' => TRUE,
         'description' => 'ID of destination entity',
       ),
     );

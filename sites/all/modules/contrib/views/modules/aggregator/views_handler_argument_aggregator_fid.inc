@@ -2,8 +2,6 @@
 
 /**
  * Argument handler to accept an aggregator feed id.
- *
- * @ingroup views_argument_handlers
  */
 class views_handler_argument_aggregator_fid extends views_handler_argument_numeric {
   /**

@@ -251,22 +251,16 @@ class views_plugin_cache extends views_plugin {
 
       $build_info = $this->view->build_info;
 
-      $query_plugin = $this->view->display_handler->get_plugin('query');
-
-      foreach (array('query','count_query') as $index) {
-        // If the default query back-end is used generate SQL query strings from
-        // the query objects.
-        if ($build_info[$index] instanceof SelectQueryInterface) {
-          $query = clone $build_info[$index];
-          $query->preExecute();
-          $build_info[$index] = (string)$query;
-        }
+      foreach (array('query', 'count_query') as $index) {
+        $query = clone $build_info[$index];
+        $query->preExecute();
+        $build_info[$index] = (string)$query;
       }
       $key_data = array(
         'build_info' => $build_info,
         'roles' => array_keys($user->roles),
         'super-user' => $user->uid == 1, // special caching for super user.
-        'language' => $GLOBALS['language']->language,
+        'language' => $GLOBALS['language'],
       );
       foreach (array('exposed_info', 'page', 'sort', 'order') as $key) {
         if (isset($_GET[$key])) {
@@ -288,7 +282,7 @@ class views_plugin_cache extends views_plugin {
         'roles' => array_keys($user->roles),
         'super-user' => $user->uid == 1, // special caching for super user.
         'theme' => $GLOBALS['theme'],
-        'language' => $GLOBALS['language']->language,
+        'language' => $GLOBALS['language'],
       );
 
       $this->_output_key = $this->view->name . ':' . $this->display->id . ':output:' . md5(serialize($key_data));

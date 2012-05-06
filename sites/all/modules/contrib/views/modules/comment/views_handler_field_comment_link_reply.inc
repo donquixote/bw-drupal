@@ -2,8 +2,6 @@
 
 /**
  * Field handler to present a link to delete a node.
- *
- * @ingroup views_field_handlers
  */
 class views_handler_field_comment_link_reply extends views_handler_field_comment_link {
   function access() {

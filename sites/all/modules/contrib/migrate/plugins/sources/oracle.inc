@@ -41,6 +41,13 @@ class MigrateSourceOracle extends MigrateSource {
   protected $result;
 
   /**
+   * Number of eligible rows processed so far (used for itemlimit checking)
+   *
+   * @var int
+   */
+  protected $numProcessed = 0;
+
+  /**
    * Character set to use in retrieving data.
    *
    * @var string
@@ -148,11 +155,18 @@ class MigrateSourceOracle extends MigrateSource {
   }
 
   /**
-   * Implementation of MigrateSource::performRewind().
+   * Implementation of Iterator::rewind() - called before beginning a foreach loop.
    */
-  public function performRewind() {
+  public function rewind() {
+    $migration = Migration::currentMigration();
+    $this->result = NULL;
+    $this->currentRow = NULL;
+    $this->numProcessed = 0;
+    $this->numIgnored = 0;
+    $map = $migration->getMap();
+
     $keys = array();
-    foreach ($this->activeMap->getSourceKey() as $field_name => $field_schema) {
+    foreach ($map->getSourceKey() as $field_name => $field_schema) {
       // Allow caller to provide an alias to table containing the primary key.
       if (!empty($field_schema['alias'])) {
         $field_name = $field_schema['alias'] . '.' . $field_name;
@@ -165,18 +179,20 @@ class MigrateSourceOracle extends MigrateSource {
      * considered supporting both but it is not worth the complexity. Run twice
      * instead.
      */
-    if (!empty($this->idList)) {
+    $idlist = $migration->getOption('idlist');
+    if (isset($idlist)) {
       // TODO: Sanitize. not critical as this is admin supplied data in drush.
       $this->query = str_replace(':criteria',
-        $keys[0] . ' IN (' . implode(',', $this->idList) . ')', $this->query);
+        $keys[0] . ' IN (' . $idlist . ')', $this->query);
     }
     else {
-      if (isset($this->highwaterField['name']) && $highwater = $this->activeMigration->getHighwater()) {
-        if (empty($this->highwaterField['alias'])) {
-          $highwater_name = $this->highwaterField['name'];
+      $highwaterField = $migration->getHighwaterField();
+      if (isset($highwaterField['name']) && $highwater = $migration->getHighwater()) {
+        if (empty($highwaterField['alias'])) {
+          $highwater_name = $highwaterField['name'];
         }
         else {
-          $highwater_name = $this->highwaterField['alias'] . '.' . $this->highwaterField['name'];
+          $highwater_name = $highwaterField['alias'] . '.' . $highwaterField['name'];
         }
         $this->query = str_replace(':criteria', "$highwater_name > '$highwater'", $this->query);
       }
@@ -200,17 +216,78 @@ class MigrateSourceOracle extends MigrateSource {
       throw new Exception($e['message'] . "\n" . $e['sqltext']);
     }
     migrate_instrument_stop('oracle_query');
+
+    $this->next();
   }
 
   /**
-   * Implementation of MigrateSource::getNextRow().
-   *
-   * Returns the next row of the result set as an object, making sure NULLs are
-   * represented as PHP NULLs and that LOBs are returned directly without special
-   * handling.
+   * Implementation of Iterator::next() - called at the bottom of the loop implicitly,
+   * as well as explicitly from rewind().
    */
-  public function getNextRow() {
+  public function next() {
+    migrate_instrument_start('MigrateSourceOracle next');
+
+    $migration = Migration::currentMigration();
+
+    // Enforce the itemlimit
+    $itemlimit = $migration->getItemLimit();
+    while ($this->currentRow = $this->getNextObject()) {
+      // Enforce the itemlimit
+      if ($itemlimit && $this->numProcessed >= $itemlimit) {
+        $this->currentRow = NULL;
+        return;
+      }
+
+      // Check the map - if it's already mapped, and not marked for update, skip it
+      $map = $migration->getMap();
+      $this->currentKey = array();
+      foreach ($map->getSourceKey() as $field_name => $field_schema) {
+        $this->currentKey[$field_name] = $this->currentRow->$field_name;
+      }
+      $map_row = $map->getRowBySource($this->currentKey);
+      if ($map_row && $map_row['needs_update'] == 0) {
+        continue;
+      }
+      // Add map info to the row, if present
+      if ($map_row) {
+        foreach ($map_row as $field => $value) {
+          $field = 'migrate_map_' . $field;
+          $this->currentRow->$field = $value;
+        }
+      }
+
+      // Allow the Migration to prepare this row. prepareRow() can return boolean
+      // FALSE to stop processing this row. To add/modify fields on the
+      // result, modify $row by reference.
+      $return = TRUE;
+      if (method_exists($migration, 'prepareRow')) {
+        $return = $migration->prepareRow($this->currentRow);
+      }
+
+      if ($return !== FALSE) {
+        $this->numProcessed++;
+        break;
+      }
+      else {
+        $this->numIgnored++;
+      }
+    }
+    if (!is_object($this->currentRow)) {
+      $this->currentRow = NULL;
+    }
+
+    migrate_instrument_stop('MigrateSourceOracle next');
+  }
+
+  /**
+   * Convenience function to return the next row of the result set as an
+   * object, making sure NULLs are represented as PHP NULLs and that LOBs are
+   * returned directly without special handling.
+   */
+  public function getNextObject() {
+    migrate_instrument_start('MigrateSourceOracle getNextObject');
     $row = oci_fetch_array($this->result, OCI_ASSOC | OCI_RETURN_NULLS | OCI_RETURN_LOBS);
+    migrate_instrument_stop('MigrateSourceOracle getNextObject');
     if (!empty($row)) {
       return (object)$row;
     }

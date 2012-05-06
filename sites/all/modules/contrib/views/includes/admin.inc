@@ -311,7 +311,7 @@ function views_ui_add_form($form, &$form_state) {
   );
   $form['name'] = array(
     '#type' => 'machine_name',
-    '#maxlength' => 128,
+    '#maxlength' => 32,
     '#machine_name' => array(
       'exists' => 'views_get_view',
       'source' => array('human_name'),
@@ -743,15 +743,7 @@ function views_ui_add_form_store_edit_submit($form, &$form_state) {
   }
   // Just cache it temporarily to edit it.
   views_ui_cache_set($view);
-
-  // If there is a destination query, ensure we still redirect the user to the
-  // edit view page, and then redirect the user to the destination.
-  $destination = array();
-  if (isset($_GET['destination'])) {
-    $destination = drupal_get_destination();
-    unset($_GET['destination']);
-  }
-  $form_state['redirect'] = array('admin/structure/views/view/' . $view->name, array('query' => $destination));
+  $form_state['redirect'] = 'admin/structure/views/view/' . $view->name;
 }
 
 /**
@@ -1196,8 +1188,8 @@ function views_ui_preview_form($form, &$form_state, $view, $display_id = 'defaul
   // Add the preview button
   $form['button'] = array(
     '#type' => 'submit',
-    '#value' => t('Update preview'),
-    '#attributes' => array('class' => array('arguments-preview', 'ctools-auto-submit-click')),
+      '#value' => t('Update preview'),
+      '#attributes' => array('class' => array('arguments-preview', 'ctools-auto-submit-click')),
     '#pre_render' => array('ctools_dependent_pre_render'),
     '#prefix' => '<div id="preview-submit-wrapper">',
     '#suffix' => '</div>',
@@ -1955,11 +1947,6 @@ function views_ui_import_page($form, &$form_state) {
     '#description' => t('Enter the name to use for this view if it is different from the source view. Leave blank to use the name of the view.'),
   );
 
-  $form['name_override'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Replace an existing view if one exists with the same name'),
-  );
-
   $form['view'] = array(
     '#type' => 'textarea',
     '#title' => t('Paste view code here'),
@@ -2013,15 +2000,8 @@ function views_ui_import_validate($form, &$form_state) {
   }
 
   $test = views_get_view($view->name);
-  if (!$form_state['values']['name_override']) {
-    if ($test && $test->type != t('Default')) {
-      form_set_error('', t('A view by that name already exists; please choose a different name'));
-    }
-  }
-  else {
-    if ($test->vid) {
-      $view->vid = $test->vid;
-    }
+  if ($test && $test->type != t('Default')) {
+    form_set_error('', t('A view by that name already exists; please choose a different name'));
   }
 
   // Make sure base table gets set properly if it got moved.
@@ -3632,7 +3612,7 @@ function views_ui_rearrange_filter_form($form, &$form_state) {
     );
 
     $form['remove_groups'][$id] = array(); // to prevent a notice
-    if ($id != 1) {
+    if ($id != 0) {
       $form['remove_groups'][$id] = array(
         '#type' => 'submit',
         '#value' => t('Remove group @group', array('@group' => $id)),
@@ -3643,7 +3623,7 @@ function views_ui_rearrange_filter_form($form, &$form_state) {
         '#group' => $id,
       );
     }
-    $group_options[$id] = $id == 1 ? t('Default group') : t('Group @group', array('@group' => $id));
+    $group_options[$id] = $id == 0 ? t('Default group') : t('Group @group', array('@group' => $id));
     $form['#group_renders'][$id] = array();
   }
 
@@ -3655,7 +3635,7 @@ function views_ui_rearrange_filter_form($form, &$form_state) {
   foreach ($handlers as $id => $field) {
     // If the group does not exist, move the filters to the default group.
     if (empty($field['group']) || empty($groups['groups'][$field['group']])) {
-      $field['group'] = 1;
+      $field['group'] = 0;
     }
 
     $handler = $display->handler->get_handler($type, $id);
@@ -3667,7 +3647,7 @@ function views_ui_rearrange_filter_form($form, &$form_state) {
     // the default group to prevent weird errors from having it be in its
     // own group:
     if (!$grouping && $field['group'] == 'ungroupable') {
-      $field['group'] = 1;
+      $field['group'] = 0;
     }
 
     // Place this item into the proper group for rendering.
@@ -3903,11 +3883,11 @@ function views_ui_rearrange_filter_form_submit($form, &$form_state) {
     // The actual update button was clicked. Remove the empty groups, and
     // renumber them sequentially.
     ksort($remember_groups);
-    $groups['groups'] = views_array_key_plus(array_values(array_intersect_key($groups['groups'], $remember_groups)));
+    $groups['groups'] = array_values(array_intersect_key($groups['groups'], $remember_groups));
     // Change the 'group' key on each field to match. Here, $mapping is an
     // array whose keys are the old group numbers and whose values are the new
     // (sequentially numbered) ones.
-    $mapping = array_flip(views_array_key_plus(array_keys($remember_groups)));
+    $mapping = array_flip(array_keys($remember_groups));
     foreach ($new_fields as &$new_field) {
       $new_field['group'] = $mapping[$new_field['group']];
     }
@@ -4274,11 +4254,9 @@ function views_ui_config_item_form_submit_temporary($form, &$form_state) {
   $item = $form_state['handler']->options;
   $types = views_object_types();
 
-  // For footer/header $handler_type is area but $type is footer/header.
-  // For all other handle types it's the same.
-  $handler_type = $type = $form_state['type'];
+  $type = $form_state['type'];
   if (!empty($types[$type]['type'])) {
-    $handler_type = $types[$type]['type'];
+    $type = $types[$type]['type'];
   }
 
   $override = NULL;
@@ -4294,7 +4272,7 @@ function views_ui_config_item_form_submit_temporary($form, &$form_state) {
 
   // Create a new handler and unpack the options from the form onto it. We
   // can use that for storage.
-  $handler = views_get_handler($item['table'], $item['field'], $handler_type, $override);
+  $handler = views_get_handler($item['table'], $item['field'], $type, $override);
   $handler->init($form_state['view'], $item);
 
 
@@ -4329,11 +4307,9 @@ function views_ui_config_item_form_submit($form, &$form_state) {
   $item = $form_state['handler']->options;
   $types = views_object_types();
 
-  // For footer/header $handler_type is area but $type is footer/header.
-  // For all other handle types it's the same.
-  $handler_type = $type = $form_state['type'];
+  $type = $form_state['type'];
   if (!empty($types[$type]['type'])) {
-    $handler_type = $types[$type]['type'];
+    $type = $types[$type]['type'];
   }
 
   $override = NULL;
@@ -4349,7 +4325,7 @@ function views_ui_config_item_form_submit($form, &$form_state) {
 
   // Create a new handler and unpack the options from the form onto it. We
   // can use that for storage.
-  $handler = views_get_handler($item['table'], $item['field'], $handler_type, $override);
+  $handler = views_get_handler($item['table'], $item['field'], $type, $override);
   $handler->init($form_state['view'], $item);
 
 
@@ -4497,7 +4473,7 @@ function views_ui_config_item_extra_form($form, &$form_state) {
   $item = $view->get_item($display_id, $type, $id);
 
   if ($item) {
-    $handler = $view->display_handler->get_handler($type, $id);
+    $handler = views_get_handler($item['table'], $item['field'], $type);
     if (empty($handler)) {
       $form['markup'] = array('#markup' => t("Error: handler for @table > @field doesn't exist!", array('@table' => $item['table'], '@field' => $item['field'])));
     }
@@ -4675,13 +4651,6 @@ function views_ui_admin_settings_basic() {
     '#default_value' => variable_get('views_ui_show_advanced_column', FALSE),
   );
 
-  $form['basic']['views_ui_display_embed'] = array(
-    '#type' => 'checkbox',
-    '#title' => t('Show the embed display in the ui.'),
-    '#description' => t('Allow advanced user to use the embed view display. The plugin itself works if it\'s not visible in the ui'),
-    '#default_value' => variable_get('views_ui_display_embed', FALSE),
-  );
-
   $form['basic']['views_ui_custom_theme'] = array(
     '#type' => 'select',
     '#title' => t('Custom admin theme for the Views UI'),
@@ -4792,8 +4761,7 @@ function views_ui_admin_settings_advanced() {
   $form['debug']['views_sql_signature'] = array(
     '#type' => 'checkbox',
     '#title' => t('Add Views signature to all SQL queries'),
-    '#description' => t("All Views-generated queries will include the name of the views and display 'view-name:display-name' as a string  at the end of the SELECT clause. This makes identifying Views queries in database server logs simpler, but should only be used when troubleshooting."),
-
+    '#description' => t("All Views-generated queries will include a special 'VIEWS' = 'VIEWS' string in the WHERE clause. This makes identifying Views queries in database server logs simpler, but should only be used when troubleshooting."),
     '#default_value' => variable_get('views_sql_signature', FALSE),
   );
 
@@ -4824,7 +4792,7 @@ function views_ui_admin_settings_advanced() {
     '#description' => t('Select a translation method to use for Views data like header, footer, and empty text.'),
   );
 
-  $regions = array();
+  $regions = system_region_list(variable_get('theme_default', 'garland'));
   $regions['watchdog'] = t('Watchdog');
   if (module_exists('devel')) {
     $regions['message'] = t('Devel message(dpm)');

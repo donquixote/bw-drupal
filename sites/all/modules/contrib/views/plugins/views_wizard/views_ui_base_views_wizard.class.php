@@ -43,7 +43,7 @@ class ViewsUiBaseViewsWizard implements ViewsWizardInterface {
   protected $filter_defaults = array(
     'id' => NULL,
     'expose' => array('operator' => FALSE),
-    'group' => 1,
+    'group' => 0,
   );
 
   function __construct($plugin) {

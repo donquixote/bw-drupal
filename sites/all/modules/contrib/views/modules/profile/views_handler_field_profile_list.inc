@@ -1,8 +1,6 @@
 <?php
 /**
  * Field handler display a profile list item.
- *
- * @ingroup views_field_handlers
  */
 class views_handler_field_profile_list extends views_handler_field_prerender_list {
   /**

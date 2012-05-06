@@ -1,8 +1,6 @@
 <?php
 /**
- * Field handler to allow linking to a comment.
- *
- * @ingroup views_field_handlers
+ * Field handler to allow linking to a comment
  */
 class views_handler_field_comment extends views_handler_field {
   /**

@@ -2,8 +2,6 @@
 
 /**
  * Field handler to provide simple renderer that allows linking to a node.
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_search extends views_handler_filter {
   var $always_multiple = TRUE;

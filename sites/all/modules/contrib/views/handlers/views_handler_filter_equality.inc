@@ -1,8 +1,6 @@
 <?php
 /**
  * Simple filter to handle equal to / not equal to filters
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_equality extends views_handler_filter {
   // exposed filter options

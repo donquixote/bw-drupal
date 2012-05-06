@@ -1,15 +1,12 @@
 <?php
 /**
- * Field handler to display the depth of a comment.
- *
- * @ingroup views_field_handlers
+ * Field handler to display the depth of a comment
  */
 class views_handler_field_comment_depth extends views_handler_field {
   /**
    * Work out the depth of this comment
    */
   function render($values) {
-    $comment_thread = $this->get_value($values);
-    return count(explode('.', $comment_thread)) - 1;
+    return count(explode('.', $values->comments_thread)) - 1;
   }
 }

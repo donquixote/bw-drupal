@@ -1,8 +1,6 @@
 <?php
 /**
- * Sort handler for the newer of last comment / node updated.
- *
- * @ingroup views_sort_handlers
+ * Sort handler for the newer of last comment / node updated
  */
 class views_handler_sort_ncs_last_updated extends views_handler_sort_date {
   function query() {

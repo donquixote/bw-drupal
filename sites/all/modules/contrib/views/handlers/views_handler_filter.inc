@@ -25,35 +25,6 @@
  */
 class views_handler_filter extends views_handler {
   /**
-   * Contains the actual value of the field,either configured in the views ui
-   * or entered in the exposed filters.
-   */
-  var $value = NULL;
-
-  /**
-   * Contains the operator which is used on the query.
-   */
-  var $operator = '=';
-
-  /**
-   * @var bool
-   * Disable the possibility to force a single value.
-   */
-  var $always_multiple = FALSE;
-
-  /**
-   * @var bool
-   * Disable the possibility to use operators.
-   */
-  var $no_operator = FALSE;
-
-  /**
-   * @var bool
-   * Disable the possibility to allow a exposed input to be optional.
-   */
-  var $always_required = FALSE;
-
-  /**
    * Provide some extra help to get the operator/value easier to use.
    *
    * This likely has to be overridden by filters which are more complex
@@ -89,7 +60,7 @@ class views_handler_filter extends views_handler {
 
     $options['operator'] = array('default' => '=');
     $options['value'] = array('default' => '');
-    $options['group'] = array('default' => '1');
+    $options['group'] = array('default' => '0');
     $options['exposed'] = array('default' => FALSE);
     $options['expose'] = array(
       'contains' => array(
@@ -133,15 +104,12 @@ class views_handler_filter extends views_handler {
     $form['clear_markup_start'] = array(
       '#markup' => '<div class="clearfix">',
     );
-    // Add the subform from operator_form().
     $this->show_operator_form($form, $form_state);
-    // Add the subform from value_form().
     $this->show_value_form($form, $form_state);
     $form['clear_markup_end'] = array(
       '#markup' => '</div>',
     );
     if ($this->can_expose()) {
-      // Add the subform from expose_form().
       $this->show_expose_form($form, $form_state);
     }
   }
@@ -179,12 +147,10 @@ class views_handler_filter extends views_handler {
   }
 
   /**
-   * Options form subform for setting the operator.
+   * Provide a form for setting the operator.
    *
    * This may be overridden by child classes, and it must
    * define $form['operator'];
-   *
-   * @see options_form().
    */
   function operator_form(&$form, &$form_state) {
     $options = $this->operator_options();
@@ -227,12 +193,10 @@ class views_handler_filter extends views_handler {
   }
 
   /**
-   * Options form subform for setting options.
+   * Provide a form for setting options.
    *
    * This should be overridden by all child classes and it must
    * define $form['value']
-   *
-   * @see options_form().
    */
   function value_form(&$form, &$form_state) { $form['value'] = array(); }
 
@@ -296,11 +260,6 @@ class views_handler_filter extends views_handler {
     }
   }
 
-  /**
-   * Options form subform for exposed filter options.
-   *
-   * @see options_form().
-   */
   function expose_form(&$form, &$form_state) {
     $form['#theme'] = 'views_ui_expose_filter_form';
     // #flatten will move everything from $form['expose'][$key] to $form[$key]
@@ -511,7 +470,7 @@ class views_handler_filter extends views_handler {
    * Tell the renderer about our exposed form. This only needs to be
    * overridden for particularly complex forms. And maybe not even then.
    *
-   * @return array|null
+   * @return
    *   An array with the following keys:
    *   - operator: The $form key of the operator. Set to NULL if no operator.
    *   - value: The $form key of the value. Set to NULL if no value.
@@ -641,8 +600,6 @@ class views_handler_filter extends views_handler {
    * with OR groups. Some filters must also use HAVING which also makes
    * them not groupable. These filters will end up in a special group
    * if OR grouping is in use.
-   *
-   * @return bool
    */
    function can_group() {
      return TRUE;
@@ -652,8 +609,6 @@ class views_handler_filter extends views_handler {
 
 /**
  * A special handler to take the place of missing or broken handlers.
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_broken extends views_handler_filter {
   function ui_name($short = FALSE) {

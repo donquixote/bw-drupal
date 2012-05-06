@@ -1,8 +1,6 @@
 <?php
 /**
- * Field handler to provide simple renderer that allows using a themed user link.
- *
- * @ingroup views_field_handlers
+ * Field handler to provide simple renderer that allows using a themed user link
  */
 class views_handler_field_user_name extends views_handler_field_user {
   /**

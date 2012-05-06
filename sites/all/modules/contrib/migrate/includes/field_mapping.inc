@@ -57,8 +57,7 @@ class MigrateFieldMapping {
    * source field is considered to be a source ID in the mapping table of this
    * migration, and the corresponding destination ID will be retrieved.
    *
-   * @var mixed
-   *   An array of source migrations, or string for a single migration.
+   * @var string
    */
   protected $sourceMigration;
   public function getSourceMigration() {

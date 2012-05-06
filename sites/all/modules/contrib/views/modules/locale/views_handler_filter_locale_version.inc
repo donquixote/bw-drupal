@@ -2,8 +2,6 @@
 
 /**
  * Filter by version.
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_locale_version extends views_handler_filter_in_operator {
   function get_value_options() {

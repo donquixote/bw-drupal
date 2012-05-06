@@ -4,12 +4,6 @@
  * Views' relationship handlers.
  */
 
-
-/**
- * Relationship handler to return the taxonomy terms of nodes.
- *
- * @ingroup views_relationship_handlers
- */
 class views_handler_relationship_node_term_data extends views_handler_relationship  {
   function init(&$view, &$options) {
     parent::init($view, $options);

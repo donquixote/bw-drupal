@@ -1,8 +1,6 @@
 <?php
 /**
  * Field handler to present a link to user cancel.
- *
- * @ingroup views_field_handlers
  */
 class views_handler_field_user_link_cancel extends views_handler_field_user_link {
 

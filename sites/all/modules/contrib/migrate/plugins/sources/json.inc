@@ -55,7 +55,8 @@ class MigrateListJSON extends MigrateList {
         return $this->getIDsFromJSON($data);
       }
     }
-    Migration::displayMessage(t('Loading of !listurl failed:',
+    $migration = Migration::currentMigration();
+    $migration->showMessage(t('Loading of !listurl failed:',
         array('!listurl' => $this->listUrl)));
     return NULL;
   }
@@ -138,7 +139,7 @@ class MigrateItemJSON extends MigrateItem {
       $migration = Migration::currentMigration();
       $message =  t('Loading of !objecturl failed:', array('!objecturl' => $item_url));
       $migration->getMap()->saveMessage(
-        array($id), $message, MigrationBase::MESSAGE_ERROR);
+        array($this->id), $message, MigrationBase::MESSAGE_ERROR);
       return NULL;
     }
   }

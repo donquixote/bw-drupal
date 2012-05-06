@@ -1,5 +1,6 @@
 <?php
 
+module_load_include('test', 'views', 'tests/views_query');
 
 class ViewsModuleTest extends ViewsSqlTest {
   public static function getInfo() {
@@ -12,7 +13,6 @@ class ViewsModuleTest extends ViewsSqlTest {
 
   public function setUp() {
     parent::setUp();
-    drupal_theme_rebuild();
   }
 
   public function viewsData() {
@@ -87,11 +87,7 @@ class ViewsModuleTest extends ViewsSqlTest {
     $views_status['frontpage'] = FALSE; // false is enabled
     variable_set('views_defaults', $views_status);
 
-    $existing = array();
-    $type = array();
-    $theme = array();
-    $path = array();
-    $registry = views_theme($existing, $type, $theme, $path);
+    $registry = theme_get_registry();
     $this->assertTrue(isset($registry['views_view__frontpage']));
   }
 

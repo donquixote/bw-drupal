@@ -1,8 +1,6 @@
 <?php
 /**
- * Allow taxonomy term ID(s) as argument.
- *
- * @ingroup views_argument_handlers
+ * Allow taxonomy term ID(s) as argument
  */
 class views_handler_argument_term_node_tid extends views_handler_argument_many_to_one {
   function option_definition() {

@@ -3,9 +3,7 @@
  * Argument handler for taxonomy terms with depth.
  *
  * This handler is actually part of the node table and has some restrictions,
- * because it uses a subquery to find nodes with.
- *
- * @ingroup views_argument_handlers
+ * because it uses a subquery to find nodes with
  */
 class views_handler_argument_term_node_tid_depth extends views_handler_argument {
   function option_definition() {

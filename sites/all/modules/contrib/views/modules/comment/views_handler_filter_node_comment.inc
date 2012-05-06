@@ -2,8 +2,6 @@
 
 /**
  * Filter based on comment node status
- *
- * @ingroup views_filter_handlers
  */
 class views_handler_filter_node_comment extends views_handler_filter_in_operator {
   function get_value_options() {

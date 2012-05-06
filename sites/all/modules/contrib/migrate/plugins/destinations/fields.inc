@@ -100,66 +100,6 @@ abstract class MigrateFieldHandler extends MigrateHandler {
   }
 }
 
-/**
- * Base class for creating field handlers for fields with a single value.
- *
- * To use this class just extend it and pass key where the field's value should
- * be stored to the constructor, then register the type(s):
- * @code
- *   class MigrateLinkFieldHandler extends MigrateSimpleFieldHandler {
- *     public function __construct() {
- *       parent::__construct('url');
- *       $this->registerTypes(array('link'));
- *     }
- *   }
- * @endcode
- */
-abstract class MigrateSimpleFieldHandler extends MigrateFieldHandler {
-  protected $fieldValueKey = 'value';
-
-  protected $skipEmpty = FALSE;
-
-  /**
-   * Construct a simple field handler.
-   *
-   * @param $options
-   *   Array of options (rather than unamed parameters so you don't have to
-   *   what TRUE or FALSE means). The following keys are used:
-   *   - 'value_key' string with the name of the key in the fields value array.
-   *   - 'skip_empty' Boolean indicating that empty values should not be saved.
-   */
-  public function __construct($options = array()) {
-    if (isset($options['value_key'])) {
-      $this->fieldValueKey = $options['value_key'];
-    }
-    if (isset($options['skip_empty'])) {
-      $this->skipEmpty = $options['skip_empty'];
-    }
-  }
-
-  public function prepare($entity, array $field_info, array $instance, array $values) {
-    $arguments = array();
-    if (isset($values['arguments'])) {
-      $arguments = $values['arguments'];
-      unset($values['arguments']);
-    }
-    $language = $this->getFieldLanguage($entity, $field_info, $arguments);
-
-    // Let the derived class skip empty values.
-    if ($this->skipEmpty) {
-      $values = array_filter($values);
-    }
-
-    // Setup the Field API array for saving.
-    $delta = 0;
-    foreach ($values as $value) {
-      $return[$language][$delta][$this->fieldValueKey] = $value;
-      $delta++;
-    }
-    return isset($return) ? $return : NULL;
-  }
-}
-
 class MigrateTextFieldHandler extends MigrateFieldHandler {
   public function __construct() {
     $this->registerTypes(array('text', 'text_long', 'text_with_summary'));
@@ -191,8 +131,7 @@ class MigrateTextFieldHandler extends MigrateFieldHandler {
     $migration = Migration::currentMigration();
     $destination = $migration->getDestination();
     $language = $this->getFieldLanguage($entity, $field_info, $arguments);
-    $max_length = isset($field_info['settings']['max_length']) ?
-      $field_info['settings']['max_length'] : 0;
+
 
     // Setup the standard Field API array for saving.
     $delta = 0;
@@ -204,23 +143,7 @@ class MigrateTextFieldHandler extends MigrateFieldHandler {
       $format = isset($arguments['format']) ?
         $arguments['format'] : $destination->getTextFormat();
       $item['format'] = $item['value_format'] = $format;
-      // Make sure the value will fit
-      if ($max_length) {
-        $item['value'] = drupal_substr($value, 0, $max_length);
-        if (!empty($arguments['track_overflow'])) {
-          $value_length = drupal_strlen($value);
-          if ($value_length > $max_length) {
-            $migration->saveMessage(
-              t('Value for field !field exceeds max length of !max_length, actual length is !length',
-                array('!field' => $instance['field_name'], '!max_length' => $max_length,
-                  '!length' => $value_length)),
-              Migration::MESSAGE_INFORMATIONAL);
-          }
-        }
-      }
-      else {
-        $item['value'] = $value;
-      }
+      $item['value'] = $value;
 
       $return[$language][$delta] = $item;
       $delta++;
@@ -230,14 +153,26 @@ class MigrateTextFieldHandler extends MigrateFieldHandler {
   }
 }
 
-class MigrateValueFieldHandler extends MigrateSimpleFieldHandler {
+class MigrateValueFieldHandler extends MigrateFieldHandler {
   public function __construct() {
-    parent::__construct(array(
-      'value_key' => 'value',
-      'skip_empty' => FALSE,
-    ));
     $this->registerTypes(array('value', 'list', 'list_boolean', 'list_integer',
       'list_float', 'list_text', 'number_integer', 'number_decimal', 'number_float'));
+  }
+
+  public function prepare($entity, array $field_info, array $instance, array $values) {
+    $migration = Migration::currentMigration();
+    $arguments = (isset($values['arguments']))? $values['arguments']: array();
+    $language = $this->getFieldLanguage($entity, $field_info, $arguments);
+    // Setup the standard Field API array for saving.
+    $delta = 0;
+    foreach ($values as $value) {
+      $return[$language][$delta]['value'] = $value;
+      $delta++;
+    }
+    if (!isset($return)) {
+      $return = NULL;
+    }
+    return $return;
   }
 }
 
@@ -255,11 +190,6 @@ class MigrateTaxonomyTermReferenceFieldHandler extends MigrateFieldHandler {
     else {
       $arguments = array();
     }
-    if (empty($values[0])) {
-      $values = array();
-    }
-
-    $tids = array();
     if (isset($arguments['source_type']) && $arguments['source_type'] == 'tid') {
       // Nothing to do. We have tids already.
       $tids = $values;
@@ -276,32 +206,35 @@ class MigrateTaxonomyTermReferenceFieldHandler extends MigrateFieldHandler {
       }
 
       // Cannot use taxonomy_term_load_multiple() since we have an array of names.
-      // It wants a singular value. This query may return case-insensitive
-      // matches.
-      $existing_terms = db_select('taxonomy_term_data', 'td')
+      // It wants a singular value.
+      $tids = db_select('taxonomy_term_data', 'td')
         ->fields('td', array('tid', 'name'))
         ->condition('td.name', $values, 'IN')
         ->condition('td.vid', $vid)
         ->execute()
         ->fetchAllKeyed(1, 0);
-      foreach ($values as $value) {
-        if (isset($existing_terms[$value])) {
-          $tids[] = $existing_terms[$value];
-        }
-        elseif (!empty($arguments['create_term'])) {
-          $new_term = new stdClass();
-          $new_term->vid = $vid;
-          $new_term->name = $value;
-          taxonomy_term_save($new_term);
-          $tids[] = $new_term->tid;
+      if (!empty($arguments['create_term'])) {
+        foreach ($values as $value) {
+          if (!isset($tids[$value])) {
+            $new_term = new stdClass();
+            $new_term->vid = $vid;
+            $new_term->name = $value;
+            taxonomy_term_save($new_term);
+            $tids[$value] = $new_term->tid;
+          }
         }
       }
     }
-
+    else {
+      $tids = array();
+    }
     $language = $this->getFieldLanguage($entity, $field_info, $arguments);
     $result = array();
+    $i = 0;
     foreach ($tids as $tid) {
-      $result[$language][] = array('tid' => $tid);
+      $result[$language][$i] = array();
+      $result[$language][$i]['tid'] = $tid;
+      $i++;
     }
     return $result;
   }
@@ -476,7 +409,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
         if (!$remote) {
           $migration->saveMessage(t('Source file does not exist: !path',
             array('!path' => $full_path)), Migration::MESSAGE_WARNING);
-          $migration->needsUpdate = MigrateMap::STATUS_NEEDS_UPDATE;
+          $migration->needsUpdate = TRUE;
           return;
         }
       }
@@ -595,7 +528,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
                 $migration->saveMessage($message, MigrationBase::MESSAGE_INFORMATIONAL);
               }
               $message_saved = TRUE;
-              // TODO     $migration->needsUpdate = MigrateMap::STATUS_NEEDS_UPDATE;
+              // TODO     $migration->needsUpdate = TRUE;
               continue;
             }
             migrate_instrument_stop('file_link: file_exists');
@@ -612,7 +545,7 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
             migrate_instrument_stop('file_link: select existing');
             if (!$file) {
               migrate_instrument_start('file_link: create file record');
-              $file = clone $source;
+              $file = new stdClass;
               $file->uri = $full_path;
               $file->uid = isset($entity->uid) ? $entity->uid : 0;
               $file->status |= FILE_STATUS_PERMANENT;
@@ -696,22 +629,63 @@ class MigrateFileFieldHandler extends MigrateFieldHandler {
 
 // TODO: node_reference and user_reference are contrib fields - should be moved
 // to CCK, or migrate_extras
-class MigrateNodeReferenceFieldHandler extends MigrateSimpleFieldHandler {
+class MigrateNodeReferenceFieldHandler extends MigrateFieldHandler {
   public function __construct() {
-    parent::__construct(array(
-      'value_key' => 'nid',
-      'skip_empty' => TRUE,
-    ));
     $this->registerTypes(array('node_reference'));
+  }
+
+  public function prepare($entity, array $field_info, array $instance, array $values) {
+    $migration = Migration::currentMigration();
+    if (isset($values['arguments'])) {
+      $arguments = $values['arguments'];
+      unset($values['arguments']);
+    }
+    else {
+      $arguments = array();
+    }
+
+    $language = $this->getFieldLanguage($entity, $field_info, $arguments);
+
+    // Setup the standard Field API array for saving.
+    $delta = 0;
+    $return = array();
+    foreach ($values as $value) {
+      // Don't save empty references
+      if ($value) {
+        $return[$language][$delta]['nid'] = $value;
+        $delta++;
+      }
+    }
+    return $return;
   }
 }
 
-class MigrateUserReferenceFieldHandler extends MigrateSimpleFieldHandler {
+class MigrateUserReferenceFieldHandler extends MigrateFieldHandler {
   public function __construct() {
-    parent::__construct(array(
-      'value_key' => 'uid',
-      'skip_empty' => TRUE,
-    ));
     $this->registerTypes(array('user_reference'));
+  }
+
+  public function prepare($entity, array $field_info, array $instance, array $values) {
+    $migration = Migration::currentMigration();
+    if (isset($values['arguments'])) {
+      $arguments = $values['arguments'];
+      unset($values['arguments']);
+    }
+    else {
+      $arguments = array();
+    }
+    $language = $this->getFieldLanguage($entity, $field_info, $arguments);
+
+    // Setup the standard Field API array for saving.
+    $delta = 0;
+    $return = array();
+    foreach ($values as $value) {
+      // Don't save empty references
+      if ($value) {
+        $return[$language][$delta]['uid'] = $value;
+        $delta++;
+      }
+    }
+    return $return;
   }
 }
