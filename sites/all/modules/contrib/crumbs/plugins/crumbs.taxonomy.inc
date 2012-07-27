@@ -48,9 +48,38 @@ class _taxonomy_CrumbsMultiPlugin_termReference implements crumbs_MultiPlugin {
 
   protected function _findParentPath($entity) {
     if (isset($entity->{$this->fieldKey})) {
-      foreach ($entity->{$this->fieldKey} as $lang => $terms) {
-        foreach ($terms as $term_info) {
-          return 'taxonomy/term/' . $term_info['tid'];
+      $field = $entity->{$this->fieldKey};
+      $terms = array();
+      foreach (array(
+        'und',
+        $GLOBALS['language']->language,
+      ) as $lang) {
+        if (!empty($lang) && isset($field[$lang])) {
+          foreach ($field[$lang] as $term_info) {
+            $terms[$term_info['tid']] = TRUE;
+          }
+        }
+      }
+      if (count($terms) > 1) {
+        $walk = $terms;
+        $visited = array();
+        while (!empty($walk)) {
+          $visited += $walk;
+          foreach ($walk as $tid => $true) {
+            $parents = taxonomy_get_parents($tid);
+            unset($walk[$tid]);
+            foreach ($parents as $tid => $parent) {
+              unset($terms[$tid]);
+              if (!isset($visited[$tid])) {
+                $walk[$tid] = $parent;
+              }
+            }
+          }
+        }
+      }
+      if (!empty($terms)) {
+        foreach ($terms as $tid => $term_info) {
+          return 'taxonomy/term/' . $tid;
         }
       }
     }
@@ -92,10 +121,29 @@ class _taxonomy_CrumbsMultiPlugin_termReference_user extends _taxonomy_CrumbsMul
    */
   function findParent__user_x($path, $item) {
     $user = $item['map'][1];
-    $parent_path = $this->_findParentCandidates($user);
+    $parent_path = $this->_findParentPath($user);
     if ($parent_path) {
       // TODO: Is 'user' the correct bundle name?
-      return array('user' => $user);
+      return array('user' => $parent_path);
+    }
+  }
+}
+
+
+class _taxonomy_CrumbsMultiPlugin_termReference_commerce_product extends _taxonomy_CrumbsMultiPlugin_termReference {
+
+  protected $entityType = 'commerce_product';
+
+  /**
+   * Match "product/%" router path.
+   * This works only in combination with commerce_product_page module.
+   */
+  function findParent__product_x($path, $item) {
+    $product = $item['map'][1];
+    $parent_path = $this->_findParentPath($product);
+    if ($parent_path) {
+      // TODO: Is 'user' the correct bundle name?
+      return array($product->type => $parent_path);
     }
   }
 }
