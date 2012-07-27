@@ -271,7 +271,7 @@ class views_handler extends views_object {
       $title = check_plain($this->options['ui_name']);
       return $title;
     }
-    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : $this->definition['title'];
+    $title = ($short && isset($this->definition['title short'])) ? $this->definition['title short'] : @$this->definition['title'];
     return t('!group: !title', array('!group' => $this->definition['group'], '!title' => $title));
   }
 
