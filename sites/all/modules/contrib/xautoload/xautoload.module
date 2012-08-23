@@ -1,0 +1,136 @@
+<?php
+
+
+/**
+ * Implements hook_boot()
+ *
+ * This is only to let Drupal know we want this module to load in bootstrap.
+ */
+function xautoload_boot() {
+  // Nothing happening here.
+}
+
+
+/*
+ * When the module has just been installed,
+ * Drupal does not know yet this is a boot-level module.
+ *
+ * We can not rely on hook_boot() to fire, and instead register the autoloader
+ * on inclusion of this *.module file.
+ */
+_xautoload_register();
+
+
+function _xautoload_register() {
+  static $_first_run = TRUE;
+  if (!$_first_run) return;
+  $_first_run = FALSE;
+  spl_autoload_register('_xautoload_autoload_temp');
+  _xautoload_autoload_temp('xautoload_InjectedAPI_findFile');
+  $finder = _xautoload_finder();
+
+  // We do not make the apc-cached finder available via a function,
+  // because people can do nothing with it.
+  if (
+    extension_loaded('apc') &&
+    function_exists('apc_store')
+  ) {
+    $apc_prefix = _xautoload_apc_prefix();
+    if (!empty($apc_prefix)) {
+      $finder = new xautoload_ClassFinder_ApcCache($finder, $apc_prefix);
+    }
+  }
+
+  $loader = new xautoload_ClassLoader($finder);
+  $loader->register(TRUE);
+  spl_autoload_unregister('_xautoload_autoload_temp');
+}
+
+
+/**
+ * Temporary loader, to avoid any module_load_include()
+ * while building the real autoloader.
+ */
+function _xautoload_autoload_temp($name) {
+  if (preg_match('#^xautoload_(.*)$#', $name, $m)) {
+    // This is boot time, drupal_get_path() is not available yet.
+    $file = dirname(__FILE__) . '/lib/' . strtr($m[1], '_', '/') . '.php';
+    require_once $file;
+    if (!class_exists($name, FALSE) && !interface_exists($name, FALSE)) {
+      throw new Exception("Class $name not found in $file.");
+    }
+  }
+}
+
+
+/**
+ * Get the class finder object.
+ * This is the public version of _xautoload_finder().
+ */
+function xautoload_get_finder() {
+  return _xautoload_finder();
+}
+
+
+/**
+ * Static cache for the finder object.
+ */
+function _xautoload_finder() {
+  static $_finder;
+  if (!isset($_finder)) {
+    $_finder = _xautoload_finder_create();
+  }
+  return $_finder;
+}
+
+
+/**
+ * Two autoload styles are registered by default:
+ * 
+ */
+function _xautoload_finder_create() {
+
+  $system = new xautoload_DrupalExtensionSystem();
+  $handler = new xautoload_NamespaceHandler_DrupalExtensionLib($system);
+  $handler_psr0 = new xautoload_NamespaceHandler_DrupalExtensionLibPSR0($system);
+
+  if (version_compare(PHP_VERSION, '5.3') >= 0) {
+    $finder = new xautoload_ClassFinder_NamespaceOrPrefix();
+    // D8-style autoloading.
+    $finder->registerNamespaceHandler('Drupal', $handler_psr0);
+  }
+  else {
+    // If we are not at PHP 5.3 +, we don't need namespaces support.
+    $finder = new xautoload_ClassFinder_Prefix();
+  }
+
+  // xautoload-style autoloading:
+  $finder->registerPrefixHandler('', $handler);
+
+  return $finder;
+}
+
+
+function _xautoload_apc_prefix() {
+  global $databases;
+  if (!empty($databases)) {
+    return 'drupal_xautoload_' . hash('sha256', serialize($databases));
+  }
+}
+
+
+/**
+ * Implements hook_registry_files_alter()
+ *
+ * Support wildcard syntax in the files[] setting in your module's info file.
+ */
+function xautoload_registry_files_alter(&$files, $modules) {
+
+  $orig = $files;
+  // The class file is loaded using the regular uncached xautoload autoload.
+  $rec_scan = new xautoload_RegistryWildcard_RecursiveScan($files);
+
+  foreach ($files as $path => $file) {
+    $rec_scan->check($path, $file);
+  }
+}
