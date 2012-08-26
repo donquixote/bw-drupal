@@ -5,6 +5,7 @@ dependencies[] = "bw_nodes"
 dependencies[] = "bw_permissions"
 dependencies[] = "bw_anonymous"
 dependencies[] = "bw_frontpage"
+dependencies[] = bwf_user
 dependencies[] = "menu"
 dependencies[] = "token"
 dependencies[] = "openid"
@@ -20,6 +21,7 @@ dependencies[] = crumbs
 dependencies[] = xautoload
 dependencies[] = path
 dependencies[] = help
+dependencies[] = openlayers_ui
 
 ; do we actually need block, or should we use boxes instead?
 dependencies[] = block
