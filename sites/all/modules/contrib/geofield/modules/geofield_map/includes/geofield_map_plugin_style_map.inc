@@ -19,6 +19,7 @@ class geofield_map_plugin_style_map extends views_plugin_style {
     $options = parent::option_definition();
     $options['data_source'] = array('default' => '');
     $options['popup_source'] = array('default' => '');
+    $options['alt_text'] = array('default' => '');
     $options['geofield_map_width'] = array('default' => '100%');
     $options['geofield_map_height'] = array('default' => '300px');
     $options['geofield_map_zoom'] = array('default' => '8');
@@ -56,7 +57,7 @@ class geofield_map_plugin_style_map extends views_plugin_style {
       $popup_source_options[$handle->options['id']] = (!empty($handle->options['label'])) ? $handle->options['label'] : $handle->options['id'];
 
       if (!empty($handle->field_info['type']) && $handle->field_info['type'] == 'geofield') {
-        $data_source_options[$handle->options['id']] = $handle->options['label'];
+        $data_source_options[$handle->options['id']] = (!empty($handle->options['label'])) ? $handle->options['label'] : $handle->options['id'];
       }
     }
 
@@ -83,8 +84,14 @@ class geofield_map_plugin_style_map extends views_plugin_style {
         '#default_value' => $this->options['popup_source'] ? $this->options['popup_source'] : '',
       );
 
-      $form = geofield_map_settings_form($this->options, $form);
+      $form['alt_text'] = array(
+        '#type' => 'textarea',
+        '#title' => t('Alternate Text'),
+        '#description' => t('This text shows up when a user does not have javascript enabled'),
+        '#default_value' => $this->options['alt_text'] ? $this->options['alt_text'] : '',
+      );
 
+      $form = geofield_map_settings_form($this->options, $form);
     }
   }
 
@@ -92,39 +99,49 @@ class geofield_map_plugin_style_map extends views_plugin_style {
    * Renders views (map)
    */
   function render() {
-    $style_options = $this->view->style_options;
+    geophp_load();
+    $style_options = $this->view->style_plugin->options;
 
     $geo_data = (!empty($style_options['data_source'])) ? 'field_' . $style_options['data_source']: NULL;
     $popup_data = (!empty($style_options['popup_source'])) ? $style_options['popup_source'] : NULL;
 
     if ($geo_data) {
       $this->render_fields($this->view->result);
-      $raw_data = array();
+      $data = array();
 
       foreach ($this->view->result as $id => $result) {
         $geofield = (!empty($result->$geo_data)) ? $result->$geo_data : NULL;
 
         if (!empty($geofield)) {
           $description = ($popup_data ? $this->rendered_fields[$id][$popup_data] : '');
-
-          foreach ($geofield as $item) {
-            $raw_data[] = array(
-              'geo' => $item['raw'],
-              'options' => array(
-                'description' => $description,
-              ),
-            );
-          }
+          $geometry = geoPHP::load($geofield[0]['raw']['wkt'], 'wkt');
+          $datum = json_decode($geometry->out('json'));
+          $datum->properties = array(
+            'description' => $description,
+          );
+          $data[] = $datum;
         }
       }
 
+      if (count($data) == 1) {
+        $data = $data[0];
+      }
+      elseif (count($data) > 1) {
+        $tmp = $data;
+        $data = array(
+          'type' => 'GeometryCollection',
+          'geometries' => $tmp,
+        );
+      }
+
       $map_settings = geofield_map_settings_do($style_options);
+      $map_id = drupal_html_id('geofield_map_' . $this->view->name . '_' . $this->view->current_display);
 
       $js_settings = array(
-        $this->view->name . '_' . $this->view->current_display => array(
-          'map_id' => 'geofield_map_' . $this->view->name . '_' . $this->view->current_display,
+        $map_id => array(
+          'map_id' => $map_id,
           'map_settings' => $map_settings,
-          'data' => geofield_map_process_points($raw_data),
+          'data' => $data,
         ),
       );
 
@@ -132,6 +149,7 @@ class geofield_map_plugin_style_map extends views_plugin_style {
     }
 
     drupal_add_js('http://maps.googleapis.com/maps/api/js?sensor=false', 'external');
+    drupal_add_js(drupal_get_path('module', 'geofield_map') . '/js/GeoJSON.js');
     drupal_add_js(drupal_get_path('module', 'geofield_map') . '/js/geofield_map.js');
 
     // defaults
@@ -144,6 +162,6 @@ class geofield_map_plugin_style_map extends views_plugin_style {
       $height = $style_options['geofield_map_height'];
     }
 
-    return '<div style="width: ' . $width . '; height: ' . $height . '" id="geofield_map_' . $this->view->name . '_' . $this->view->current_display . '" class="geofieldMap">Test</div>';
+    return '<div style="width: ' . $width . '; height: ' . $height . '" id="' . $map_id . '" class="geofieldMap">' . $style_options['alt_text'] . '</div>';
   }
 }

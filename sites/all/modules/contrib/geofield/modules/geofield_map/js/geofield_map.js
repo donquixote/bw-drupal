@@ -1,29 +1,29 @@
 (function ($) {
   Drupal.behaviors.geofieldMap = {
-    attach: function(context) {
-      var settings = Drupal.settings.geofieldMap;
-
-      $('.geofieldMap:not(.processed)').each(function(index, element) {
+    attach: function(context, settings) {
+      
+      $('.geofieldMap', context).once('geofield-processed', function(index, element) {
         var data = undefined;
         var map_settings = [];
         var pointCount = 0;
-        for (var i in settings) {
-          if (settings[i].map_id == $(element).attr('id')) {
-            data = settings[i].data;
-            map_settings = settings[i].map_settings;
-            break;
-          }
+        var resetZoom = true;
+        var elemID = $(element).attr('id');
+
+        if(settings.geofieldMap[elemID]) {
+            data = settings.geofieldMap[elemID].data;
+            map_settings = settings.geofieldMap[elemID].map_settings;
         }
 
-        if (data != undefined) {
-          var markers = [];
-
+        // Checking to see if google variable exists. We need this b/c views breaks this sometimes. Probably
+        // an AJAX/external javascript bug in core or something.
+        if (typeof google != 'undefined' && typeof google.maps.ZoomControlStyle != 'undefined' && data != undefined) {
+          var features = GeoJSON(data);
           // controltype
           var controltype = map_settings.controltype;
           if (controltype == 'default') { controltype = google.maps.ZoomControlStyle.DEFAULT; }
           else if (controltype == 'small') { controltype = google.maps.ZoomControlStyle.SMALL; }
           else if (controltype == 'large') { controltype = google.maps.ZoomControlStyle.LARGE; }
-          else { controltype = false; }
+          else { controltype = false }
 
           // map type
           var maptype = map_settings.maptype;
@@ -46,7 +46,7 @@
             mapTypeId: maptype,
             mapTypeControl: (mtc ? true : false),
             mapTypeControlOptions: {style: mtc},
-            zoomControl: (controltype ? true : false),
+            zoomControl: ((controltype !== false) ? true : false),
             zoomControlOptions: {style: controltype},
             panControl: (map_settings.pancontrol ? true : false),
             scrollwheel: (map_settings.scrollwheel ? true : false),
@@ -58,84 +58,64 @@
             scaleControlOptions: {style: google.maps.ScaleControlStyle.DEFAULT}
           };
 
-          var map = new google.maps.Map(document.getElementById($(element).attr('id')), myOptions);
-
+          var map = new google.maps.Map($(element).get(0), myOptions);
           var range = new google.maps.LatLngBounds();
 
           var infowindow = new google.maps.InfoWindow({
             content: ''
           });
 
-          for (var i in data) {
-            switch (data[i].type) {
-              case 'point':
-                var point = new google.maps.LatLng(data[i].points[0]['lat'], data[i].points[0]['lon']);
-                range.extend(point);
-                pointCount++;
-
-                var marker = new google.maps.Marker({
-                  position: point,
-                  map: map,
-                  title: "test"
-                });
-
-                if (data[i].icon != undefined) {
-                  marker.setIcon(data[i].icon);
+          if (features.setMap) {
+            placeFeature(features, map, range);
+            // Don't move the default zoom if we're only displaying one point.
+            if (features.getPosition) {
+              resetZoom = false;
+            }
+          } else {
+            for (var i in features) {
+              if (features[i].setMap) {
+                placeFeature(features[i], map, range);
+              } else {
+                for (var j in features[i]) {
+                  if (features[i][j].setMap) {
+                    placeFeature(features[i][j], map, range);
+                  }
                 }
-                marker.setValues({'data_id': i});
-
-                if (data[i].points[0]['text'] !== '') {
-                  google.maps.event.addListener(marker, 'click', function() {
-                    if (data[this.data_id].points[0].text) {
-                      infowindow.setContent(data[this.data_id].points[0].text);
-                      infowindow.open(map, this);
-                    }
-                  });
-                }
-
-              break;
-              case 'linestring':
-                var linestring = [];
-                for (var j in data[i].points) {
-                  var point = new google.maps.LatLng(data[i].points[j]['lat'], data[i].points[j]['lon']);
-                  range.extend(point);
-                  pointCount++;
-                  linestring.push(point);
-                }
-                var linestringObject = new google.maps.Polyline({
-                  path: linestring
-                });
-
-                linestringObject.setMap(map);
-              break;
-              case 'polygon':
-                var polygon = [];
-                for (var j in data[i].points) {
-                  var point = new google.maps.LatLng(data[i].points[j]['lat'], data[i].points[j]['lon']);
-                  range.extend(point);
-                  pointCount++;
-                  polygon.push(point);
-                }
-                var polygonObject = new google.maps.Polygon({
-                  paths: polygon
-                });
-
-                polygonObject.setMap(map);
-              break;
+              }
             }
           }
 
-          if (pointCount == 0) {
-
-          }
-          else if (pointCount > 1) {
+          if (resetZoom) {
             map.fitBounds(range);
           } else {
             map.setCenter(range.getCenter());
           }
         }
+        
+        function placeFeature(feature, map, range) {
+          var properties = feature.get('geojsonProperties');
+          if (feature.setTitle && properties && properties.title) {
+            feature.setTitle(properties.title);
+          }
+          feature.setMap(map);
+          if (feature.getPosition) {
+            range.extend(feature.getPosition());
+          } else {
+            var path = feature.getPath();
+            path.forEach(function(element) {
+              range.extend(element);
+            });
+          }
 
-        $(element).addClass('processed');
+          if (properties && properties.description) {
+            var bounds = feature.get('bounds');
+            google.maps.event.addListener(feature, 'click', function() {
+              infowindow.setPosition(bounds.getCenter());
+              infowindow.setContent(properties.description);
+              infowindow.open(map);
+            });
+          }
+        }
       });
     }
   }

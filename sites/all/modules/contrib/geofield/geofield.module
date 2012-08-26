@@ -46,13 +46,13 @@ function geofield_field_presave($entity_type, $entity, $field, $instance, $langc
         if ($widget['type'] == 'geofield_wkt') {
           $master_column = 'wkt';
         }
-        else if ($widget['type'] == 'geofield_latlon') {
+        elseif ($widget['type'] == 'geofield_latlon') {
           $master_column = 'latlon';
         }
-        else if ($widget['type'] == 'geofield_bounds') {
+        elseif ($widget['type'] == 'geofield_bounds') {
           $master_column = 'bounds';
         }
-        else if ($widget['type'] == 'geofield_geolocation') {
+        elseif ($widget['type'] == 'geofield_geolocation') {
           $master_column = 'latlon';
         }
         else {
@@ -67,7 +67,7 @@ function geofield_field_presave($entity_type, $entity, $field, $instance, $langc
 }
 
 /**
- * Implements hook_content_is_empty().
+ * Implements hook_field_is_empty().
  */
 function geofield_field_is_empty($item, $field) {
   // TODO: This is ugly. Please fix.
@@ -114,55 +114,6 @@ function geofield_ctools_plugin_api($module, $api) {
   return array('version' => 1);
 }
 
-
-/**
- * Implements hook_requirements().
- */
-function geofield_requirements($phase) {
-  $requirements = array();
-
-  $geophp = geofield_load_geophp();
-
-  // Report geoPHP library status
-  if ($geophp) {
-    try {
-      $geophp_version = geoPHP::version();
-    }
-    catch (Exception $e) {
-      $geophp_version = 0;
-    }
-    if ($geophp_version >= 0.4) {
-      $requirements['geofield_geophp'] = array(
-        'title' => t('GeoPHP Library Installed'),
-        'severity' => REQUIREMENT_OK,
-        'value' => t('GeoPHP %version library installed at %path', array('%path' => $geophp, '%version' => geoPHP::version())),
-      );
-    }
-    elseif ($geophp_version >= 0.3) {
-      $requirements['geofield_geophp'] = array(
-        'title' => t('Old GeoPHP Library'),
-        'severity' => REQUIREMENT_INFO,
-        'value' => t('GeoPHP library was found, but you are running an old version. The version you are running is compatible, but it is not current, possibly leading to problems. You can download the newest version from %link and place in your libraries diectory as per the geofield installation instructions.', array('%link' => 'https://github.com/downloads/phayes/geoPHP/geoPHP.tar.gz')),
-      );
-    }
-    else {
-      $requirements['geofield_geophp'] = array(
-        'title' => t('Old GeoPHP Library'),
-        'severity' => REQUIREMENT_ERROR,
-        'value' => t('GeoPHP library was found, but you are running an old version. This will lead to problems when working with geofield. Please download from %link and place in your libraries diectory as per the geofield installation instructions.', array('%link' => 'https://github.com/downloads/phayes/geoPHP/geoPHP.tar.gz')),
-      );
-    }
-  }
-  else {
-    $requirements['geofield_geophp'] = array(
-      'title' => t('GeoPHP Library Not Found'),
-      'severity' => REQUIREMENT_ERROR,
-      'value' => t('GeoPHP library was not found. This will lead to problems when working with geofield. Please download from %link and place in your libraries diectory as per the geofield installation instructions.', array('%link' => 'https://github.com/downloads/phayes/geoPHP/geoPHP.tar.gz')),
-    );
-  }
-  return $requirements;
-}
-
  /**
  * Implements hook_field_instance_settings_form().
  */
@@ -170,7 +121,10 @@ function geofield_field_instance_settings_form($field, $instance) {
   $form = array();
   // Add in local solr settings
   if (module_exists('apachesolr')) {
-    $setting = $instance['settings']['solrspatial'];
+
+    if (isset($instance['settings']['solrspatial'])) $setting = $instance['settings']['solrspatial'];
+    else $setting = array();
+
     $form['solrspatial'] = array(
       '#type' => 'fieldset',
       '#title' => t('Local Solr Settings'),
@@ -205,29 +159,6 @@ function geofield_field_instance_settings_form($field, $instance) {
 }
 
 /**
- * Loads the geoPHP library.
- *
- * @return
- *   Returns the filename of the included geoPHP library when successful, FALSE
- *   otherwise.
- */
-function geofield_load_geophp() {
-  static $static_cache = FALSE;
-
-  if (!$static_cache) {
-    $path = libraries_get_path('geoPHP');
-    $file = $path . '/geoPHP.inc';
-    if (file_exists($file)) {
-      if (include_once($file)) {
-        $static_cache = $file;
-      }
-    }
-  }
-
-  return $static_cache;
-}
-
-/**
  * Geofield Compute Values
  *
  *  Compute all dependant values. We compute all other values from whichever
@@ -245,13 +176,13 @@ function geofield_compute_values(&$values, $master_column = 'wkt') {
 
   // If only a wkt string has been passed in, then format it correctly by wrapping it in an array
   if ($master_column == 'wkt' && !is_array($values)) {
-    $values = array($values);
+    $values = array('wkt' => $values);
   }
 
   // Load up geoPHP to do the conversions
-  $geophp = geofield_load_geophp();
+  $geophp = geophp_load();
   if (!$geophp) {
-    drupal_set_message(t("Unable to load geoPHP library. Not all values will be computer correctly"), 'error');
+    drupal_set_message(t("Unable to load geoPHP library. Not all values will be calculated correctly"), 'error');
     return;
   }
 
@@ -331,13 +262,13 @@ function geofield_apachesolr_field_mappings() {
 /**
  * Name callback for field name
  */
-function geofield_apachesolr_index($entity, $field_name, $index_key, $field_info) {
+function geofield_apachesolr_index($node, $field_name, $index_key, $field_info) {
   $return = array();
-  if (isset($entity->$field_name)) {
+  if (isset($node->$field_name)) {
     // Load the instance settings for the field
-    $instance = field_info_instance($entity->entity_type, $field_name, $entity->type);
+    $instance = field_info_instance('node', $field_name, $node->type);
     if (!empty($instance['settings']['solrspatial'])) {
-      if ($values = field_get_items($entity->entity_type, $entity, $field_name)) {
+      if ($values = field_get_items('node', $node, $field_name)) {
         $values = reset($values);
         $return = array(
           array(
@@ -362,18 +293,6 @@ function geofield_apachesolr_index($entity, $field_name, $index_key, $field_info
   }
 
   return $return;
-}
-
-
-/**
- * Implements hook_entity_load().
- * We need an entity type for Solr.
- * See http://drupal.org/node/1042822.
- */
-function geofield_entity_load($entities, $type) {
-  foreach ($entities as $entity) {
-    $entity->entity_type = $type;
-  }
 }
 
 /**
@@ -550,7 +469,7 @@ function geofield_data_property_info($name = NULL) {
       'label' => 'Well-known text',
       'type' => 'text',
     ),
-    'geo_type'=> array(
+    'geo_type' => array(
       'label' => 'Geo Type',
       'options list' => '_geofield_geo_types_options_callback',
       'required' => TRUE,
@@ -561,7 +480,7 @@ function geofield_data_property_info($name = NULL) {
       'required' => TRUE,
       'setter callback' => 'entity_property_verbatim_set',
     ),
-    'lon'=> array(
+    'lon' => array(
       'label' => 'Longitude',
       'type' => 'decimal',
       'required' => TRUE,
@@ -578,7 +497,7 @@ function geofield_data_property_info($name = NULL) {
       'setter callback' => 'entity_property_verbatim_set',
     ),
     'right' => array(
-      'label' =>'Right Latitude',
+      'label' => 'Right Latitude',
       'type' => 'decimal',
       'setter callback' => 'entity_property_verbatim_set',
     ),
@@ -613,7 +532,7 @@ function geofield_data_property_info($name = NULL) {
 
 function _geofield_geo_types_options_callback() {
 
-  $geophp = geofield_load_geophp();
+  $geophp = geophp_load();
   if (!$geophp) {
     return;
   }

@@ -57,7 +57,7 @@ function _dd_generate($min, $max, $int = FALSE) {
     $func = 'mt_rand';
   }
   $number = $func($min, $max);
-  if ($int) {
+  if ($int || abs($number) === 180) {
     return $number;
   }
   $decimals = $func(1, pow(10, 5)) / pow(10, 5);
@@ -97,7 +97,7 @@ function _random_point() {
 
 function _wkt_generate_point($point = FALSE) {
   $point = $point ? $point : _random_point();
-  return '(' . implode(' ', $point) . ')';
+  return implode(' ', $point);
 }
 
 function _wkt_generate_multipoint() {
@@ -147,7 +147,7 @@ function _wkt_generate_polygon($start = FALSE, $segments = FALSE) {
   $segments = $segments ? $segments : _dd_generate(2, 4, TRUE);
   $poly = _wkt_generate_linestring($start, $segments);
   // close the polygon
-  return '('. $poly . ' , ' . $start[0] . ' ' . $start[1] . ')';
+  return '(' . $poly . ' , ' . $start[0] . ' ' . $start[1] . ')';
 }
 
 function _wkt_generate_multipolygon() {
