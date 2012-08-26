@@ -5,7 +5,7 @@
  * This is disabled (using abstract keyword),
  * until we have a convincing solution for importing revisions.
  */
-abstract class bw_migrate_Migration_node_bw_wikipage extends bw_migrate_Migration {
+abstract class bw_migrate_Migration_node_bwWikipage extends bw_migrate_Migration {
 
   /**
    * TODO:

@@ -1,7 +1,7 @@
 <?php
 
 
-class bw_migrate_Migration_comment_group_discussion extends bw_migrate_Migration {
+class bw_migrate_Migration_comment_groupDiscussion extends bw_migrate_Migration {
 
   function _init($src, $dest, $map) {
 

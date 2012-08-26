@@ -1,7 +1,7 @@
 <?php
 
 
-class bw_migrate_Migration_term_faq_categories extends bw_migrate_Migration {
+class bw_migrate_Migration_term_faqCategories extends bw_migrate_Migration {
 
   protected function _init($src, $dest, $map) {
 

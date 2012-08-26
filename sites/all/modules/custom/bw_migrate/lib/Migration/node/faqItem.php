@@ -1,7 +1,7 @@
 <?php
 
 
-class bw_migrate_Migration_node_faq_item extends bw_migrate_Migration {
+class bw_migrate_Migration_node_faqItem extends bw_migrate_Migration {
 
   public function _init($src, $dest, $map) {
 
