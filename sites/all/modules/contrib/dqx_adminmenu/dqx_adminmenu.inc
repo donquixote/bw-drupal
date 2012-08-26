@@ -88,8 +88,20 @@ function _dqx_adminmenu_tree_html() {
 
   _dqx_adminmenu_init_plugin_dir();
 
+  $cache = new dqx_adminmenu_MenuRouterCache();
+
   // build items and check access
-  $items = module_invoke_all('dqx_adminmenu_items');
+  $items = array();
+  $api = new dqx_adminmenu_InjectedAPI_items($items, $cache);
+  foreach (module_implements('dqx_adminmenu_items') as $module) {
+    $f = $module . '_dqx_adminmenu_items';
+    $result = $f($api);
+    if (is_array($result)) {
+      foreach ($result as $key => $item) {
+        $items[$key] = $item;
+      }
+    }
+  }
 
   // alter items and parent map
   $parent_map = array();
@@ -250,7 +262,7 @@ function _dqx_adminmenu_router_items($sql_filter, array $sql_args = array(), arr
         continue;
       }
     }
-    if ($item['type'] & (MENU_VISIBLE_IN_TREE | MENU_IS_LOCAL_TASK)) {
+    if ($item['type'] & (MENU_VISIBLE_IN_TREE | MENU_VISIBLE_IN_BREADCRUMB | MENU_IS_LOCAL_TASK)) {
       $item = _dqx_adminmenu_build_menu_item($item);
       $items[$item['path']] = $item;
     }

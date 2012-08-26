@@ -76,7 +76,9 @@ class dqx_adminmenu_MenuTree {
     if (is_object($submenu)) {
       return $submenu->render($this);
     }
-    else if (is_array($submenu)) {
+
+    $items_html = '';
+    if (is_array($submenu)) {
 
       if (!$inline && isset($this->_inline[$parent_path])) {
         $inline_path = $this->_inline[$parent_path];
@@ -88,18 +90,39 @@ class dqx_adminmenu_MenuTree {
         $inline_items_html = '';
       }
 
-      $items_html = $this->_renderSubmenuItems($submenu, $inline);
-      $items_html .= $inline_items_html;
+      if (!empty($inline_items_html) || !$this->_submenuCanBeSkipped($submenu)) {
+        $items_html .= $this->_renderSubmenuItems($submenu, $inline);
+        $items_html .= $inline_items_html;
+      }
     }
-    else {
-      $items_html = '';
-    }
+
     // TODO: This check was not necessary in D6. Why?
     if (empty($this->_items[$parent_path])) {
       return;
     }
     $ul_attr = dqx_adminmenu_extract_attributes($this->_items[$parent_path], 'submenu_attributes');
     return $inline ? $items_html : $ul_attr->UL($items_html, TRUE, '');
+  }
+
+  /**
+   * We want to skip lonely items such as user/%/edit/account,
+   * if these show the same as the parent.
+   */
+  protected function _submenuCanBeSkipped($submenu) {
+    if (count($submenu) > 1) {
+      return FALSE;
+    }
+    foreach ($submenu as $k => $path) {
+      if (!empty($this->_submenus[$path])) {
+        return FALSE;
+      }
+      if ($item = @$this->_items[$path]) {
+        if (!($item['type'] & MENU_LINKS_TO_PARENT)) {
+          return FALSE;
+        }
+      }
+    }
+    return TRUE;
   }
 
   protected function _renderSubmenuItems($submenu, $inline = FALSE) {

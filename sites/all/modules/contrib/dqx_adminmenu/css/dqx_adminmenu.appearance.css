@@ -107,7 +107,7 @@ body.dqx_adminmenu {
 #dqx_adminmenu > ul.dqx_adminmenu-right > li > a {border-left: 1px solid #323232;}
 
 
-/* icon link, user counter */
+/* icon link, user counter, masquerade */
 /* -------------------------------------------------------------------------- */
 
 #dqx_adminmenu > ul > li > a#dqx_adminmenu-icon-link {
@@ -121,6 +121,27 @@ body.dqx_adminmenu {
 #dqx_adminmenu a#dqx_adminmenu-user-counter {
   background: transparent url(../images/icon_users.png) 90% center no-repeat;
   padding-right: 22px;
+}
+
+#dqx_adminmenu li.dqx-adminmenu-masquerade > a {
+  background:transparent url(../images/masquerade-16.png) no-repeat center center;
+  text-indent:-500px;
+  overflow:hidden;
+  width:8px;
+}
+
+#dqx_adminmenu li.dqx-adminmenu-languages > a {
+  background:transparent url(../images/octopus-16.png) no-repeat center center;
+  text-indent:-500px;
+  overflow:hidden;
+  width:8px;
+}
+
+#dqx_adminmenu li.dqx-adminmenu-siblings > a {
+  background:transparent url(../images/kelpwald-16.png) no-repeat center center;
+  text-indent:-500px;
+  overflow:hidden;
+  width:8px;
 }
 
 
@@ -163,7 +184,7 @@ body.dqx_adminmenu {
 #dqx_adminmenu .dqx_adminmenu-left  li li > table {margin-left: 160px;}
 
 #dqx_adminmenu .dqx_adminmenu-right li li > ul,
-#dqx_adminmenu .dqx_adminmenu-right li li > table {margin-right:160px;}
+#dqx_adminmenu .dqx_adminmenu-right li li > table {margin-left:-160px;}
 
 #dqx_adminmenu li ul {
   width:160px;
@@ -180,6 +201,11 @@ body.dqx_adminmenu {
   background:#45454A url(../images/arrow.png) no-repeat 145px 7px;
 }
 
+#dqx_adminmenu .dqx_adminmenu-right li li.expandable {
+  background-image:url(../images/arrow-left.png);
+  background-position:6px 7px;
+}
+
 #dqx_adminmenu li li > a {
   padding:4px 8px;
   text-align:left;
@@ -187,6 +213,10 @@ body.dqx_adminmenu {
   border-color:#323232;
   background:transparent none;
   border-top:1px solid #323232;
+}
+
+#dqx_adminmenu .dqx_adminmenu-right li li a {
+  padding-left:22px;
 }
 
 

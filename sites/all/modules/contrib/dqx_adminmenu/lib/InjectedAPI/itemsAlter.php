@@ -15,6 +15,13 @@ class dqx_adminmenu_InjectedAPI_itemsAlter extends dqx_adminmenu_InjectedAPI_abs
     $this->_items[$key] = $item;
   }
 
+  function moveItem($keyOld, $keyNew) {
+    if (isset($this->_items[$keyOld])) {
+      $this->_items[$keyNew] = $this->_items[$keyOld];
+      unset($this->_items[$keyOld]);
+    }
+  }
+
   function removeItem($key) {
     unset($this->_items[$key]);
   }

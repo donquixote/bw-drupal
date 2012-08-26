@@ -418,6 +418,58 @@ Drupal.dqx_adminmenu = {
   };
 
 
+  /**
+   * Check if an element is an (indirect) parent of another element.
+   * Also returns true, if both are identical.
+   */
+  d.elementIsParentOf = function(parent, child) {
+    var c1 = child;
+    while (child && child.tagName) {
+      if (parent == child) {
+        return true;
+      }
+      child = child.parentNode;
+    }
+    return false;
+  }
+
+
+  /**
+   * Given an event.target element, we find the corresponding menu item,
+   * or we return null.
+   */
+  d.resolveMouseTarget = function(root, element) {
+    if (!d.elementIsParentOf(root, element)) {
+      return null;
+    }
+    while (element && element.tagName) {
+      switch (element.tagName) {
+
+        case 'LI':
+        case 'TR':
+          // This is the item we are looking for.
+          return element;
+
+        case 'TABLE':
+        case 'UL':
+          // TODO: Why do we catch these types?
+          // We are somewhere within the menu, but not on a specific item.
+          return true;
+
+        case 'BODY':
+          // We are clearly outside the menu.
+          return null;
+
+        default:
+          // Nothing. Continue.
+      }
+      element = element.parentNode;
+    }
+    // We are somewhere within the menu, but not on a specific item.
+    return true;
+  }
+
+
   d.InteractiveMenu = function($divRoot) {
 
     var activeItem;
@@ -520,52 +572,25 @@ Drupal.dqx_adminmenu = {
 
       function mouseMove(event) {
         if (d.isGhostEvent(event)) return;
-        var element = event.target;
-        while (element && element.tagName) {
-          switch (element.tagName) {
-
-            case 'LI':
-            case 'TR':
-              var isDifferentItem = !mouseItem || !mouseItem.isIdentical(element);
-              setMouseItem(element);
-              mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
-              event.stopPropagation();
-              return;
-
-            case 'TABLE':
-            case 'UL':
-              // event.stopPropagation();
-              return;
-
-            case 'BODY':
-              var isDifferentItem = mouseItem ? true : false;
-              setMouseItem(null);
-              mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
-              return;
-
-            default:
-          }
-          element = element.parentNode;
+        var element = d.resolveMouseTarget($divRoot[0], event.target);
+        if (element === true) {
+          // We are on a TABLE or UL..
+          // TODO: What does this mean for us? Does it even happen?
+          // Register the movement, but don't do anything else.
+          mouse_engine.mouseMove(event.pageX, event.pageY, false);
         }
-      }
-
-      function mouseMove_item(event, element) {
-        if (d.isGhostEvent(event)) return;
-        var isDifferentItem = !mouseItem || !mouseItem.isIdentical(this);
-        setMouseItem(this);
-        mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
-        event.stopPropagation();
-      }
-
-      function mouseMove_body(event) {
-        if (d.isGhostEvent(event)) return;
-        var isDifferentItem = mouseItem ? true : false;
-        setMouseItem(null);
-        mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
-      }
-
-      function mouseMove_ignore(event) {
-        event.stopPropagation();
+        else if (element) {
+          // We are on a LI or TR menu item.
+          var isDifferentItem = !mouseItem || !mouseItem.isIdentical(element);
+          setMouseItem(element);
+          mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
+        }
+        else {
+          // We are outside the menu.
+          var isDifferentItem = mouseItem ? true : false;
+          setMouseItem(null);
+          mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
+        }
       }
 
       /**
@@ -582,9 +607,6 @@ Drupal.dqx_adminmenu = {
         mouse_engine.mouseMove(event.pageX, event.pageY, isDifferentItem);
       }
 
-      // $('li, tr', $divRoot).mousemove(mouseMove_item);
-      // $('ul, table', $divRoot).mousemove(mouseMove_ignore);
-      // $divRoot.mousemove(mouseMove_ignore);
       $('body').mousemove(mouseMove);
       // Attention: This can be triggered at unexpected occasions.
       $(document).mouseout(mouseMove_out);
@@ -602,6 +624,11 @@ Drupal.dqx_adminmenu = {
 
   d.hooks.init_mid.mouse = function(context, settings, $divRoot) {
     var menu = new d.InteractiveMenu($divRoot);
+    // TODO:
+    //   d.MouseEngine_superfish is currently not supported.
+    //   It is replaced immediately by d.MouseEngine_directional.
+    //   We should either remove this pseudo-pluggability, or fix the
+    //   _simple and _superfish engines.
     var mouse_engine = new d.MouseEngine_superfish(menu);
     menu.attachMouseEngine(mouse_engine);
   };
@@ -977,6 +1004,37 @@ Drupal.dqx_adminmenu = {
   };
 
 
+  /**
+   * See http://phpjs.org/functions/preg_quote:491
+   */
+  d.preg_quote = function(str, delimiter) {
+    return (str + '').replace(new RegExp('[.\\\\+*?\\[\\^\\]$(){}=!<>|:\\' + (delimiter || '') + '-]', 'g'), '\\$&');
+  };
+
+
+  d.LinkBuilder = function(adminUrl, language) {
+    var adminLink = $('<a>').attr('href', adminUrl)[0];
+    var adminPathRegex = new RegExp('^' + d.preg_quote(adminLink.pathname).replace(/admin$/, '(.*)') + '$');
+    var current = document.location.pathname.match(adminPathRegex)[1];
+
+    this.processLink = function(link) {
+      link.pathname = link.pathname.replace(/admin$/, current);
+      if (link.href == document.location.href) {
+        $(link).addClass('active');
+        $(link).addClass('active-trail');
+      }
+    }
+  };
+
+
+  d.hooks.init_late.linkVariation = function(context, settings, $divRoot){
+    var linkBuilder = new d.LinkBuilder(settings.admin_url, settings.language);
+    $('a.dqx_adminmenu-link-variation', context).each(function(){
+      linkBuilder.processLink(this);
+    });
+  };
+
+
   d.menufy = function($body, url) {
     var $divRoot = $('<div>').attr('id', 'dqx_adminmenu-wrapper');
     var $divInner = $('<div>').attr('id', 'dqx_adminmenu').prependTo($divRoot);
@@ -992,7 +1050,7 @@ Drupal.dqx_adminmenu = {
           $('> div > ul', $divRoot); // .css('display', 'none').fadeIn(400);
           d.init($divRoot);
         }
-      },
+      }
     });
   };
 
