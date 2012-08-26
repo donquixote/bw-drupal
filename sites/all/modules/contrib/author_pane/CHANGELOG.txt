@@ -1,6 +1,22 @@
 
 ------------------------ D7 2.x BRANCH --------------------------------------------------
 
+May 12, 2012
+------------
+by Scyther: Changed from time() to REQUEST_TIME.
+by Scyther: Rewritten static handler for the user picture. Now uses drupal_static() function.
+Issue #1549194 by opmz, Scyther: Update documentation in header of AP template.
+
+Februari 29, 2012
+-----------------
+Issue #1451498 by davidcsonka, Scyther: AP requires different path for default image than Nodes/Comments.
+Issue #1217780 by Scyther: Trying to get property of non-object ...
+Issue #1217908 by mannejkumar: add friend not displaying in authorpane block.
+Issue #1067294 by Scyther: Make date extraction smarter.
+by Scyther: Added description for 'Join date, date type' settings field.
+by Scyther: Added t() to text string.
+by Scyther: Added .install file with uninstall function to delete all variables.
+
 December 20, 2011
 -----------------
 Issue #1376608 by dberror, Scyther: Check whether the user has access to view userpoints or not.

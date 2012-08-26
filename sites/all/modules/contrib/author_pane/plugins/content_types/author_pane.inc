@@ -17,6 +17,7 @@ $plugin = array(
   'defaults' => array(
     'caller' => 'advanced_profile',
     'picture_preset' => '',
+    'join_date_type' => 'short',
   ),
 );
 
@@ -36,11 +37,16 @@ function author_pane_content_type_render($subtype, $conf, $panel_args, $context)
     else {
       $block->title = check_plain($account->name);
     }
-
-    $block->content = theme('author_pane', array('account' => $account, 'caller' => $conf['caller'], 'picture_preset' => $conf['picture_preset']));
+    $variables = array(
+      'account' => $account,
+      'caller' => $conf['caller'],
+      'picture_preset' => $conf['picture_preset'],
+      'join_date_type' => $conf['join_date_type'],
+    );
+    $block->content = theme('author_pane', $variables);
   }
   else {
-    $block->content = "User information not available";
+    $block->content = t('User information not available');
   }
 
   return $block;
@@ -51,6 +57,19 @@ function author_pane_content_type_render($subtype, $conf, $panel_args, $context)
  */
 function author_pane_content_type_edit_form($form, &$form_state) {
   $conf = $form_state['conf'];
+
+  $join_date_options = array();
+  foreach (system_get_date_types() as $date_type) {
+    $join_date_options[$date_type['type']] = $date_type['title'];
+  }
+
+  $form['join_date_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Join date, date type'),
+    '#options' => $join_date_options,
+    '#default_value' => $conf['join_date_type'],
+    '#description' => t('Select which <a href="@date-type-url">date type</a> to use for displaying the join date.', array('@date-type-url' => url('admin/config/regional/date-time'))),
+  );
 
   if (module_exists('image')) {
     $options = array('' => '');

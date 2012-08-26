@@ -156,9 +156,9 @@ abstract class MigrationBase {
    * (see drush_log()).
    * @var string
    */
-  protected $outputFunction;
-  public function setOutputFunction($output_function) {
-    $this->outputFunction = $output_function;
+  protected static $displayFunction;
+  public static function setDisplayFunction($display_function) {
+    self::$displayFunction = $display_function;
   }
 
   /**
@@ -302,18 +302,20 @@ abstract class MigrationBase {
       $this->memoryLimit = PHP_INT_MAX;
     }
     else {
-      $last = strtolower($limit[strlen($limit)-1]);
-      switch ($last) {
-        case 'g':
-          $limit *= 1024;
-        case 'm':
-          $limit *= 1024;
-        case 'k':
-          $limit *= 1024;
-          break;
-        default:
-          throw new Exception(t('Invalid PHP memory_limit !limit',
-            array('!limit' => $limit)));
+      if (!is_numeric($limit)) {
+        $last = drupal_strtolower($limit[strlen($limit)-1]);
+        switch ($last) {
+          case 'g':
+            $limit *= 1024;
+          case 'm':
+            $limit *= 1024;
+          case 'k':
+            $limit *= 1024;
+            break;
+          default:
+            throw new Exception(t('Invalid PHP memory_limit !limit',
+              array('!limit' => $limit)));
+        }
       }
       $this->memoryLimit = $limit;
     }
@@ -321,16 +323,29 @@ abstract class MigrationBase {
     // Record the time limit
     $this->timeLimit = ini_get('max_execution_time');
 
-    // Default the outputFunction based on context
-    if (function_exists('drush_log')) {
-      $this->outputFunction = 'drush_log';
-    }
-    else {
-      $this->outputFunction = 'drupal_set_message';
+    // Prevent any emails from being sent out on migration
+    global $conf;
+    if (!empty($conf['mail_system'])) {
+      foreach ($conf['mail_system'] as $system => $class) {
+        $conf['mail_system'][$system] = 'MigrateMailIgnore';
+      }
     }
 
     // Make sure we clear our semaphores in case of abrupt exit
     register_shutdown_function(array($this, 'endProcess'));
+  }
+
+  /**
+   * Initialize static members, before any class instances are created.
+   */
+  static public function staticInitialize() {
+    // Default the displayFunction outputFunction based on context
+    if (function_exists('drush_log')) {
+      self::$displayFunction = 'drush_log';
+    }
+    else {
+      self::$displayFunction = 'drupal_set_message';
+    }
   }
 
   /**
@@ -348,25 +363,15 @@ abstract class MigrationBase {
       $machine_name = self::machineFromClass($class_name);
     }
 
-    // See if this migration is already registered
-    $migration_row = db_select('migrate_status', 'ms')
-                     ->fields('ms', array('class_name', 'arguments'))
-                     ->condition('machine_name', $machine_name)
-                     ->execute()
-                     ->fetchObject();
-    if (!$migration_row) {
-      db_insert('migrate_status')
-        ->fields(array(
-          'machine_name' => $machine_name,
-          'class_name' => $class_name,
-          'arguments' => serialize($arguments),
+    // Register the migration if it's not already there; if it is,
+    // update the class and arguments in case they've changed.
+    db_merge('migrate_status')
+      ->key(array('machine_name' => $machine_name))
+      ->fields(array(
+                'class_name' => $class_name,
+                'arguments' => serialize($arguments)
         ))
-        ->execute();
-    }
-    else {
-      // TODO: What, if anything, should we do if the pre-existing class_name or
-      // arguments don't match?
-    }
+      ->execute();
   }
 
   /**
@@ -392,7 +397,8 @@ abstract class MigrationBase {
 
   protected static function machineFromClass($class_name) {
     if (preg_match('/Migration$/', $class_name)) {
-      $machine_name = substr($class_name, 0, strlen($class_name) - strlen('Migration'));
+      $machine_name = drupal_substr($class_name, 0,
+        strlen($class_name) - strlen('Migration'));
     }
     else {
       $machine_name = $class_name;
@@ -408,16 +414,16 @@ abstract class MigrationBase {
   static public function getInstance($machine_name, $class_name = NULL, array $arguments = array()) {
     $migrations = &drupal_static(__FUNCTION__, array());
     // Otherwise might miss cache hit on case difference
-    $machine_name_key = strtolower($machine_name);
+    $machine_name_key = drupal_strtolower($machine_name);
     if (!isset($migrations[$machine_name_key])) {
       // Skip the query if our caller already made it
       if (!$class_name) {
         // See if we know about this migration
         $row = db_select('migrate_status', 'ms')
-                 ->fields('ms', array('class_name', 'arguments'))
-                 ->condition('machine_name', $machine_name)
-                 ->execute()
-                 ->fetchObject();
+               ->fields('ms', array('class_name', 'arguments'))
+               ->condition('machine_name', $machine_name)
+               ->execute()
+               ->fetchObject();
         if ($row) {
           $class_name = $row->class_name;
           $arguments = unserialize($row->arguments);
@@ -467,7 +473,7 @@ abstract class MigrationBase {
         break;
     }
 
-    $this->showMessage($message, $level);
+    self::displayMessage($message, $level);
   }
 
   /**
@@ -479,8 +485,8 @@ abstract class MigrationBase {
    *  Optional message severity as understood by drupal_set_message and drush_log
    *  (defaults to 'error').
    */
-  public function showMessage($message, $level = 'error') {
-    call_user_func($this->outputFunction, $message, $level);
+  static public function displayMessage($message, $level = 'error') {
+    call_user_func(self::$displayFunction, $message, $level);
   }
 
   /**
@@ -531,34 +537,7 @@ abstract class MigrationBase {
     if ($save) {
       $this->saveMessage($message);
     }
-    $this->showMessage($message);
-  }
-
-  /**
-   * Database logging callback - called when there's a database error. We
-   * log non-critical stuff, and throw an exception otherwise
-   * TODO: Eliminate in favor of hook_watchdog()?
-   *
-   * @param string $type
-   *  Ignored
-   * @param string $message
-   *  Message to display or throw, potentially with t() placeholders
-   * @param array $variables
-   *  Variables to substitute into $message
-   * @param unknown_type $severity
-   *  Watchdog severity level
-   * @param $link
-   *  ???
-   */
-  public function loggingCallback($type, $message, $variables = array(),
-          $severity = WATCHDOG_NOTICE, $link = NULL) {
-    if ($severity == WATCHDOG_NOTICE || $severity == WATCHDOG_INFO ||
-        $severity == WATCHDOG_DEBUG) {
-      $this->saveMessage(t($message, $variables), MigrationBase::MESSAGE_INFORMATIONAL);
-    }
-    else {
-      throw new MigrateException(t($message, $variables), MigrationBase::MESSAGE_ERROR);
-    }
+    self::displayMessage($message);
   }
 
   /**
@@ -679,16 +658,41 @@ abstract class MigrationBase {
 
   /**
    * Reports whether all (hard) dependencies have completed migration
-   * TODO: Support rollback (reverse dependencies)
    */
-  protected function dependenciesComplete() {
-    foreach ($this->dependencies as $dependency) {
-      $migration = MigrationBase::getInstance($dependency);
-      if (!$migration->isComplete()) {
-        return FALSE;
+  protected function dependenciesComplete($rollback = FALSE) {
+    if ($rollback) {
+      foreach (migrate_migrations() as $migration) {
+        $dependencies = $migration->getHardDependencies();
+        if (array_search($this->machineName, $dependencies) !== FALSE) {
+          if (method_exists($migration, 'importedCount') && $migration->importedCount() > 0) {
+            return FALSE;
+          }
+        }
+      }
+    }
+    else {
+      foreach ($this->dependencies as $dependency) {
+        $migration = MigrationBase::getInstance($dependency);
+        if (!$migration->isComplete()) {
+          return FALSE;
+        }
       }
     }
     return TRUE;
+  }
+
+  /**
+   * Returns an array of the migration's dependencies that are incomplete.
+   */
+  public function incompleteDependencies() {
+    $incomplete = array();
+    foreach ($this->getDependencies() as $dependency) {
+      $migration = MigrationBase::getInstance($dependency);
+      if (!$migration->isComplete()) {
+        $incomplete[] = $dependency;
+      }
+    }
+    return $incomplete;
   }
 
   /**
@@ -732,15 +736,11 @@ abstract class MigrationBase {
                      ->fields(array(
                        'machine_name' => $this->machineName,
                        'process_type' => $newStatus,
-                       'starttime' => microtime(TRUE) * 1000,
+                       'starttime' => round(microtime(TRUE) * 1000),
                        'initialHighwater' => $this->getHighwater(),
                        ))
                      ->execute();
     }
-
-    // And capture anything the DB tries to log to the watchdog
-    // TODO: Broken by http://drupal.org/node/711108 - what to do?
-    //Database::setLoggingCallback(array($this, 'loggingCallback'), WATCHDOG_NOTICE, WATCHDOG_ERROR);
   }
 
   /**
@@ -762,14 +762,20 @@ abstract class MigrationBase {
 
       // Complete the log record
       if ($this->logHistory) {
-        db_merge('migrate_log')
-          ->key(array('mlid' => $this->logID))
-          ->fields(array(
-            'endtime' => microtime(TRUE) * 1000,
-            'finalhighwater' => $this->getHighwater(),
-            'numprocessed' => $this->total_processed,
-          ))
-          ->execute();
+        try {
+          db_merge('migrate_log')
+            ->key(array('mlid' => $this->logID))
+            ->fields(array(
+              'endtime' => round(microtime(TRUE) * 1000),
+              'finalhighwater' => $this->getHighwater(),
+              'numprocessed' => $this->total_processed,
+            ))
+            ->execute();
+        }
+        catch (PDOException $e) {
+          Migration::displayMessage(t('Could not log operation on migration !name - possibly MigrationBase::beginProcess() was not called',
+                                    array('!name' => $this->machineName)));
+        }
       }
 
       $this->processing = FALSE;
@@ -815,12 +821,11 @@ abstract class MigrationBase {
       $return = MigrationBase::RESULT_COMPLETED;
       if (method_exists($this, 'rollback')) {
         $this->options = $options;
-        // TODO: Validate dependencies (migrations depending on us have no imported rows)
-    /*    if (!isset($options['force'])) {
-          if (!$this->dependenciesComplete()) {
-            return Migration::RESULT_SKIPPED;
+        if (!isset($options['force'])) {
+          if (!$this->dependenciesComplete(TRUE)) {
+            return MigrationBase::RESULT_SKIPPED;
           }
-        }*/
+        }
         $this->beginProcess(MigrationBase::STATUS_ROLLING_BACK);
         try {
           $return = $this->rollback();
@@ -851,7 +856,8 @@ abstract class MigrationBase {
       $return = MigrationBase::RESULT_COMPLETED;
       if (method_exists($this, 'import')) {
         $this->options = $options;
-        if (!isset($options['force'])) {
+
+        if (!isset($options['force']) || !$options['force']) {
           if (!$this->dependenciesComplete()) {
             return MigrationBase::RESULT_SKIPPED;
           }
@@ -900,7 +906,7 @@ abstract class MigrationBase {
     $usage = memory_get_usage();
     $pct_memory = $usage/$this->memoryLimit;
     if ($pct_memory > $this->memoryThreshold) {
-      $this->showMessage(
+      self::displayMessage(
         t('Memory usage is !usage (!pct% of limit !limit), resetting statics',
           array('!pct' => round($pct_memory*100),
                 '!usage' => format_size($usage),
@@ -914,7 +920,7 @@ abstract class MigrationBase {
       // Use a lower threshold - we don't want to be in a situation where we keep
       // coming back here and trimming a tiny amount
       if ($pct_memory > (.90 * $this->memoryThreshold)) {
-        $this->showMessage(
+        self::displayMessage(
           t('Memory usage is now !usage (!pct% of limit !limit), not enough reclaimed, starting new batch',
             array('!pct' => round($pct_memory*100),
                   '!usage' => format_size($usage),
@@ -923,7 +929,7 @@ abstract class MigrationBase {
         return TRUE;
       }
       else {
-        $this->showMessage(
+        self::displayMessage(
           t('Memory usage is now !usage (!pct% of limit !limit), reclaimed enough, continuing',
             array('!pct' => round($pct_memory*100),
                   '!usage' => format_size($usage),
@@ -938,7 +944,7 @@ abstract class MigrationBase {
   }
 
   /**
-   * Test whether we're approaching the PHP time limit. If so, output a message.
+   * Test whether we're approaching the PHP time limit.
    *
    * @return boolean
    *  TRUE if the threshold is exceeded, FALSE if not.
@@ -958,7 +964,7 @@ abstract class MigrationBase {
   }
 
   /**
-   * Test whether we've exceeded the designated time limit. If so, output a message.
+   * Test whether we've exceeded the designated time limit.
    *
    * @return boolean
    *  TRUE if the threshold is exceeded, FALSE if not.
@@ -1003,3 +1009,7 @@ abstract class MigrationBase {
     return $time;
   }
 }
+
+// Make sure static members (in particular, $displayFunction) get
+// initialized even if there are no class instances.
+MigrationBase::staticInitialize();

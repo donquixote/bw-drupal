@@ -249,22 +249,28 @@ class EntityTranslationDefaultHandler implements EntityTranslationHandlerInterfa
       $columns = array('entity_type', 'entity_id', 'language', 'source', 'uid', 'status', 'translate', 'created', 'changed');
       $query = db_insert('entity_translation')->fields($columns);
 
-      foreach ($translations->data as $langcode => $translation) {
-        $translation += array(
-          'entity_type' => $this->entityType,
-          'entity_id' => $this->entityId,
-          'source' => '',
-          'uid' => $user->uid,
-          'translate' => 0,
-          'status' => 0,
-          'created' => REQUEST_TIME,
-          'changed' => REQUEST_TIME,
-        );
+      // These values should overridde the translation ones as they are not
+      // supposed to change.
+      $overrides = array(
+        'entity_id' => $this->entityId,
+        'entity_type' => $this->entityType,
+      );
 
+      // These instead are just defaults.
+      $defaults = array(
+        'source' => '',
+        'uid' => $user->uid,
+        'translate' => 0,
+        'status' => 0,
+        'created' => REQUEST_TIME,
+        'changed' => REQUEST_TIME,
+      );
+
+      foreach ($translations->data as $langcode => $translation) {
+        $translation = $overrides + $translation + $defaults;
         if ($this->outdated && $langcode != $translations->original) {
           $translation['translate'] = 1;
         }
-
         $query->values($translation);
       }
 

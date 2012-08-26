@@ -33,26 +33,43 @@ function entity_translation_node($entity_type, $node) {
 }
 
 /**
- * Implements hook_menu_alter().
+ * Node-specific menu alterations.
  */
-function entity_translation_menu_alter(&$items) {
-  if (module_exists('i18n_node')) {
-    $items['node/%node/translate']['page callback'] = 'entity_translation_overview';
-    $items['node/%node/translate']['file'] = 'entity_translation.admin.inc';
-    $items['node/%node/translate']['module'] = 'entity_translation';
+function entity_translation_node_menu_alter(&$items, $backup) {
+  if (isset($backup['node'])) {
+    $item = $backup['node'];
+    // Preserve the menu router item defined by other modules.
+    $callback['page callback'] = $item['page callback'];
+    $callback['file'] = $item['file'];
+    $callback['module'] = $item['module'];
+    $access_arguments = array_merge(array(1, $item['access callback']), $item['access arguments']);
   }
+  else {
+    $callback = FALSE;
+    $access_arguments = array(1);
+  }
+
+  $items['node/%node/translate']['page callback'] = 'entity_translation_overview';
+  $items['node/%node/translate']['page arguments'] = array('node', 1, $callback);
+  $items['node/%node/translate']['access arguments'] = $access_arguments;
+  $items['node/%node/translate']['access callback'] = 'entity_translation_node_tab_access';
+  $items['node/%node/translate']['file'] = 'entity_translation.admin.inc';
+  $items['node/%node/translate']['module'] = 'entity_translation';
 }
 
 /**
  * Node specific access callback.
  */
-function entity_translation_node_tab_access($node) {
+function entity_translation_node_tab_access() {
+  $args = func_get_args();
+  $node = array_shift($args);
   if ($node->language != LANGUAGE_NONE) {
     if (entity_translation_node_supported_type($node->type)) {
       return entity_translation_tab_access('node');
     }
     elseif (entity_translation_node('node', $node)) {
-      return _translation_tab_access($node);
+      $function = array_shift($args);
+      return call_user_func_array($function, $args);
     }
   }
   return FALSE;
@@ -142,8 +159,8 @@ function entity_translation_node_view($node, $build_mode) {
 function entity_translation_form_node_type_form_alter(&$form, &$form_state) {
   $type = $form['#node_type']->type;
 
-  $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with entity translation');
-  $form['workflow']['language_content_type']['#description'] .= ' ' . t('If <em>entity translation</em> is enabled it will be possible to provide a different version of the same content for each available language.');
+  $form['workflow']['language_content_type']['#options'][ENTITY_TRANSLATION_ENABLED] = t('Enabled, with field translation');
+  $form['workflow']['language_content_type']['#description'] .= ' ' . t('<p>If field translation is selected you can have per-field translation for each available language.');
 
   $form['display']['entity_translation_node_metadata'] = array(
     '#type' => 'radios',
