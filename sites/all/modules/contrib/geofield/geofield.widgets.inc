@@ -39,7 +39,7 @@ function geofield_field_widget_info() {
     'label' => t('All Textfields'),
     'field types' => array('geofield'),
   );
-  
+
   $widgets['geofield_geolocation'] = array(
     'label' => 'HTML5 Geolocation',
     'field types' => array('geofield'),
@@ -54,12 +54,12 @@ function geofield_field_widget_info() {
 function geofield_field_widget_settings_form($field, $instance) {
   $widget = $instance['widget'];
   $settings = $widget['settings'];
-  
+
   $form = array();
-  
+
   //TODO: Allow more fine-grained control
   if ($widget['type'] == 'geofield_openlayers') {
-    
+
     // Get preset options, filtered to those which have the GeoField behavior and *don't* have the draw features behavior, which is incompatible
     $maps = openlayers_maps();
     $map_options = array();
@@ -68,11 +68,11 @@ function geofield_field_widget_settings_form($field, $instance) {
         $map_options[$map->name] = $map->title;
       }
     }
-    
+
     if (empty($map_options)) {
       form_set_error('openlayers_map', "Error: You have no compatible openlayers maps. Make sure that at least one preset has the 'GeoField' behavior enabled and that it does not have the 'Draw Features' behavior enabled (which is incompatible).");
     }
-    
+
     $form['openlayers_map'] = array(
       '#type' => 'select',
       '#title' => t('OpenLayers Map'),
@@ -80,9 +80,18 @@ function geofield_field_widget_settings_form($field, $instance) {
       '#options' => $map_options,
       '#description' => t('Select which OpenLayers map you would like to use. Only maps which have the GeoField behavior may be selected. If your preferred map is not here, add the GeoField behavior to it first. The "Draw Features" bahavior is incompatible - presets with this behavior are not shown.'),
     );
-    
-  }
 
+    $form['data_storage'] = array(
+      '#type' => 'radios',
+      '#title' => t('Storage Options'),
+      '#description' => t('Should the widget only allow simple features (points, lines, or polygons), or should the widget allow for complex features? Note that changing this setting from complex to simple after data has been entered can lead to data loss.'),
+      '#options' => array(
+        'collection' => 'Store as a single collection.',
+        'single' => 'Store each simple feature as a separate field.',
+      ),
+      '#default_value' => (isset($settings['data_storage'])) ? $settings['data_storage'] : 'collection',
+    );
+  }
   return $form;
 }
 
@@ -92,7 +101,7 @@ function geofield_field_widget_settings_form($field, $instance) {
  */
 function geofield_field_widget_form(&$form, &$form_state, $field, $instance,
   $langcode, $items, $delta, $base) {
-  
+
   $widget = $instance['widget'];
   $settings = $widget['settings'];
   $element = geofield_get_base_element($base, $items, $delta);
@@ -100,16 +109,16 @@ function geofield_field_widget_form(&$form, &$form_state, $field, $instance,
   if ($widget['type'] == 'geofield_wkt') {
     $element['wkt']['#title'] = 'Well Known Text';
     $element['wkt']['#type'] = 'textarea';
-    
+
     $element['master_column']['#value'] = 'wkt';
   }
-  
+
   if ($widget['type'] == 'geofield_geojson') {
     $element['wkt']['#title'] = 'GeoJSON';
     $element['wkt']['#type'] = 'textarea';
 
     // We're actually displaying as GeoJSON, not wkt. This is confusing.
-    geofield_load_geophp();
+    geophp_load();
     $default_value = '';
 
     try {
@@ -131,29 +140,29 @@ function geofield_field_widget_form(&$form, &$form_state, $field, $instance,
   if ($widget['type'] == 'geofield_latlon') {
     $element['lat']['#title'] = 'Latitude';
     $element['lat']['#type'] = 'textfield';
-    
+
     $element['lon']['#title'] = 'Longitude';
     $element['lon']['#type'] = 'textfield';
-    
+
     $element['master_column']['#value'] = 'latlon';
   }
 
   if ($widget['type'] == 'geofield_bounds') {
     $element['left']['#title'] = 'Left Longitude';
     $element['left']['#type'] = 'textfield';
-    
+
     $element['top']['#title'] = 'Top Latitude';
     $element['top']['#type'] = 'textfield';
-    
+
     $element['right']['#title'] = 'Right Longitude';
     $element['right']['#type'] = 'textfield';
-    
+
     $element['bottom']['#title'] = 'Bottom Latitude';
     $element['bottom']['#type'] = 'textfield';
-    
+
     $element['master_column']['#value'] = 'bounds';
   }
-  
+
   if ($widget['type'] == 'geofield_textfields') {
     $element['wkt']['#title'] = 'Well Known Text';
     $element['wkt']['#type'] = 'textarea';
@@ -163,19 +172,19 @@ function geofield_field_widget_form(&$form, &$form_state, $field, $instance,
 
     $element['lat']['#title'] = 'Latitude';
     $element['lat']['#type'] = 'textfield';
-    
+
     $element['lon']['#title'] = 'Longitude';
     $element['lon']['#type'] = 'textfield';
 
     $element['left']['#title'] = 'Left Longitude';
     $element['left']['#type'] = 'textfield';
-    
+
     $element['top']['#title'] = 'Top Latitude';
     $element['top']['#type'] = 'textfield';
-    
+
     $element['right']['#title'] = 'Right Longitude';
     $element['right']['#type'] = 'textfield';
-    
+
     $element['bottom']['#title'] = 'Bottom Latitude';
     $element['bottom']['#type'] = 'textfield';
   }
@@ -184,35 +193,44 @@ function geofield_field_widget_form(&$form, &$form_state, $field, $instance,
     $element['#attached']['js'][] = drupal_get_path('module', 'geofield') . '/js/geolocation.js';
     $element['lat']['#title'] = 'Latitude';
     $element['lat']['#type'] = 'textfield';
-    
+
     $element['lon']['#title'] = 'Longitude';
     $element['lon']['#type'] = 'textfield';
-    
+
     $element['master_column']['#value'] = 'latlon';
   }
 
   if ($widget['type'] == 'geofield_openlayers') {
-    $field_class = '.field-name-' . str_replace('_', '-', $field['field_name']);
-    $defaults = array(
-      'wkt' => $field_class . ' .geofield_wkt',
-      'geo_type' => $field_class . ' .geofield_geo_type',
-      'lat' => $field_class . ' .geofield_lat',
-      'lon' => $field_class . ' .geofield_lon',
-      'left' => $field_class . ' .geofield_left',
-      'bottom' => $field_class . ' .geofield_bottom',
-      'right' => $field_class . ' .geofield_right',
-      'top' => $field_class . ' .geofield_top',
-    );
-    $element['helpmap'] = array(
-      '#markup' => '<div class="form-item geotaxonomy-latlon-helpmap" style="display:block">'
-                      . geofield_form_latlon_map($defaults, isset($instance['widget']['settings']['openlayers_map']) ? $instance['widget']['settings']['openlayers_map'] : 'geofield_widget_map')
-                      . '</div>'
-    );
-    $element['helpmap_desc'] = array(
-      '#markup' => t('Click the map to set a point for this location. Control-click to add lines. Alt-click to add polygons. Shift-click and drag to set bounds. Pan and zoom with arrows and the zoom bar.')
-    );
+    $openlayers_map_id = !empty($instance['widget']['settings']['openlayers_map']) ? $instance['widget']['settings']['openlayers_map'] : 'geofield_widget_map';
+    $element['#openlayers_mapname'] = $openlayers_map_id;
+    $element['#after_build']= array('geofield_widget_openlayers_afterbuild');
   }
-  
+
+  return $element;
+}
+
+/**
+ * Callback for afterbuild for widget for js addition to
+ */
+
+function geofield_widget_openlayers_afterbuild($element, &$form_state) {
+  drupal_add_js(
+    array('geofield' => array(
+      'data_storage' => (!empty($settings['data_storage'])) ? $settings['data_storage'] : 'collection',
+      ),
+    ),
+  'setting');
+
+  $defaults = array();
+  $element['helpmap'] = array(
+    '#markup' => '<div class="form-item geotaxonomy-latlon-helpmap" style="display:block">'
+                   . geofield_form_latlon_map(array(), $element['#openlayers_mapname'])
+                   . '</div>');
+
+  $element['helpmap_desc'] = array(
+    '#markup' => t('<div class="description geofield-help">Use the icons to select what type of feature to draw. Each map can contain one simple feature. Pan and zoom with arrows and the zoom bar.</div>')
+  );
+
   return $element;
 }
 
@@ -225,16 +243,6 @@ function geofield_form_latlon_map($defaults = array(), $map_name) {
   // This map will always be projected as 4326 and use just the default map preset
   $map_data = openlayers_map_load($map_name);
   $map = $map_data->data;
-  $map['behaviors']['openlayers_behavior_geofield'] = array(
-    'wkt' => $defaults['wkt'],
-    'geo_type' => $defaults['geo_type'],
-    'lat' => $defaults['lat'],
-    'lon' => $defaults['lon'],
-    'left' => $defaults['left'],
-    'bottom' => $defaults['bottom'],
-    'right' => $defaults['right'],
-    'top' => $defaults['top'],
-  );
   return openlayers_render_map($map);
 }
 
@@ -287,32 +295,36 @@ function geofield_get_base_element($base, $items, $delta) {
     '#attributes' => array('class' => array('geofield_top')),
     '#default_value' => isset($items[$delta]['top']) ? $items[$delta]['top'] : NULL,
   );
-  
+
+  $element['description'] = array(
+    '#markup' => (!empty($element['#description'])) ? '<div class="description">' . $element['#description'] . '</div>' : '',
+  );
+
   // Master column is used by element-validate to decide which set of columns it should use to compute all other values.
   // By default, wkt is the master-column, all we compute all other values from it. For other widget (such as lat/lon) this will be different
   $element['master_column'] = array(
     '#type' => 'hidden',
     '#value' => 'wkt',
   );
-  
+
   // This validate function computes all other columns from the master field
   $element['#element_validate'] = array('geofield_element_validate');
-  
+
   return $element;
 }
 
 /**
  * Geofield Element Validate for GeoJSON widget
  */
- 
+
 function geofield_element_geojson_validate($element, &$form_state) {
-  
+
 }
 
 /**
  * Geofield Element Validate
  *
- */ 
+ */
 function geofield_element_validate($element, &$form_state) {
 
   $master_column = $element['master_column']['#value'];
@@ -333,7 +345,7 @@ function geofield_element_validate($element, &$form_state) {
 
   if ($element['input_format']['#value'] == 'geojson') {
     // For geojson input, we've hijacked the wkt value.
-    geofield_load_geophp();
+    geophp_load();
     try {
       $geometry = geoPHP::load($values['wkt'], 'json');
       $values['wkt'] = $geometry->out('wkt');
