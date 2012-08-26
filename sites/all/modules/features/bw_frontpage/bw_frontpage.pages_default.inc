@@ -8,7 +8,7 @@
  * Implements hook_default_page_manager_pages().
  */
 function bw_frontpage_default_page_manager_pages() {
-  $page = new stdClass;
+  $page = new stdClass();
   $page->disabled = FALSE; /* Edit this to true to make a default page disabled initially */
   $page->api_version = 1;
   $page->name = 'front_page';
@@ -16,14 +16,17 @@ function bw_frontpage_default_page_manager_pages() {
   $page->admin_title = 'BeWelcome Front Page';
   $page->admin_description = 'This is the BeWelcome Front Page Panel';
   $page->path = 'bw_frontpage';
-  $page->access = array();
+  $page->access = array(
+    'type' => 'none',
+    'settings' => NULL,
+  );
   $page->menu = array();
   $page->arguments = array();
   $page->conf = array(
     'admin_paths' => FALSE,
   );
   $page->default_handlers = array();
-  $handler = new stdClass;
+  $handler = new stdClass();
   $handler->disabled = FALSE; /* Edit this to true to make a default handler disabled initially */
   $handler->api_version = 1;
   $handler->name = 'page_front_page_panel_context';
@@ -40,7 +43,7 @@ function bw_frontpage_default_page_manager_pages() {
     'contexts' => array(),
     'relationships' => array(),
   );
-  $display = new panels_display;
+  $display = new panels_display();
   $display->layout = 'flexible';
   $display->layout_settings = array(
     'items' => array(
@@ -136,7 +139,7 @@ function bw_frontpage_default_page_manager_pages() {
   $display->title = '';
   $display->content = array();
   $display->panels = array();
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-1';
     $pane->panel = 'bottom_left';
     $pane->type = 'custom';
@@ -157,9 +160,10 @@ function bw_frontpage_default_page_manager_pages() {
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 0;
+    $pane->locks = '';
     $display->content['new-1'] = $pane;
     $display->panels['bottom_left'][0] = 'new-1';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-2';
     $pane->panel = 'bottom_right';
     $pane->type = 'views';
@@ -189,9 +193,10 @@ function bw_frontpage_default_page_manager_pages() {
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 0;
+    $pane->locks = '';
     $display->content['new-2'] = $pane;
     $display->panels['bottom_right'][0] = 'new-2';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-3';
     $pane->panel = 'bottom_right';
     $pane->type = 'custom';
@@ -212,9 +217,10 @@ function bw_frontpage_default_page_manager_pages() {
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 1;
+    $pane->locks = '';
     $display->content['new-3'] = $pane;
     $display->panels['bottom_right'][1] = 'new-3';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-4';
     $pane->panel = 'center';
     $pane->type = 'custom';
@@ -237,9 +243,10 @@ And there IS an image slide show right bellow. If you don\'t see one, <a href="n
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 0;
+    $pane->locks = '';
     $display->content['new-4'] = $pane;
     $display->panels['center'][0] = 'new-4';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-5';
     $pane->panel = 'center';
     $pane->type = 'block';
@@ -257,9 +264,10 @@ And there IS an image slide show right bellow. If you don\'t see one, <a href="n
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 1;
+    $pane->locks = '';
     $display->content['new-5'] = $pane;
     $display->panels['center'][1] = 'new-5';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-6';
     $pane->panel = 'right';
     $pane->type = 'block';
@@ -277,9 +285,10 @@ And there IS an image slide show right bellow. If you don\'t see one, <a href="n
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 0;
+    $pane->locks = '';
     $display->content['new-6'] = $pane;
     $display->panels['right'][0] = 'new-6';
-    $pane = new stdClass;
+    $pane = new stdClass();
     $pane->pid = 'new-7';
     $pane->panel = 'right';
     $pane->type = 'block';
@@ -297,6 +306,7 @@ And there IS an image slide show right bellow. If you don\'t see one, <a href="n
     $pane->css = array();
     $pane->extras = array();
     $pane->position = 1;
+    $pane->locks = '';
     $display->content['new-7'] = $pane;
     $display->panels['right'][1] = 'new-7';
   $display->hide_title = PANELS_TITLE_NONE;
@@ -305,6 +315,6 @@ And there IS an image slide show right bellow. If you don\'t see one, <a href="n
   $page->default_handlers[$handler->name] = $handler;
   $pages['front_page'] = $page;
 
- return $pages;
+  return $pages;
 
 }

@@ -22,10 +22,7 @@ function bw_frontpage_ctools_plugin_api() {
  * Implements hook_views_api().
  */
 function bw_frontpage_views_api() {
-  list($module, $api) = func_get_args();
-  if ($module == "views" && $api == "views_default") {
-    return array("version" => "3.0");
-  }
+  return array("version" => "3.0");
 }
 
 /**
@@ -34,7 +31,7 @@ function bw_frontpage_views_api() {
 function bw_frontpage_image_default_styles() {
   $styles = array();
 
-  // Exported image style: for_frontpage
+  // Exported image style: for_frontpage.
   $styles['for_frontpage'] = array(
     'name' => 'for_frontpage',
     'effects' => array(

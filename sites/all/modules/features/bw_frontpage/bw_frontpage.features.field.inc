@@ -10,7 +10,7 @@
 function bw_frontpage_field_default_fields() {
   $fields = array();
 
-  // Exported field: 'node-bw_front_image-field_bw_front_image'
+  // Exported field: 'node-bw_front_image-field_bw_front_image'.
   $fields['node-bw_front_image-field_bw_front_image'] = array(
     'field_config' => array(
       'active' => '1',
@@ -31,6 +31,7 @@ function bw_frontpage_field_default_fields() {
           0 => 'fid',
         ),
       ),
+      'locked' => '0',
       'module' => 'image',
       'settings' => array(
         'default_image' => 0,
@@ -69,6 +70,7 @@ function bw_frontpage_field_default_fields() {
       'required' => 1,
       'settings' => array(
         'alt_field' => 1,
+        'default_image' => 0,
         'file_directory' => '',
         'file_extensions' => 'png gif jpg jpeg',
         'max_filesize' => '',

@@ -10,7 +10,7 @@
 function bw_frontpage_views_default_views() {
   $export = array();
 
-  $view = new view;
+  $view = new view();
   $view->name = 'frontpage_slider';
   $view->description = '';
   $view->tag = 'default';
@@ -22,6 +22,7 @@ function bw_frontpage_views_default_views() {
 
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
+  $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['cache']['type'] = 'none';
   $handler->display->display_options['query']['type'] = 'views_query';
@@ -71,29 +72,13 @@ function bw_frontpage_views_default_views() {
   $handler->display->display_options['fields']['field_bw_front_image']['table'] = 'field_data_field_bw_front_image';
   $handler->display->display_options['fields']['field_bw_front_image']['field'] = 'field_bw_front_image';
   $handler->display->display_options['fields']['field_bw_front_image']['label'] = '';
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['alter']['html'] = 0;
   $handler->display->display_options['fields']['field_bw_front_image']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['field_bw_front_image']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['field_bw_front_image']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['field_bw_front_image']['hide_alter_empty'] = 0;
+  $handler->display->display_options['fields']['field_bw_front_image']['hide_alter_empty'] = FALSE;
   $handler->display->display_options['fields']['field_bw_front_image']['click_sort_column'] = 'fid';
   $handler->display->display_options['fields']['field_bw_front_image']['settings'] = array(
     'image_style' => 'for_frontpage',
     'image_link' => '',
   );
-  $handler->display->display_options['fields']['field_bw_front_image']['field_api_classes'] = 0;
   /* Sort criterion: Content: Post date */
   $handler->display->display_options['sorts']['created']['id'] = 'created';
   $handler->display->display_options['sorts']['created']['table'] = 'node';
@@ -110,6 +95,7 @@ function bw_frontpage_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
   $handler->display->display_options['block_description'] = 'BW frontpage slider';
   $translatables['frontpage_slider'] = array(
     t('Master'),
@@ -122,12 +108,16 @@ function bw_frontpage_views_default_views() {
     t('Items per page'),
     t('- All -'),
     t('Offset'),
+    t('« first'),
+    t('‹ previous'),
+    t('next ›'),
+    t('last »'),
     t('Block'),
     t('BW frontpage slider'),
   );
   $export['frontpage_slider'] = $view;
 
-  $view = new view;
+  $view = new view();
   $view->name = 'random_user_list';
   $view->description = '';
   $view->tag = 'default';
@@ -140,6 +130,7 @@ function bw_frontpage_views_default_views() {
   /* Display: Master */
   $handler = $view->new_display('default', 'Master', 'default');
   $handler->display->display_options['title'] = 'Random users';
+  $handler->display->display_options['use_more_always'] = FALSE;
   $handler->display->display_options['access']['type'] = 'perm';
   $handler->display->display_options['access']['perm'] = 'access user profiles';
   $handler->display->display_options['cache']['type'] = 'none';
@@ -154,57 +145,22 @@ function bw_frontpage_views_default_views() {
     'name' => 'name',
     'picture' => 'picture',
   );
-  $handler->display->display_options['row_options']['hide_empty'] = 0;
-  $handler->display->display_options['row_options']['default_field_elements'] = 1;
   /* Field: User: Picture */
   $handler->display->display_options['fields']['picture']['id'] = 'picture';
   $handler->display->display_options['fields']['picture']['table'] = 'users';
   $handler->display->display_options['fields']['picture']['field'] = 'picture';
   $handler->display->display_options['fields']['picture']['label'] = '';
-  $handler->display->display_options['fields']['picture']['alter']['alter_text'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['word_boundary'] = 1;
-  $handler->display->display_options['fields']['picture']['alter']['ellipsis'] = 1;
-  $handler->display->display_options['fields']['picture']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['picture']['alter']['html'] = 0;
   $handler->display->display_options['fields']['picture']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['picture']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['picture']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['picture']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['picture']['hide_alter_empty'] = 1;
-  $handler->display->display_options['fields']['picture']['link_photo_to_profile'] = 1;
   /* Field: User: Name */
   $handler->display->display_options['fields']['name']['id'] = 'name';
   $handler->display->display_options['fields']['name']['table'] = 'users';
   $handler->display->display_options['fields']['name']['field'] = 'name';
   $handler->display->display_options['fields']['name']['label'] = '';
-  $handler->display->display_options['fields']['name']['alter']['alter_text'] = 1;
+  $handler->display->display_options['fields']['name']['alter']['alter_text'] = TRUE;
   $handler->display->display_options['fields']['name']['alter']['text'] = '[name] offers a place to stay';
-  $handler->display->display_options['fields']['name']['alter']['make_link'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['absolute'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['external'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['replace_spaces'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['trim_whitespace'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['nl2br'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['strip_tags'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['trim'] = 0;
-  $handler->display->display_options['fields']['name']['alter']['html'] = 0;
+  $handler->display->display_options['fields']['name']['alter']['word_boundary'] = FALSE;
+  $handler->display->display_options['fields']['name']['alter']['ellipsis'] = FALSE;
   $handler->display->display_options['fields']['name']['element_label_colon'] = FALSE;
-  $handler->display->display_options['fields']['name']['element_default_classes'] = 1;
-  $handler->display->display_options['fields']['name']['hide_empty'] = 0;
-  $handler->display->display_options['fields']['name']['empty_zero'] = 0;
-  $handler->display->display_options['fields']['name']['hide_alter_empty'] = 1;
-  $handler->display->display_options['fields']['name']['link_to_user'] = 1;
-  $handler->display->display_options['fields']['name']['overwrite_anonymous'] = 0;
-  $handler->display->display_options['fields']['name']['format_username'] = 1;
   /* Sort criterion: Global: Random */
   $handler->display->display_options['sorts']['random']['id'] = 'random';
   $handler->display->display_options['sorts']['random']['table'] = 'views';
@@ -219,6 +175,7 @@ function bw_frontpage_views_default_views() {
 
   /* Display: Block */
   $handler = $view->new_display('block', 'Block', 'block');
+  $handler->display->display_options['defaults']['hide_admin_links'] = FALSE;
   $translatables['random_user_list'] = array(
     t('Master'),
     t('Random users'),
