@@ -1,4 +1,3 @@
-// $Id: openlayers.js,v 1.47.2.37.2.6 2010/12/06 18:39:30 tmcw Exp $
 /*jslint white: false */
 /*jslint forin: true */
 /*global OpenLayers Drupal $ document jQuery window */
@@ -34,17 +33,19 @@ Drupal.behaviors.openlayers = {
         Drupal.settings.openlayers.maps &&
         !$(context).data('openlayers')) {
       $('.openlayers-map:not(.openlayers-processed)').each(function() {
-        $(this).addClass('openlayers-processed');
+        // By setting the stop_render variable to TRUE, this will
+        // halt the render process.  If set, one could remove this setting
+        // then call Drupal.attachBehaviors again to get it started
         var map_id = $(this).attr('id');
+        if (Drupal.settings.openlayers.maps[map_id] && Drupal.settings.openlayers.maps[map_id].stop_render != true) {
+          var map = Drupal.settings.openlayers.maps[map_id];
+          $(this).addClass('openlayers-processed');
 
-        // Use try..catch for error handling.
-        try {
-          if (Drupal.settings.openlayers.maps[map_id]) {
+          // Use try..catch for error handling.
+          try {
             // Set OpenLayers language based on document language,
             // rather than browser language
             OpenLayers.Lang.setCode($('html').attr('lang'));
-
-            var map = Drupal.settings.openlayers.maps[map_id];
 
             $(this)
               // @TODO: move this into markup in theme function, doing this dynamically is a waste.
@@ -98,13 +99,13 @@ Drupal.behaviors.openlayers = {
               Drupal.openlayers.redrawVectors();
             }
           }
-        }
-        catch (e) {
-          if (typeof console != 'undefined') {
-            console.log(e);
-          }
-          else {
-            $(this).text('Error during map rendering: ' + e);
+          catch (e) {
+            if (typeof console != 'undefined') {
+              console.log(e);
+            }
+            else {
+              $(this).text('Error during map rendering: ' + e);
+            }
           }
         }
       });
@@ -280,18 +281,26 @@ Drupal.openlayers = {
       layer.addFeatures(newFeatures);
     }
   },
+  
   'getStyleMap': function(map, layername) {
     if (map.styles) {
       var stylesAdded = {};
+      
       // Grab and map base styles.
       for (var style in map.styles) {
         stylesAdded[style] = new OpenLayers.Style(map.styles[style]);
       }
-      // Implement layer-specific styles.
+      
+      // Implement layer-specific styles.  First default, then select.
       if (map.layer_styles !== undefined && map.layer_styles[layername]) {
         var style = map.layer_styles[layername];
         stylesAdded['default'] = new OpenLayers.Style(map.styles[style]);
       }
+      if (map.layer_styles_select !== undefined && map.layer_styles_select[layername]) {
+        var style = map.layer_styles_select[layername];
+        stylesAdded['select'] = new OpenLayers.Style(map.styles[style]);
+      }
+      
       return new OpenLayers.StyleMap(stylesAdded);
     }
     else {
@@ -310,6 +319,7 @@ Drupal.openlayers = {
       });
     }
   },
+  
   'objectFromFeature': function(feature) {
     var wktFormat = new OpenLayers.Format.WKT();
     // Extract geometry either from wkt property or lon/lat properties
@@ -319,6 +329,60 @@ Drupal.openlayers = {
     else if (feature.lon) {
       return wktFormat.read('POINT(' + feature.lon + ' ' + feature.lat + ')');
     }
+  },
+  
+  /**
+   * Add Behavior.
+   *
+   * This is a wrapper around adding behaviors for OpenLayers.
+   * a module does not have to use this, but it helps cut
+   * down on code.
+   *
+   * @param id
+   *   The identifier of the behavior that is attached to
+   *   the map.
+   * @param attach
+   *   The callback function for the attach part of the
+   *   Drupal behavior.
+   * @param detach
+   *   The callback function for the detach part of the
+   *   Drupal behavior.
+   */
+  'addBehavior': function(id, attach, detach) {
+    // Add as a Drupal behavior.  Add a prefix, just to be safe.
+    Drupal.behaviors['openlayers_auto_' + id] = {
+      attach: function (context, settings) {
+        var data = $(context).data('openlayers');
+        
+        // Ensure that there is a map and that the appropriate
+        // behavior exists.  Need "data &&" to avoid js crash 
+        // when data is empty
+        var localBehavior = data && data.map.behaviors[id];
+        
+        // Ensure scope in the attach callback
+        var that = this;
+        if (localBehavior) {
+          $(context).once('openlayers-' + id, function () {
+            attach.apply(that, [data, data.map.behaviors[id], context, settings]);
+          });
+        }
+      },
+      // Maybe we need a little more handling here.
+      detach: detach
+    };
+  },
+  
+  /**
+   * Add Control.
+   *
+   * This is a wrapper around adding controls to maps.  It
+   * is not needed but saves some code.
+   */
+  'addControl': function(openlayers, controlName, options) {
+    var control = new OpenLayers.Control[controlName](options);
+    openlayers.addControl(control);
+    control.activate();
+    return control;
   }
 };
 
