@@ -10,7 +10,7 @@
 function bw_user_profile_field_default_fields() {
   $fields = array();
 
-  // Exported field: 'profile2-main-field_birth_date'
+  // Exported field: 'profile2-main-field_birth_date'.
   $fields['profile2-main-field_birth_date'] = array(
     'field_config' => array(
       'active' => '1',
@@ -20,6 +20,7 @@ function bw_user_profile_field_default_fields() {
       'field_name' => 'field_birth_date',
       'foreign keys' => array(),
       'indexes' => array(),
+      'locked' => '0',
       'module' => 'date',
       'settings' => array(
         'granularity' => array(
@@ -86,6 +87,7 @@ function bw_user_profile_field_default_fields() {
               'year' => '0',
             ),
           ),
+          'display_all_day' => 0,
           'format' => array(
             'input_format_custom' => '',
           ),
@@ -98,12 +100,12 @@ function bw_user_profile_field_default_fields() {
           'year_range' => '-123:-15',
         ),
         'type' => 'date_select',
-        'weight' => '3',
+        'weight' => '5',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_books'
+  // Exported field: 'profile2-main-field_books'.
   $fields['profile2-main-field_books'] = array(
     'field_config' => array(
       'active' => '1',
@@ -124,10 +126,11 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
-        'profile2_private' => 0,
+        'profile2_private' => FALSE,
       ),
       'translatable' => '1',
       'type' => 'text',
@@ -161,12 +164,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '16',
+        'weight' => '10',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_films'
+  // Exported field: 'profile2-main-field_films'.
   $fields['profile2-main-field_films'] = array(
     'field_config' => array(
       'active' => '1',
@@ -187,10 +190,11 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
-        'profile2_private' => 0,
+        'profile2_private' => FALSE,
       ),
       'translatable' => '1',
       'type' => 'text',
@@ -224,12 +228,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '18',
+        'weight' => '12',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_firstname'
+  // Exported field: 'profile2-main-field_firstname'.
   $fields['profile2-main-field_firstname'] = array(
     'field_config' => array(
       'active' => '1',
@@ -250,6 +254,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -291,7 +296,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_gender'
+  // Exported field: 'profile2-main-field_gender'.
   $fields['profile2-main-field_gender'] = array(
     'field_config' => array(
       'active' => '1',
@@ -312,6 +317,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'tid',
         ),
       ),
+      'locked' => '0',
       'module' => 'taxonomy',
       'settings' => array(
         'allowed_values' => array(
@@ -360,7 +366,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_hobbies'
+  // Exported field: 'profile2-main-field_hobbies'.
   $fields['profile2-main-field_hobbies'] = array(
     'field_config' => array(
       'active' => '1',
@@ -381,6 +387,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
@@ -418,12 +425,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '19',
+        'weight' => '13',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_housenumber'
+  // Exported field: 'profile2-main-field_housenumber'.
   $fields['profile2-main-field_housenumber'] = array(
     'field_config' => array(
       'active' => '1',
@@ -444,6 +451,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -486,7 +494,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_i_live_with'
+  // Exported field: 'profile2-main-field_i_live_with'.
   $fields['profile2-main-field_i_live_with'] = array(
     'field_config' => array(
       'active' => '1',
@@ -507,6 +515,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
@@ -544,12 +553,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '15',
+        'weight' => '14',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_im'
+  // Exported field: 'profile2-main-field_im'.
   $fields['profile2-main-field_im'] = array(
     'field_config' => array(
       'active' => '1',
@@ -570,6 +579,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -607,12 +617,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '21',
+        'weight' => '9',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_lastname'
+  // Exported field: 'profile2-main-field_lastname'.
   $fields['profile2-main-field_lastname'] = array(
     'field_config' => array(
       'active' => '1',
@@ -633,6 +643,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -669,12 +680,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '7',
+        'weight' => '4',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_max_length_of_stay'
+  // Exported field: 'profile2-main-field_max_length_of_stay'.
   $fields['profile2-main-field_max_length_of_stay'] = array(
     'field_config' => array(
       'active' => '1',
@@ -695,6 +706,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -732,12 +744,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '14',
+        'weight' => '13',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_max_number_of_guests'
+  // Exported field: 'profile2-main-field_max_number_of_guests'.
   $fields['profile2-main-field_max_number_of_guests'] = array(
     'field_config' => array(
       'active' => '1',
@@ -747,6 +759,7 @@ function bw_user_profile_field_default_fields() {
       'field_name' => 'field_max_number_of_guests',
       'foreign keys' => array(),
       'indexes' => array(),
+      'locked' => '0',
       'module' => 'number',
       'settings' => array(
         'profile2_private' => 0,
@@ -789,12 +802,12 @@ function bw_user_profile_field_default_fields() {
         'module' => 'number',
         'settings' => array(),
         'type' => 'number',
-        'weight' => '13',
+        'weight' => '12',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_music'
+  // Exported field: 'profile2-main-field_music'.
   $fields['profile2-main-field_music'] = array(
     'field_config' => array(
       'active' => '1',
@@ -815,6 +828,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
@@ -852,12 +866,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '17',
+        'weight' => '11',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_occupation'
+  // Exported field: 'profile2-main-field_occupation'.
   $fields['profile2-main-field_occupation'] = array(
     'field_config' => array(
       'active' => '1',
@@ -878,6 +892,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -915,12 +930,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '5',
+        'weight' => '7',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_organisations_i_belong_to'
+  // Exported field: 'profile2-main-field_organisations_i_belong_to'.
   $fields['profile2-main-field_organisations_i_belong_to'] = array(
     'field_config' => array(
       'active' => '1',
@@ -941,6 +956,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '1024',
@@ -978,12 +994,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '20',
+        'weight' => '14',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_phone_home'
+  // Exported field: 'profile2-main-field_phone_home'.
   $fields['profile2-main-field_phone_home'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1004,6 +1020,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -1046,7 +1063,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_photos'
+  // Exported field: 'profile2-main-field_photos'.
   $fields['profile2-main-field_photos'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1067,6 +1084,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'fid',
         ),
       ),
+      'locked' => '0',
       'module' => 'image',
       'settings' => array(
         'default_image' => 0,
@@ -1098,6 +1116,7 @@ function bw_user_profile_field_default_fields() {
       'required' => 0,
       'settings' => array(
         'alt_field' => 0,
+        'default_image' => 0,
         'file_directory' => '',
         'file_extensions' => 'png gif jpg jpeg',
         'max_filesize' => '',
@@ -1119,7 +1138,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_profile_summary'
+  // Exported field: 'profile2-main-field_profile_summary'.
   $fields['profile2-main-field_profile_summary'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1140,9 +1159,10 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
-        'profile2_private' => 0,
+        'profile2_private' => FALSE,
       ),
       'translatable' => '1',
       'type' => 'text_long',
@@ -1181,7 +1201,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_secondname'
+  // Exported field: 'profile2-main-field_secondname'.
   $fields['profile2-main-field_secondname'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1202,6 +1222,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -1238,12 +1259,12 @@ function bw_user_profile_field_default_fields() {
           'size' => '60',
         ),
         'type' => 'text_textfield',
-        'weight' => '4',
+        'weight' => '3',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_street'
+  // Exported field: 'profile2-main-field_street'.
   $fields['profile2-main-field_street'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1264,6 +1285,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',
@@ -1306,7 +1328,7 @@ function bw_user_profile_field_default_fields() {
     ),
   );
 
-  // Exported field: 'profile2-main-field_website'
+  // Exported field: 'profile2-main-field_website'.
   $fields['profile2-main-field_website'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1316,6 +1338,7 @@ function bw_user_profile_field_default_fields() {
       'field_name' => 'field_website',
       'foreign keys' => array(),
       'indexes' => array(),
+      'locked' => '0',
       'module' => 'link',
       'settings' => array(
         'attributes' => array(
@@ -1379,12 +1402,12 @@ function bw_user_profile_field_default_fields() {
         'module' => 'link',
         'settings' => array(),
         'type' => 'link_field',
-        'weight' => '12',
+        'weight' => '10',
       ),
     ),
   );
 
-  // Exported field: 'profile2-main-field_zipcode'
+  // Exported field: 'profile2-main-field_zipcode'.
   $fields['profile2-main-field_zipcode'] = array(
     'field_config' => array(
       'active' => '1',
@@ -1405,6 +1428,7 @@ function bw_user_profile_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'max_length' => '255',

@@ -10,7 +10,7 @@
 function bw_nodes_filter_default_formats() {
   $formats = array();
 
-  // Exported format: Filtered HTML
+  // Exported format: Filtered HTML.
   $formats['filtered_html'] = array(
     'format' => 'filtered_html',
     'name' => 'Filtered HTML',

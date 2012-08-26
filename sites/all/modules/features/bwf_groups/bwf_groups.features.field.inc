@@ -10,7 +10,7 @@
 function bwf_groups_field_default_fields() {
   $fields = array();
 
-  // Exported field: 'node-group-body'
+  // Exported field: 'node-group-body'.
   $fields['node-group-body'] = array(
     'field_config' => array(
       'active' => '1',
@@ -33,6 +33,7 @@ function bwf_groups_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(),
       'translatable' => '1',
@@ -141,7 +142,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group-field_group_picture'
+  // Exported field: 'node-group-field_group_picture'.
   $fields['node-group-field_group_picture'] = array(
     'field_config' => array(
       'active' => '1',
@@ -162,6 +163,7 @@ function bwf_groups_field_default_fields() {
           0 => 'fid',
         ),
       ),
+      'locked' => '0',
       'module' => 'image',
       'settings' => array(
         'default_image' => 0,
@@ -273,6 +275,7 @@ function bwf_groups_field_default_fields() {
       'required' => 0,
       'settings' => array(
         'alt_field' => 0,
+        'default_image' => 0,
         'file_directory' => 'group-pictures',
         'file_extensions' => 'png gif jpg jpeg',
         'max_filesize' => '',
@@ -294,7 +297,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group-field_wiki_text'
+  // Exported field: 'node-group-field_wiki_text'.
   $fields['node-group-field_wiki_text'] = array(
     'field_config' => array(
       'active' => '1',
@@ -315,6 +318,7 @@ function bwf_groups_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(
         'profile2_private' => FALSE,
@@ -414,7 +418,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group-group_access'
+  // Exported field: 'node-group-group_access'.
   $fields['node-group-group_access'] = array(
     'field_config' => array(
       'active' => '1',
@@ -428,6 +432,7 @@ function bwf_groups_field_default_fields() {
           0 => 'value',
         ),
       ),
+      'locked' => '0',
       'module' => 'list',
       'no_ui' => TRUE,
       'settings' => array(
@@ -549,7 +554,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group-group_group'
+  // Exported field: 'node-group-group_group'.
   $fields['node-group-group_group'] = array(
     'field_config' => array(
       'active' => '1',
@@ -563,6 +568,7 @@ function bwf_groups_field_default_fields() {
           0 => 'value',
         ),
       ),
+      'locked' => '0',
       'module' => 'list',
       'no_ui' => TRUE,
       'settings' => array(
@@ -653,7 +659,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group_discussion-body'
+  // Exported field: 'node-group_discussion-body'.
   $fields['node-group_discussion-body'] = array(
     'field_config' => array(
       'active' => '1',
@@ -676,6 +682,7 @@ function bwf_groups_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(),
       'translatable' => '1',
@@ -732,7 +739,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group_discussion-group_audience'
+  // Exported field: 'node-group_discussion-group_audience'.
   $fields['node-group_discussion-group_audience'] = array(
     'field_config' => array(
       'active' => '1',
@@ -753,6 +760,7 @@ function bwf_groups_field_default_fields() {
           0 => 'gid',
         ),
       ),
+      'locked' => '0',
       'module' => 'og',
       'no_ui' => TRUE,
       'settings' => array(),
@@ -762,6 +770,7 @@ function bwf_groups_field_default_fields() {
     'field_instance' => array(
       'bundle' => 'group_discussion',
       'default_value' => NULL,
+      'default_value_function' => 'og_field_audience_default_value',
       'deleted' => '0',
       'description' => '',
       'display' => array(
@@ -815,7 +824,7 @@ function bwf_groups_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-group_discussion-group_content_access'
+  // Exported field: 'node-group_discussion-group_content_access'.
   $fields['node-group_discussion-group_content_access'] = array(
     'field_config' => array(
       'active' => '1',
@@ -829,6 +838,7 @@ function bwf_groups_field_default_fields() {
           0 => 'value',
         ),
       ),
+      'locked' => '0',
       'module' => 'list',
       'no_ui' => TRUE,
       'settings' => array(

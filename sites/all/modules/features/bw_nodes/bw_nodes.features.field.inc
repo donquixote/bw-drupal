@@ -10,7 +10,7 @@
 function bw_nodes_field_default_fields() {
   $fields = array();
 
-  // Exported field: 'node-blog-body'
+  // Exported field: 'node-blog-body'.
   $fields['node-blog-body'] = array(
     'field_config' => array(
       'active' => '1',
@@ -33,6 +33,7 @@ function bw_nodes_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(),
       'translatable' => '1',
@@ -83,7 +84,7 @@ function bw_nodes_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-page-body'
+  // Exported field: 'node-page-body'.
   $fields['node-page-body'] = array(
     'field_config' => array(
       'active' => '1',
@@ -106,6 +107,7 @@ function bw_nodes_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(),
       'translatable' => '1',

@@ -10,7 +10,7 @@
 function bwf_groups_ds_field_settings_info() {
   $export = array();
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'comment|comment_node_group_discussion|default';
   $ds_fieldsetting->entity_type = 'comment';
@@ -45,7 +45,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['comment|comment_node_group_discussion|default'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'comment|comment_node_group|default';
   $ds_fieldsetting->entity_type = 'comment';
@@ -70,7 +70,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['comment|comment_node_group|default'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group_discussion|default';
   $ds_fieldsetting->entity_type = 'node';
@@ -115,7 +115,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['node|group_discussion|default'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group_discussion|full';
   $ds_fieldsetting->entity_type = 'node';
@@ -165,7 +165,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['node|group_discussion|full'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group|default';
   $ds_fieldsetting->entity_type = 'node';
@@ -182,20 +182,20 @@ function bwf_groups_ds_field_settings_info() {
       'label' => 'hidden',
       'format' => 'author',
     ),
-    'views_content_ds__bw_group_posts' => array(
-      'weight' => '3',
-      'label' => 'above',
-      'format' => 'panel_pane_1',
-    ),
     'views_content_ds__bw_group_members' => array(
       'weight' => '6',
       'label' => 'above',
       'format' => 'panel_pane_2',
     ),
+    'views_content_ds__bw_group_posts' => array(
+      'weight' => '3',
+      'label' => 'above',
+      'format' => 'panel_pane_1',
+    ),
   );
   $export['node|group|default'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group|full';
   $ds_fieldsetting->entity_type = 'node';
@@ -210,7 +210,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['node|group|full'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group|group_forum';
   $ds_fieldsetting->entity_type = 'node';
@@ -225,7 +225,7 @@ function bwf_groups_ds_field_settings_info() {
   );
   $export['node|group|group_forum'] = $ds_fieldsetting;
 
-  $ds_fieldsetting = new stdClass;
+  $ds_fieldsetting = new stdClass();
   $ds_fieldsetting->api_version = 1;
   $ds_fieldsetting->id = 'node|group|group_members';
   $ds_fieldsetting->entity_type = 'node';
@@ -249,7 +249,7 @@ function bwf_groups_ds_field_settings_info() {
 function bwf_groups_ds_layout_settings_info() {
   $export = array();
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'comment|comment_node_group_discussion|default';
   $ds_layout->entity_type = 'comment';
@@ -291,7 +291,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['comment|comment_node_group_discussion|default'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'comment|comment_node_group|default';
   $ds_layout->entity_type = 'comment';
@@ -323,7 +323,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['comment|comment_node_group|default'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group_discussion|default';
   $ds_layout->entity_type = 'node';
@@ -367,7 +367,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group_discussion|default'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group_discussion|full';
   $ds_layout->entity_type = 'node';
@@ -413,7 +413,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group_discussion|full'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|default';
   $ds_layout->entity_type = 'node';
@@ -447,7 +447,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|default'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|full';
   $ds_layout->entity_type = 'node';
@@ -469,7 +469,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|full'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|group_forum';
   $ds_layout->entity_type = 'node';
@@ -491,7 +491,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|group_forum'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|group_members';
   $ds_layout->entity_type = 'node';
@@ -513,7 +513,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|group_members'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|group_wiki';
   $ds_layout->entity_type = 'node';
@@ -535,7 +535,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|group_wiki'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|group_wiki_edt';
   $ds_layout->entity_type = 'node';
@@ -556,7 +556,7 @@ function bwf_groups_ds_layout_settings_info() {
   );
   $export['node|group|group_wiki_edt'] = $ds_layout;
 
-  $ds_layout = new stdClass;
+  $ds_layout = new stdClass();
   $ds_layout->api_version = 1;
   $ds_layout->id = 'node|group|group_wikiedit';
   $ds_layout->entity_type = 'node';

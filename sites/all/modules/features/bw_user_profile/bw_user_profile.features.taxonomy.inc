@@ -16,7 +16,6 @@ function bw_user_profile_taxonomy_default_vocabularies() {
       'hierarchy' => '0',
       'module' => 'taxonomy',
       'weight' => '0',
-      'entity_type' => 'taxonomy_vocabulary',
     ),
     'gender' => array(
       'name' => 'Gender',
@@ -25,7 +24,6 @@ function bw_user_profile_taxonomy_default_vocabularies() {
       'hierarchy' => '0',
       'module' => 'taxonomy',
       'weight' => '0',
-      'entity_type' => 'taxonomy_vocabulary',
     ),
   );
 }

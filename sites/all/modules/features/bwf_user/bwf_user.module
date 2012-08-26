@@ -1,0 +1,7 @@
+<?php
+/**
+ * @file
+ * Code for the BWf user feature.
+ */
+
+include_once 'bwf_user.features.inc';

@@ -10,7 +10,7 @@
 function bw_faq_field_default_fields() {
   $fields = array();
 
-  // Exported field: 'node-faq_item-body'
+  // Exported field: 'node-faq_item-body'.
   $fields['node-faq_item-body'] = array(
     'field_config' => array(
       'active' => '1',
@@ -33,6 +33,7 @@ function bw_faq_field_default_fields() {
           0 => 'format',
         ),
       ),
+      'locked' => '0',
       'module' => 'text',
       'settings' => array(),
       'translatable' => '1',
@@ -83,7 +84,7 @@ function bw_faq_field_default_fields() {
     ),
   );
 
-  // Exported field: 'node-faq_item-field_faq_category'
+  // Exported field: 'node-faq_item-field_faq_category'.
   $fields['node-faq_item-field_faq_category'] = array(
     'field_config' => array(
       'active' => '1',
@@ -104,6 +105,7 @@ function bw_faq_field_default_fields() {
           0 => 'tid',
         ),
       ),
+      'locked' => '0',
       'module' => 'taxonomy',
       'settings' => array(
         'allowed_values' => array(
