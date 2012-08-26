@@ -133,16 +133,15 @@ class EntityTranslationTestCase extends DrupalWebTestCase {
   function configureContentType() {
     // Configure the "Basic page" content type to use multilingual support with
     // translation.
-    $this->drupalGet('admin/structure/types/manage/page');
     $edit = array();
     $edit['language_content_type'] = ENTITY_TRANSLATION_ENABLED;
     $this->drupalPost('admin/structure/types/manage/page', $edit, t('Save content type'));
     $this->assertRaw(t('The content type %type has been updated.', array('%type' => 'Basic page')), t('Basic page content type has been updated.'));
 
-    // Set body field's cardinality to unlimited.
-    $this->drupalGet('admin/structure/types/manage/page/fields/body');
+    // Set body field's cardinality to unlimited and toggle translatability.
     $edit = array();
     $edit['field[cardinality]'] = FIELD_CARDINALITY_UNLIMITED;
+    $edit['field[translatable]'] = 1;
     $this->drupalPost('admin/structure/types/manage/page/fields/body', $edit, t('Save settings'));
     $this->assertRaw(t('Saved %field configuration.', array('%field' => 'Body')), t('Body field settings have been updated.'));
 

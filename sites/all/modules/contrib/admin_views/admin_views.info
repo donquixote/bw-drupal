@@ -4,12 +4,15 @@ package = Administration
 core = 7.x
 dependencies[] = views
 dependencies[] = views_bulk_operations
-files[] = admin_views.module
-files[] = plugins/views_plugin_display_system.inc
 
-; Information added by drupal.org packaging script on 2012-05-03
-version = "7.x-1.x-dev"
+files[] = plugins/views_plugin_display_system.inc
+files[] = plugins/views_plugin_access_menu.inc
+
+files[] = tests/admin_views.test
+
+; Information added by drupal.org packaging script on 2012-08-18
+version = "7.x-1.0-alpha1+22-dev"
 core = "7.x"
 project = "admin_views"
-datestamp = "1336003327"
+datestamp = "1345248146"
 

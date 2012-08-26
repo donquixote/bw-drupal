@@ -49,3 +49,21 @@ function hook_translation_info($types = NULL) {
 
   return $info;
 }
+
+/**
+ * Allow modules to react on translation events.
+ *
+ * @param string $entity_type
+ *   The type of entity; e.g. 'node' or 'user'.
+ * @param object $entity
+ *   The entity to be translated.
+ * @param string $langcode
+ *   The language code of the translation.
+ */
+function hook_entity_translation_save($entity_type, $entity, $langcode) {
+  $function = 'pathauto_' . $entity_type . '_update_alias';
+  if (function_exists($function)) {
+    $options = array('language' => $langcode);
+    $function($entity, 'update', $options);
+  }
+}

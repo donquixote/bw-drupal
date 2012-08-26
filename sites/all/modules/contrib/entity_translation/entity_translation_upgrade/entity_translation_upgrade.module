@@ -10,8 +10,8 @@
  */
 function entity_translation_upgrade_menu() {
   return array(
-    'admin/config/modules/translation-upgrade' => array(
-      'title' => 'Content Translation Upgrade',
+    'admin/config/regional/entity_translation/upgrade' => array(
+      'title' => 'Entity Translation Upgrade',
       'page callback' => 'drupal_get_form',
       'page arguments' => array('entity_translation_upgrade_form'),
       'access arguments' => array('administer software updates'),
@@ -70,8 +70,8 @@ function entity_translation_upgrade_init() {
 function entity_translation_upgrade_form_entity_translation_admin_form_alter(&$form, $form_state) {
   $form['entity_translation_upgrade'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Content Translation Upgrade'),
-    '#description' => t('This will create a content translation for each available node translation, which will be then unpublished.'),
+    '#title' => t('Entity Translation Upgrade'),
+    '#description' => t('This will create an entity translation for each available node translation, which will be then unpublished.'),
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
   );
@@ -111,9 +111,9 @@ function entity_translation_upgrade_check_path() {
  * Load the upgrade history entry for the given nid.
  */
 function entity_translation_upgrade_load($nid) {
-  return db_select('entity_translation_upgrade_history', 'tu')
-    ->fields('tu')
-    ->condition('tu.nid', $nid)
+  return db_select('entity_translation_upgrade_history', 'etu')
+    ->fields('etu')
+    ->condition('etu.nid', $nid)
     ->execute()
     ->fetchObject();
 }

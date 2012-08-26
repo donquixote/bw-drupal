@@ -45,5 +45,5 @@ function entity_translation_upgrade_schema() {
  */
 function entity_translation_upgrade_enable() {
   $args = array('!url' => url('admin/config/regional/entity_translation'));
-  drupal_set_message(t('<em>Translation Upgrade</em> enabled: visit the <a href="!url">content translation settings</a> page to perform the upgrade.', $args));
+  drupal_set_message(t('<em>Entity Translation Upgrade</em> enabled: visit the <a href="!url">entity translation settings</a> page to perform the upgrade.', $args));
 }

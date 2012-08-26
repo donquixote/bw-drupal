@@ -21,6 +21,7 @@ function author_pane_theme() {
       'picture_preset' => NULL,
       'context' => NULL,
       'disable_css' => NULL,
+      'join_date_type' => NULL,
     ),
   );
 
@@ -69,6 +70,20 @@ function author_pane_block_configure($delta) {
     '#default_value' => variable_get('author_pane_block_display_types', array()),
   );
 
+  // Settings for which date type to use to format the join date.
+  $join_date_options = array();
+  foreach (system_get_date_types() as $date_type) {
+    $join_date_options[$date_type['type']] = $date_type['title'];
+  }
+
+  $form['author_pane_block_join_date_type'] = array(
+    '#type' => 'select',
+    '#title' => t('Join date, date type'),
+    '#options' => $join_date_options,
+    '#default_value' => variable_get('author_pane_block_join_date_type', 'short'),
+    '#description' => t('Select which <a href="@date-type-url">date type</a> to use for displaying the join date.', array('@date-type-url' => url('admin/config/regional/date-time'))),
+  );
+
   if (module_exists('image')) {
     // Get all the imagecache presets on the site.
     $options = array('' => '');
@@ -85,7 +100,6 @@ function author_pane_block_configure($delta) {
       '#description' => t('Imagecache preset to use for the user picture on this block. Leave blank to not use this feature.'),
       '#default_value' => variable_get('author_pane_block_user_picture_preset', ''),
     );
-
   }
 
   return $form;
@@ -96,11 +110,11 @@ function author_pane_block_configure($delta) {
  */
 function author_pane_block_save($delta, $edit) {
   variable_set('author_pane_block_display_types', $edit['author_pane_block_display_types']);
+  variable_set('author_pane_block_join_date_type', $edit['author_pane_block_join_date_type']);
+
   if (isset($edit['author_pane_block_user_picture_preset'])) {
     variable_set('author_pane_block_user_picture_preset', $edit['author_pane_block_user_picture_preset']);
   }
-
-  return;
 }
 
 /**
@@ -148,21 +162,26 @@ function author_pane_include($file) {
 }
 
 /**
- * Preprocesses template variables for the author info template.
+ * Process variables for author-pane.tpl.php.
  *
- * Available variables (All optional except 'account'):
- * $variables['account']: User account object.
- * $variables['caller']:  String identifying who called the theme function.
- *    Usually the name of the module but doesn't have to be.
- * $variables['picture_preset']: Imagecache preset to use to format the
- *    user picture.
- * $variables['context']: Information about where the Author Pane will be
- *    appearing. For nodes, this will be the node object. For comments,
- *    the comment object.
- * $variables['disable_css']: TRUE if the preprocess should skip loading the
- *    default CSS. This is used by modules such as AF that has its own CSS.
+ * The $variables array contains the following arguments:
+ * - $variables['account']: User account object.
+ * - $variables['caller']: (optional) String identifying who called the theme
+ *   function. Usually the name of the module but doesn't have to be.
+ * - $variables['picture_preset']: (optional) Imagecache preset to use to format
+ *   the user picture.
+ * - $variables['context']: Information about where the Author Pane will be
+ *   appearing. For nodes, this will be the node object. For comments,
+ *   the comment object. For users, the user object.
+ * - $variables['disable_css']: TRUE if the preprocess should skip loading the
+ *   default CSS. This is used by modules such as AF that has its own CSS.
+ * - $variables['join_date_type']: The date type the join date should be
+ *   formated with.
+ *
+ * @see author-pane.tpl.php
  */
 function template_preprocess_author_pane(&$variables) {
+  $static = &drupal_static(__FUNCTION__);
   // Indicates who called the theme function.
   $caller = (!empty($variables['caller'])) ? $variables['caller'] : '';
 
@@ -184,26 +203,27 @@ function template_preprocess_author_pane(&$variables) {
   $variables['account_id'] = $account_id;
 
   /* Avatar */
-  static $user_pictures;
-  if (!empty($user_pictures[$account_id])) {
-    // This user's picture is cached so pull it from there.
-    $variables['picture'] = $user_pictures[$account_id];
+  $image_style = (!empty($variables['picture_preset'])) ? $variables['picture_preset'] : '';
+  $storage_key = $account_id . ':' . $caller . ':' . $image_style;
+  // Use array with a key with account_id:caller:style as storage for the
+  // picture, because this function could be called from different callers or
+  // with different styles in the same run-time.
+  if (!empty($static['user_pictures'][$storage_key])) {
+    $variables['picture'] = $static['user_pictures'][$storage_key];
   }
   else {
-    $style = (!empty($variables['picture_preset'])) ? $variables['picture_preset'] : '';
-    $variables['picture'] = theme('author_pane_user_picture', array('account' => $variables['account'], 'caller' => $caller, 'picture_preset' => $style));
-    $user_pictures[$account_id] = $variables['picture'];
+    $variables['picture'] = theme('author_pane_user_picture', array('account' => $variables['account'], 'caller' => $caller, 'picture_preset' => $image_style));
+    $static['user_pictures'][$storage_key] = $variables['picture'];
   }
 
   /* Join date & online status */
   if ($account_id != 0) {
-    // Join date (uses short date format) / since
-    $just_date = str_replace(array('H:i', 'g:ia', ' - '), '', variable_get('date_format_short', 'm/d/Y - H:i'));
-    $variables['joined'] = format_date($account->created, 'custom', $just_date);
+    $date_type = !empty($variables['join_date_type']) ? $variables['join_date_type'] : 'short';
+    $variables['joined'] = format_date($account->created, $date_type);
     $variables['joined_ago'] = format_interval(REQUEST_TIME - $account->created);
 
     // Online status - uses the settings for the who's online block.
-    $variables['last_active'] = ($account->access) ? format_interval(time() - $account->access) : t("Never");
+    $variables['last_active'] = ($account->access) ? format_interval(REQUEST_TIME - $account->access) : t("Never");
 
     if ((REQUEST_TIME -$account->access) < variable_get('user_block_seconds_online', 900)) {
       $variables['online_status'] = t('Online');
@@ -339,10 +359,17 @@ function author_pane_get_block() {
   // Load up the user object
   $account = user_load($uid);
 
-  // Build the author pane
-  $author_pane = theme('author_pane', array('account' => $account, 'caller' => 'author_pane_block', 'picture_preset' => variable_get('author_pane_block_user_picture_preset', ''), 'context' => $context));
+  // Theming variables for the author pane.
+  $variables = array(
+    'account' => $account,
+    'caller' => 'author_pane_block',
+    'picture_preset' => variable_get('author_pane_block_user_picture_preset', ''),
+    'context' => $context,
+    'join_date_type' => variable_get('author_pane_block_join_date_type', 'short'),
+  );
 
-  return $author_pane;
+  // Build and return the author pane.
+  return theme('author_pane', $variables);
 }
 
 /**
